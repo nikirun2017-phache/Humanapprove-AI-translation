@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { cn, UNIT_STATUS_COLORS } from "@/lib/utils"
 import { CommentPanel } from "@/components/comment-panel"
@@ -52,8 +52,9 @@ export function ReviewEditor({
   const [units, setUnits] = useState<Unit[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editValue, setEditValue] = useState("")
+  const [draftValue, setDraftValue] = useState("")
+  const [isDirty, setIsDirty] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [filter, setFilter] = useState<string>("all")
   const [saving, setSaving] = useState<string | null>(null) // unitId being saved
   const [submitLoading, setSubmitLoading] = useState(false)
@@ -94,27 +95,54 @@ export function ReviewEditor({
 
   const selectedUnit = units.find((u) => u.id === selectedId) ?? null
 
-  function startEdit(unit: Unit) {
-    setEditingId(unit.id)
-    setEditValue(unit.revisedTarget ?? unit.targetText)
-  }
+  // Initialise draft whenever the selected unit changes
+  useEffect(() => {
+    if (selectedUnit) {
+      setDraftValue(selectedUnit.revisedTarget ?? selectedUnit.targetText)
+      setIsDirty(false)
+    }
+  }, [selectedId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function saveEdit(unitId: string) {
+  // Keyboard navigation: up/down arrows when textarea is not focused
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) return
+      if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return
+      e.preventDefault()
+      setSelectedId((cur) => {
+        if (!cur || units.length === 0) return cur
+        const idx = units.findIndex((u) => u.id === cur)
+        if (e.key === "ArrowDown") return units[Math.min(idx + 1, units.length - 1)].id
+        return units[Math.max(idx - 1, 0)].id
+      })
+    }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [units])
+
+  async function saveIfDirty(unitId: string, value: string) {
+    if (!isDirty) return
     setSaving(unitId)
     const res = await fetch(`/api/units/${unitId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ revisedTarget: editValue }),
+      body: JSON.stringify({ revisedTarget: value }),
     })
     if (res.ok) {
       const updated = await res.json()
       setUnits((prev) => prev.map((u) => (u.id === unitId ? { ...u, ...updated } : u)))
     }
-    setEditingId(null)
+    setIsDirty(false)
     setSaving(null)
   }
 
+  async function navigateTo(id: string) {
+    if (selectedUnit && isDirty) await saveIfDirty(selectedUnit.id, draftValue)
+    setSelectedId(id)
+  }
+
   async function approveUnit(unitId: string) {
+    if (isDirty) await saveIfDirty(unitId, draftValue)
     setSaving(unitId)
     const res = await fetch(`/api/units/${unitId}/approve`, { method: "POST" })
     if (res.ok) {
@@ -122,7 +150,6 @@ export function ReviewEditor({
         prev.map((u) => (u.id === unitId ? { ...u, status: "approved" } : u))
       )
       setApprovedCount((c) => c + 1)
-      // Move to next pending unit
       const idx = units.findIndex((u) => u.id === unitId)
       const next = units.slice(idx + 1).find((u) => u.status !== "approved")
       if (next) setSelectedId(next.id)
@@ -229,7 +256,7 @@ export function ReviewEditor({
             displayedUnits.map((unit) => (
               <button
                 key={unit.id}
-                onClick={() => setSelectedId(unit.id)}
+                onClick={() => navigateTo(unit.id)}
                 className={cn(
                   "w-full text-left px-3 py-2.5 text-xs border-b border-gray-50 hover:bg-gray-50 transition-colors",
                   selectedId === unit.id && "bg-indigo-50 border-l-2 border-l-indigo-500"
@@ -306,54 +333,29 @@ export function ReviewEditor({
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Target
-                    {selectedUnit.revisedTarget !== null && (
+                    {isDirty && (
+                      <span className="ml-1.5 text-amber-500 normal-case font-normal">· unsaved</span>
+                    )}
+                    {!isDirty && selectedUnit.revisedTarget !== null && (
                       <span className="ml-1.5 text-indigo-500 normal-case font-normal">(revised)</span>
                     )}
                   </label>
-                  {isReviewer && editingId !== selectedUnit.id && (
-                    <button
-                      onClick={() => startEdit(selectedUnit)}
-                      className="text-xs text-indigo-600 hover:text-indigo-800"
-                    >
-                      Edit
-                    </button>
+                  {saving === selectedUnit.id && (
+                    <span className="text-xs text-gray-400">Saving…</span>
                   )}
                 </div>
 
-                {editingId === selectedUnit.id ? (
-                  <div className="space-y-2">
-                    <textarea
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      rows={4}
-                      className="w-full border border-indigo-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-                      autoFocus
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => saveEdit(selectedUnit.id)}
-                        disabled={saving === selectedUnit.id}
-                        className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded-lg disabled:opacity-50"
-                      >
-                        {saving === selectedUnit.id ? "Saving…" : "Save"}
-                      </button>
-                      <button
-                        onClick={() => setEditingId(null)}
-                        className="px-3 py-1.5 text-gray-600 border border-gray-300 text-xs rounded-lg hover:bg-gray-50"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
+                {isReviewer ? (
+                  <textarea
+                    ref={textareaRef}
+                    value={draftValue}
+                    onChange={(e) => { setDraftValue(e.target.value); setIsDirty(true) }}
+                    onBlur={() => saveIfDirty(selectedUnit.id, draftValue)}
+                    rows={4}
+                    className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                  />
                 ) : (
-                  <div
-                    className={cn(
-                      "rounded-lg p-3 text-sm leading-relaxed whitespace-pre-wrap",
-                      selectedUnit.revisedTarget !== null
-                        ? "bg-indigo-50 border border-indigo-100 text-indigo-900"
-                        : "bg-gray-50 text-gray-800"
-                    )}
-                  >
+                  <div className="rounded-lg p-3 text-sm leading-relaxed whitespace-pre-wrap bg-gray-50 text-gray-800">
                     {selectedUnit.revisedTarget ?? selectedUnit.targetText}
                   </div>
                 )}
@@ -374,7 +376,7 @@ export function ReviewEditor({
                 <div className="flex gap-2 pt-2 border-t border-gray-100">
                   <button
                     onClick={() => approveUnit(selectedUnit.id)}
-                    disabled={saving === selectedUnit.id || editingId === selectedUnit.id}
+                    disabled={saving === selectedUnit.id}
                     className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-medium py-2 rounded-lg transition-colors"
                   >
                     ✓ Approve
@@ -424,14 +426,9 @@ export function ReviewEditor({
               )}
             </div>
 
-            {/* Submit review button */}
-            {canSubmit && (
+            {/* Approve All — always visible to reviewers */}
+            {isReviewer && approvedCount < totalCount && (
               <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
-                {submitError && (
-                  <p className="text-xs text-red-600">{submitError}</p>
-                )}
-
-                {/* Approve All warning dialog */}
                 {showApproveAllDialog && (
                   <div className="border border-amber-200 bg-amber-50 rounded-lg p-3 space-y-2">
                     <div className="flex items-start gap-2">
@@ -473,29 +470,35 @@ export function ReviewEditor({
                     </div>
                   </div>
                 )}
-
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-gray-600">
                     <span className="font-medium">{approvedCount}/{totalCount}</span> units approved
                   </p>
-                  <div className="flex gap-2">
-                    {approvedCount < totalCount && (
-                      <button
-                        onClick={() => setShowApproveAllDialog(true)}
-                        disabled={approvingAll || showApproveAllDialog}
-                        className="border border-amber-300 text-amber-700 hover:bg-amber-50 disabled:opacity-50 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-                      >
-                        {approvingAll ? "Approving…" : "Approve all"}
-                      </button>
-                    )}
-                    <button
-                      onClick={submitReview}
-                      disabled={submitLoading}
-                      className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors"
-                    >
-                      {submitLoading ? "Submitting…" : "Submit review"}
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setShowApproveAllDialog(true)}
+                    disabled={approvingAll || showApproveAllDialog}
+                    className="border border-amber-300 text-amber-700 hover:bg-amber-50 disabled:opacity-50 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+                  >
+                    {approvingAll ? "Approving…" : "Approve all"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Submit review button */}
+            {canSubmit && (
+              <div className="bg-white rounded-xl border border-gray-200 p-4">
+                {submitError && (
+                  <p className="text-xs text-red-600 mb-2">{submitError}</p>
+                )}
+                <div className="flex justify-end">
+                  <button
+                    onClick={submitReview}
+                    disabled={submitLoading}
+                    className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors"
+                  >
+                    {submitLoading ? "Submitting…" : "Submit review"}
+                  </button>
                 </div>
               </div>
             )}

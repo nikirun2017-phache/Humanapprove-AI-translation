@@ -64,13 +64,15 @@ export function TranslationWizard({ providers, keyStatus }: Props) {
         if (f.name.endsWith(".json")) {
           const parsed = JSON.parse(content) as unknown
           units = flattenForPreview(parsed)
+        } else if (f.name.endsWith(".md")) {
+          units = parseMarkdownPreview(content)
         } else {
           units = parseCsvPreview(content)
         }
         setPreview(units)
-        if (!jobName) setJobName(f.name.replace(/\.(json|csv)$/i, ""))
+        if (!jobName) setJobName(f.name.replace(/\.(json|csv|md)$/i, ""))
       } catch {
-        setParseError("Could not parse file. Check that it is valid JSON or CSV.")
+        setParseError("Could not parse file. Check that it is valid JSON, CSV, or Markdown.")
       }
     }
     reader.readAsText(f)
@@ -91,6 +93,30 @@ export function TranslationWizard({ providers, keyStatus }: Props) {
       })).filter((u) => u.id && u.sourceText)
     }
     return []
+  }
+
+  function parseMarkdownPreview(content: string): SourceUnit[] {
+    const units: SourceUnit[] = []
+    let index = 0
+    let inFencedBlock = false
+    const lines = content.split(/\r?\n/)
+    let i = 0
+    while (i < lines.length) {
+      const line = lines[i]
+      if (/^```/.test(line) || /^~~~/.test(line)) { inFencedBlock = !inFencedBlock; i++; continue }
+      if (inFencedBlock || /^( {4}|\t)/.test(line)) { i++; continue }
+      const headingMatch = line.match(/^(#{1,6})\s+(.+)$/)
+      if (headingMatch) { units.push({ id: `h${headingMatch[1].length}_${index++}`, sourceText: headingMatch[2].trim() }); i++; continue }
+      const listMatch = line.match(/^(\s*(?:[-*+]|\d+\.)\s+)(.+)$/)
+      if (listMatch) { units.push({ id: `li_${index++}`, sourceText: listMatch[2].trim() }); i++; continue }
+      if (line.trim() === "") { i++; continue }
+      const paraLines: string[] = []
+      while (i < lines.length && lines[i].trim() !== "" && !/^```/.test(lines[i]) && !/^~~~/.test(lines[i]) && !/^#{1,6}\s/.test(lines[i]) && !/^\s*(?:[-*+]|\d+\.)\s/.test(lines[i]) && !/^( {4}|\t)/.test(lines[i])) {
+        paraLines.push(lines[i]); i++
+      }
+      if (paraLines.length > 0) units.push({ id: `p_${index++}`, sourceText: paraLines.join(" ").trim() })
+    }
+    return units
   }
 
   function parseCsvPreview(content: string): SourceUnit[] {
@@ -174,7 +200,7 @@ export function TranslationWizard({ providers, keyStatus }: Props) {
             <input
               id="file-input"
               type="file"
-              accept=".json,.csv"
+              accept=".json,.csv,.md"
               className="hidden"
               onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
             />
@@ -185,11 +211,20 @@ export function TranslationWizard({ providers, keyStatus }: Props) {
               </div>
             ) : (
               <div>
-                <p className="text-gray-500">Drop a <strong>.json</strong> or <strong>.csv</strong> file here</p>
-                <p className="text-xs text-gray-400 mt-1">JSON: flat or nested key-value object · CSV: id,source columns</p>
+                <p className="text-gray-500">Drop a <strong>.json</strong>, <strong>.csv</strong>, or <strong>.md</strong> file here</p>
+                <p className="text-xs text-gray-400 mt-1">JSON: flat or nested key-value object · CSV: id,source columns · Markdown: headings, paragraphs, list items</p>
               </div>
             )}
           </div>
+
+          {file?.name.endsWith(".md") && (
+            <div className="flex gap-2 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
+              <span className="shrink-0">ℹ️</span>
+              <span>
+                <strong>Note:</strong> Code blocks (fenced <code className="bg-amber-100 px-1 rounded">```</code> and indented) are excluded from translation and will be preserved as-is in the output.
+              </span>
+            </div>
+          )}
 
           {parseError && <p className="text-sm text-red-500">{parseError}</p>}
 

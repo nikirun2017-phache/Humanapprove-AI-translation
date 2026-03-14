@@ -15,16 +15,22 @@ interface Project {
   approvedCount: number
   _count: { units: number }
   createdBy: { name: string }
-  assignedReviewer: { name: string } | null
+  assignedReviewer: { id: string; name: string } | null
+}
+
+interface ReviewerUser {
+  id: string
+  name: string
 }
 
 interface Props {
   initialProjects: Project[]
   role: string
   currentUserId: string
+  reviewerUsers?: ReviewerUser[]
 }
 
-export function ProjectsTable({ initialProjects, role }: Props) {
+export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Props) {
   const [projects, setProjects] = useState<Project[]>(initialProjects)
   const [nameFilter, setNameFilter] = useState("")
   const [reviewerFilter, setReviewerFilter] = useState("")
@@ -109,6 +115,24 @@ export function ProjectsTable({ initialProjects, role }: Props) {
     setProjects((ps) =>
       ps.map((p) => (p.id === id ? { ...p, status: "exported" } : p))
     )
+  }
+
+  async function assignReviewer(projectId: string, reviewerId: string | null) {
+    const res = await fetch(`/api/projects/${projectId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assignedReviewerId: reviewerId }),
+    })
+    if (res.ok) {
+      const reviewer = reviewerUsers.find((r) => r.id === reviewerId) ?? null
+      setProjects((ps) =>
+        ps.map((p) =>
+          p.id === projectId
+            ? { ...p, assignedReviewer: reviewer }
+            : p
+        )
+      )
+    }
   }
 
   async function exportSelected() {
@@ -255,8 +279,21 @@ export function ProjectsTable({ initialProjects, role }: Props) {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-600">
-                      {project.assignedReviewer?.name || (
-                        <span className="text-gray-400 italic">unassigned</span>
+                      {role === "admin" && reviewerUsers.length > 0 ? (
+                        <select
+                          value={project.assignedReviewer?.id ?? ""}
+                          onChange={(e) => assignReviewer(project.id, e.target.value || null)}
+                          className="text-xs border border-gray-200 rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 text-gray-700 max-w-[140px]"
+                        >
+                          <option value="">— unassigned —</option>
+                          {reviewerUsers.map((r) => (
+                            <option key={r.id} value={r.id}>{r.name}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        project.assignedReviewer?.name || (
+                          <span className="text-gray-400 italic">unassigned</span>
+                        )
                       )}
                     </td>
                     <td className="px-4 py-3 text-gray-400 text-xs">

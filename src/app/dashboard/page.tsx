@@ -20,15 +20,22 @@ export default async function DashboardPage() {
         ? { assignedReviewerId: userId }
         : { createdById: userId }
 
-  const projects = await db.project.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    include: {
-      createdBy: { select: { name: true } },
-      assignedReviewer: { select: { name: true } },
-      _count: { select: { units: true } },
-    },
-  })
+  const [projects, reviewerUsers] = await Promise.all([
+    db.project.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      include: {
+        createdBy: { select: { name: true } },
+        assignedReviewer: { select: { id: true, name: true } },
+        _count: { select: { units: true } },
+      },
+    }),
+    db.user.findMany({
+      where: { role: "reviewer" },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+  ])
 
   const projectsWithProgress = await Promise.all(
     projects.map(async (p) => {
@@ -77,6 +84,7 @@ export default async function DashboardPage() {
             initialProjects={projectsWithProgress}
             role={role}
             currentUserId={userId}
+            reviewerUsers={reviewerUsers}
           />
         )}
       </main>

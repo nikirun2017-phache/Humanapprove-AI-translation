@@ -59,6 +59,94 @@ export function parseCsvSource(content: string): SourceUnit[] {
     .filter((u): u is SourceUnit => u !== null)
 }
 
+/**
+ * Parse a Markdown file into translatable units.
+ * Fenced code blocks (``` ... ```) and indented code blocks are skipped.
+ * Each heading, paragraph, and list item becomes one unit.
+ * IDs encode position and type so the structure can be reconstructed later.
+ */
+export function parseMarkdownSource(content: string): SourceUnit[] {
+  const units: SourceUnit[] = []
+  let index = 0
+  let inFencedBlock = false
+
+  const lines = content.split(/\r?\n/)
+  let i = 0
+
+  while (i < lines.length) {
+    const line = lines[i]
+
+    // Toggle fenced code block
+    if (/^```/.test(line) || /^~~~/.test(line)) {
+      inFencedBlock = !inFencedBlock
+      i++
+      continue
+    }
+
+    if (inFencedBlock) {
+      i++
+      continue
+    }
+
+    // Skip indented code blocks (4+ spaces or tab at start)
+    if (/^( {4}|\t)/.test(line)) {
+      i++
+      continue
+    }
+
+    // Heading
+    const headingMatch = line.match(/^(#{1,6})\s+(.+)$/)
+    if (headingMatch) {
+      const text = headingMatch[2].trim()
+      if (text) {
+        units.push({ id: `h${headingMatch[1].length}_${index++}`, sourceText: text })
+      }
+      i++
+      continue
+    }
+
+    // List item (unordered or ordered)
+    const listMatch = line.match(/^(\s*(?:[-*+]|\d+\.)\s+)(.+)$/)
+    if (listMatch) {
+      const text = listMatch[2].trim()
+      if (text) {
+        units.push({ id: `li_${index++}`, sourceText: text })
+      }
+      i++
+      continue
+    }
+
+    // Blank line — skip
+    if (line.trim() === "") {
+      i++
+      continue
+    }
+
+    // Paragraph: collect consecutive non-blank, non-special lines
+    const paraLines: string[] = []
+    while (
+      i < lines.length &&
+      lines[i].trim() !== "" &&
+      !/^```/.test(lines[i]) &&
+      !/^~~~/.test(lines[i]) &&
+      !/^(#{1,6})\s/.test(lines[i]) &&
+      !/^(\s*(?:[-*+]|\d+\.)\s+)/.test(lines[i]) &&
+      !/^( {4}|\t)/.test(lines[i])
+    ) {
+      paraLines.push(lines[i])
+      i++
+    }
+    if (paraLines.length > 0) {
+      const text = paraLines.join(" ").trim()
+      if (text) {
+        units.push({ id: `p_${index++}`, sourceText: text })
+      }
+    }
+  }
+
+  return units
+}
+
 function parseCsvLine(line: string): string[] {
   const cols: string[] = []
   let current = ""

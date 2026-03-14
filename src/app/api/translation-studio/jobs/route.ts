@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { parseJsonSource, parseCsvSource } from "@/lib/source-parser"
+import { parseJsonSource, parseCsvSource, parseMarkdownSource } from "@/lib/source-parser"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
 
@@ -58,8 +58,8 @@ export async function POST(req: NextRequest) {
   }
 
   const ext = file.name.split(".").pop()?.toLowerCase()
-  if (ext !== "json" && ext !== "csv") {
-    return NextResponse.json({ error: "Only .json or .csv files are accepted" }, { status: 400 })
+  if (ext !== "json" && ext !== "csv" && ext !== "md") {
+    return NextResponse.json({ error: "Only .json, .csv, or .md files are accepted" }, { status: 400 })
   }
 
   let targetLanguages: string[]
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
   const content = await file.text()
   let units
   try {
-    units = ext === "json" ? parseJsonSource(content) : parseCsvSource(content)
+    units = ext === "json" ? parseJsonSource(content) : ext === "md" ? parseMarkdownSource(content) : parseCsvSource(content)
   } catch (err) {
     return NextResponse.json({ error: `Failed to parse file: ${(err as Error).message}` }, { status: 400 })
   }
