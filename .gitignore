@@ -1,0 +1,10 @@
+node_modules
+.next/
+.env.local
+.env*.local
+dev.db
+*.db
+uploads/
+tsconfig.tsbuildinfo
+.DS_Store
+README_tmp.html
