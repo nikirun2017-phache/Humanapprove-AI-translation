@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="en-US" target-language="is-IS" original="sample-source" datatype="plaintext">
+    <body>
+      <trans-unit id="nav.home" xml:space="preserve">
+        <source>Home</source>
+        <target state="needs-review-translation">Heim</target>
+      </trans-unit>
+      <trans-unit id="nav.about" xml:space="preserve">
+        <source>About</source>
+        <target state="needs-review-translation">Um okkur</target>
+      </trans-unit>
+      <trans-unit id="nav.pricing" xml:space="preserve">
+        <source>Pricing</source>
+        <target state="needs-review-translation">Verðlag</target>
+      </trans-unit>
+      <trans-unit id="nav.blog" xml:space="preserve">
+        <source>Blog</source>
+        <target state="needs-review-translation">Blogg</target>
+      </trans-unit>
+      <trans-unit id="nav.contact" xml:space="preserve">
+        <source>Contact</source>
+        <target state="needs-review-translation">Hafa samband</target>
+      </trans-unit>
+      <trans-unit id="auth.login" xml:space="preserve">
+        <source>Log in</source>
+        <target state="needs-review-translation">Skrá inn</target>
+      </trans-unit>
+      <trans-unit id="auth.logout" xml:space="preserve">
+        <source>Log out</source>
+        <target state="needs-review-translation">Skrá út</target>
+      </trans-unit>
+      <trans-unit id="auth.signup" xml:space="preserve">
+        <source>Sign up</source>
+        <target state="needs-review-translation">Nýskrá</target>
+      </trans-unit>
+      <trans-unit id="auth.forgot_password" xml:space="preserve">
+        <source>Forgot your password?</source>
+        <target state="needs-review-translation">Gleymdirðu lykilorðinu?</target>
+      </trans-unit>
+      <trans-unit id="auth.reset_password" xml:space="preserve">
+        <source>Reset password</source>
+        <target state="needs-review-translation">Endurstilla lykilorð</target>
+      </trans-unit>
+      <trans-unit id="auth.email_placeholder" xml:space="preserve">
+        <source>Enter your email</source>
+        <target state="needs-review-translation">Sláðu inn netfangið þitt</target>
+      </trans-unit>
+      <trans-unit id="auth.password_placeholder" xml:space="preserve">
+        <source>Enter your password</source>
+        <target state="needs-review-translation">Sláðu inn lykilorðið þitt</target>
+      </trans-unit>
+      <trans-unit id="dashboard.welcome" xml:space="preserve">
+        <source>Welcome back, {name}!</source>
+        <target state="needs-review-translation">Velkomin/n aftur, {name}!</target>
+      </trans-unit>
+      <trans-unit id="dashboard.projects_count" xml:space="preserve">
+        <source>You have {count} active projects</source>
+        <target state="needs-review-translation">Þú ert með {count} virk verkefni</target>
+      </trans-unit>
+      <trans-unit id="dashboard.last_updated" xml:space="preserve">
+        <source>Last updated {date}</source>
+        <target state="needs-review-translation">Síðast uppfært {date}</target>
+      </trans-unit>
+      <trans-unit id="dashboard.empty_state" xml:space="preserve">
+        <source>No projects yet. Create your first one.</source>
+        <target state="needs-review-translation">Engin verkefni enn. Búðu til þitt fyrsta.</target>
+      </trans-unit>
+      <trans-unit id="buttons.save" xml:space="preserve">
+        <source>Save</source>
+        <target state="needs-review-translation">Vista</target>
+      </trans-unit>
+      <trans-unit id="buttons.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target state="needs-review-translation">Hætta við</target>
+      </trans-unit>
+      <trans-unit id="buttons.delete" xml:space="preserve">
+        <source>Delete</source>
+        <target state="needs-review-translation">Eyða</target>
+      </trans-unit>
+      <trans-unit id="buttons.edit" xml:space="preserve">
+        <source>Edit</source>
+        <target state="needs-review-translation">Breyta</target>
+      </trans-unit>
+      <trans-unit id="buttons.submit" xml:space="preserve">
+        <source>Submit</source>
+        <target state="needs-review-translation">Senda inn</target>
+      </trans-unit>
+      <trans-unit id="buttons.confirm" xml:space="preserve">
+        <source>Confirm</source>
+        <target state="needs-review-translation">Staðfesta</target>
+      </trans-unit>
+      <trans-unit id="buttons.back" xml:space="preserve">
+        <source>Back</source>
+        <target state="needs-review-translation">Til baka</target>
+      </trans-unit>
+      <trans-unit id="buttons.next" xml:space="preserve">
+        <source>Next</source>
+        <target state="needs-review-translation">Næsta</target>
+      </trans-unit>
+      <trans-unit id="buttons.upload" xml:space="preserve">
+        <source>Upload</source>
+        <target state="needs-review-translation">Hlaða upp</target>
+      </trans-unit>
+      <trans-unit id="errors.required" xml:space="preserve">
+        <source>This field is required</source>
+        <target state="needs-review-translation">Þetta svæði er nauðsynlegt</target>
+      </trans-unit>
+      <trans-unit id="errors.invalid_email" xml:space="preserve">
+        <source>Please enter a valid email address</source>
+        <target state="needs-review-translation">Vinsamlegast sláðu inn gilt netfang</target>
+      </trans-unit>
+      <trans-unit id="errors.password_too_short" xml:space="preserve">
+        <source>Password must be at least 8 characters</source>
+        <target state="needs-review-translation">Lykilorð verður að vera að minnsta kosti 8 stafir</target>
+      </trans-unit>
+      <trans-unit id="errors.something_went_wrong" xml:space="preserve">
+        <source>Something went wrong. Please try again.</source>
+        <target state="needs-review-translation">Eitthvað fór úrskeiðis. Vinsamlegast reyndu aftur.</target>
+      </trans-unit>
+      <trans-unit id="errors.not_found" xml:space="preserve">
+        <source>Page not found</source>
+        <target state="needs-review-translation">Síða fannst ekki</target>
+      </trans-unit>
+      <trans-unit id="errors.unauthorized" xml:space="preserve">
+        <source>You are not authorized to view this page</source>
+        <target state="needs-review-translation">Þú hefur ekki heimild til að skoða þessa síðu</target>
+      </trans-unit>
+      <trans-unit id="success.saved" xml:space="preserve">
+        <source>Changes saved successfully</source>
+        <target state="needs-review-translation">Breytingar vistaðar</target>
+      </trans-unit>
+      <trans-unit id="success.deleted" xml:space="preserve">
+        <source>Item deleted</source>
+        <target state="needs-review-translation">Hlut eytt</target>
+      </trans-unit>
+      <trans-unit id="success.uploaded" xml:space="preserve">
+        <source>File uploaded successfully</source>
+        <target state="needs-review-translation">Skrá hlaðið upp</target>
+      </trans-unit>
+      <trans-unit id="success.sent" xml:space="preserve">
+        <source>Message sent</source>
+        <target state="needs-review-translation">Skilaboð send</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

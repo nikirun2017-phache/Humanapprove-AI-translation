@@ -1,0 +1,49 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "pricing": "Pricing",
+    "blog": "Blog",
+    "contact": "Contact"
+  },
+  "auth": {
+    "login": "Log in",
+    "logout": "Log out",
+    "signup": "Sign up",
+    "forgot_password": "Forgot your password?",
+    "reset_password": "Reset password",
+    "email_placeholder": "Enter your email",
+    "password_placeholder": "Enter your password"
+  },
+  "dashboard": {
+    "welcome": "Welcome back, {name}!",
+    "projects_count": "You have {count} active projects",
+    "last_updated": "Last updated {date}",
+    "empty_state": "No projects yet. Create your first one."
+  },
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "submit": "Submit",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "upload": "Upload"
+  },
+  "errors": {
+    "required": "This field is required",
+    "invalid_email": "Please enter a valid email address",
+    "password_too_short": "Password must be at least 8 characters",
+    "something_went_wrong": "Something went wrong. Please try again.",
+    "not_found": "Page not found",
+    "unauthorized": "You are not authorized to view this page"
+  },
+  "success": {
+    "saved": "Changes saved successfully",
+    "deleted": "Item deleted",
+    "uploaded": "File uploaded successfully",
+    "sent": "Message sent"
+  }
+}

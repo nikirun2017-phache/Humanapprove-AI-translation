@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="en-US" target-language="zh-CN" original="sample-source" datatype="plaintext">
+    <body>
+      <trans-unit id="nav.home" xml:space="preserve">
+        <source>Home</source>
+        <target state="needs-review-translation">首页</target>
+      </trans-unit>
+      <trans-unit id="nav.about" xml:space="preserve">
+        <source>About</source>
+        <target state="needs-review-translation">关于</target>
+      </trans-unit>
+      <trans-unit id="nav.pricing" xml:space="preserve">
+        <source>Pricing</source>
+        <target state="needs-review-translation">定价</target>
+      </trans-unit>
+      <trans-unit id="nav.blog" xml:space="preserve">
+        <source>Blog</source>
+        <target state="needs-review-translation">博客</target>
+      </trans-unit>
+      <trans-unit id="nav.contact" xml:space="preserve">
+        <source>Contact</source>
+        <target state="needs-review-translation">联系我们</target>
+      </trans-unit>
+      <trans-unit id="auth.login" xml:space="preserve">
+        <source>Log in</source>
+        <target state="needs-review-translation">登录</target>
+      </trans-unit>
+      <trans-unit id="auth.logout" xml:space="preserve">
+        <source>Log out</source>
+        <target state="needs-review-translation">退出登录</target>
+      </trans-unit>
+      <trans-unit id="auth.signup" xml:space="preserve">
+        <source>Sign up</source>
+        <target state="needs-review-translation">注册</target>
+      </trans-unit>
+      <trans-unit id="auth.forgot_password" xml:space="preserve">
+        <source>Forgot your password?</source>
+        <target state="needs-review-translation">忘记密码？</target>
+      </trans-unit>
+      <trans-unit id="auth.reset_password" xml:space="preserve">
+        <source>Reset password</source>
+        <target state="needs-review-translation">重置密码</target>
+      </trans-unit>
+      <trans-unit id="auth.email_placeholder" xml:space="preserve">
+        <source>Enter your email</source>
+        <target state="needs-review-translation">请输入您的邮箱</target>
+      </trans-unit>
+      <trans-unit id="auth.password_placeholder" xml:space="preserve">
+        <source>Enter your password</source>
+        <target state="needs-review-translation">请输入您的密码</target>
+      </trans-unit>
+      <trans-unit id="dashboard.welcome" xml:space="preserve">
+        <source>Welcome back, {name}!</source>
+        <target state="needs-review-translation">欢迎回来，{name}！</target>
+      </trans-unit>
+      <trans-unit id="dashboard.projects_count" xml:space="preserve">
+        <source>You have {count} active projects</source>
+        <target state="needs-review-translation">您有 {count} 个活跃项目</target>
+      </trans-unit>
+      <trans-unit id="dashboard.last_updated" xml:space="preserve">
+        <source>Last updated {date}</source>
+        <target state="needs-review-translation">最后更新于 {date}</target>
+      </trans-unit>
+      <trans-unit id="dashboard.empty_state" xml:space="preserve">
+        <source>No projects yet. Create your first one.</source>
+        <target state="needs-review-translation">暂无项目，创建您的第一个项目吧。</target>
+      </trans-unit>
+      <trans-unit id="buttons.save" xml:space="preserve">
+        <source>Save</source>
+        <target state="needs-review-translation">保存</target>
+      </trans-unit>
+      <trans-unit id="buttons.cancel" xml:space="preserve">
+        <source>Cancel</source>
+        <target state="needs-review-translation">取消</target>
+      </trans-unit>
+      <trans-unit id="buttons.delete" xml:space="preserve">
+        <source>Delete</source>
+        <target state="needs-review-translation">删除</target>
+      </trans-unit>
+      <trans-unit id="buttons.edit" xml:space="preserve">
+        <source>Edit</source>
+        <target state="needs-review-translation">编辑</target>
+      </trans-unit>
+      <trans-unit id="buttons.submit" xml:space="preserve">
+        <source>Submit</source>
+        <target state="needs-review-translation">提交</target>
+      </trans-unit>
+      <trans-unit id="buttons.confirm" xml:space="preserve">
+        <source>Confirm</source>
+        <target state="needs-review-translation">确认</target>
+      </trans-unit>
+      <trans-unit id="buttons.back" xml:space="preserve">
+        <source>Back</source>
+        <target state="needs-review-translation">返回</target>
+      </trans-unit>
+      <trans-unit id="buttons.next" xml:space="preserve">
+        <source>Next</source>
+        <target state="needs-review-translation">下一步</target>
+      </trans-unit>
+      <trans-unit id="buttons.upload" xml:space="preserve">
+        <source>Upload</source>
+        <target state="needs-review-translation">上传</target>
+      </trans-unit>
+      <trans-unit id="errors.required" xml:space="preserve">
+        <source>This field is required</source>
+        <target state="needs-review-translation">此字段为必填项</target>
+      </trans-unit>
+      <trans-unit id="errors.invalid_email" xml:space="preserve">
+        <source>Please enter a valid email address</source>
+        <target state="needs-review-translation">请输入有效的邮箱地址</target>
+      </trans-unit>
+      <trans-unit id="errors.password_too_short" xml:space="preserve">
+        <source>Password must be at least 8 characters</source>
+        <target state="needs-review-translation">密码长度不能少于 8 个字符</target>
+      </trans-unit>
+      <trans-unit id="errors.something_went_wrong" xml:space="preserve">
+        <source>Something went wrong. Please try again.</source>
+        <target state="needs-review-translation">出现错误，请重试。</target>
+      </trans-unit>
+      <trans-unit id="errors.not_found" xml:space="preserve">
+        <source>Page not found</source>
+        <target state="needs-review-translation">页面未找到</target>
+      </trans-unit>
+      <trans-unit id="errors.unauthorized" xml:space="preserve">
+        <source>You are not authorized to view this page</source>
+        <target state="needs-review-translation">您无权查看此页面</target>
+      </trans-unit>
+      <trans-unit id="success.saved" xml:space="preserve">
+        <source>Changes saved successfully</source>
+        <target state="needs-review-translation">更改已成功保存</target>
+      </trans-unit>
+      <trans-unit id="success.deleted" xml:space="preserve">
+        <source>Item deleted</source>
+        <target state="needs-review-translation">项目已删除</target>
+      </trans-unit>
+      <trans-unit id="success.uploaded" xml:space="preserve">
+        <source>File uploaded successfully</source>
+        <target state="needs-review-translation">文件上传成功</target>
+      </trans-unit>
+      <trans-unit id="success.sent" xml:space="preserve">
+        <source>Message sent</source>
+        <target state="needs-review-translation">消息已发送</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

@@ -1,0 +1,63 @@
+"use client"
+
+import { useSession, signOut } from "next-auth/react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { cn } from "@/lib/utils"
+
+export function Navbar() {
+  const { data: session } = useSession()
+  const pathname = usePathname()
+
+  if (!session?.user) return null
+
+  const { role } = session.user
+
+  const links = [
+    { href: "/dashboard", label: "Dashboard" },
+    ...(role !== "reviewer" ? [{ href: "/projects/new", label: "Upload XLIFF" }] : []),
+    ...(role !== "reviewer" ? [{ href: "/translation-studio", label: "Translation Studio" }] : []),
+    ...(role === "admin" ? [{ href: "/admin/users", label: "Users" }] : []),
+    ...(role === "admin" ? [{ href: "/admin/settings", label: "Settings" }] : []),
+  ]
+
+  return (
+    <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
+      <div className="flex items-center gap-6">
+        <Link href="/dashboard" className="font-semibold text-indigo-600 text-lg">
+          XLIFF Review
+        </Link>
+        <div className="flex gap-4">
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                "text-sm font-medium transition-colors",
+                pathname === link.href
+                  ? "text-indigo-600"
+                  : "text-gray-600 hover:text-gray-900"
+              )}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <span className="text-sm text-gray-500">
+          {session.user.name}
+          <span className="ml-1 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+            {session.user.role}
+          </span>
+        </span>
+        <button
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="text-sm text-gray-500 hover:text-gray-800 transition-colors"
+        >
+          Sign out
+        </button>
+      </div>
+    </nav>
+  )
+}

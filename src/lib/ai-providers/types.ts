@@ -1,0 +1,37 @@
+export type ProviderName = "anthropic" | "openai" | "deepseek" | "gemini"
+
+export interface SourceUnit {
+  id: string
+  sourceText: string
+}
+
+export interface TranslatedUnit {
+  id: string
+  translatedText: string
+}
+
+export interface TranslationBatch {
+  units: SourceUnit[]
+  sourceLanguage: string
+  targetLanguage: string
+}
+
+export interface TranslationResult {
+  units: TranslatedUnit[]
+}
+
+export interface AIProvider {
+  name: ProviderName
+  translate(batch: TranslationBatch, apiKey: string, model: string): Promise<TranslationResult>
+}
+
+export interface ModelOption {
+  id: string
+  label: string
+}
+
+export interface ProviderInfo {
+  name: ProviderName
+  label: string
+  models: ModelOption[]
+}

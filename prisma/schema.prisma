@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String
+  hashedPassword String?
+  role           String    @default("reviewer") // admin | reviewer | requester
+  languages      String    @default("[]") // JSON array of BCP-47 codes e.g. ["ja-JP","zh-CN"]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  projectsCreated  Project[]       @relation("ProjectCreator")
+  projectsAssigned Project[]       @relation("ProjectReviewer")
+  comments         Comment[]
+  reviewSessions   ReviewSession[]
+  accounts         Account[]
+  sessions         Session[]
+  translationJobs  TranslationJob[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Project {
+  id                 String  @id @default(cuid())
+  name               String
+  sourceLanguage     String  // e.g. "en-US"
+  targetLanguage     String  // e.g. "ja-JP"
+  originalFormat     String  @default("xliff")
+  xliffFileUrl       String  // local path
+  status             String  @default("pending_assignment")
+  // pending_assignment | in_review | approved | exported
+
+  createdById        String
+  assignedReviewerId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdBy        User            @relation("ProjectCreator", fields: [createdById], references: [id])
+  assignedReviewer User?           @relation("ProjectReviewer", fields: [assignedReviewerId], references: [id])
+  units            TranslationUnit[]
+  reviewSessions   ReviewSession[]
+  translationTask  TranslationTask?
+}
+
+model TranslationUnit {
+  id            String  @id @default(cuid())
+  projectId     String
+  xliffUnitId   String  // "id" attr from <trans-unit>
+  sourceText    String
+  targetText    String  // original from XLIFF
+  revisedTarget String? // reviewer's edited version
+  status        String  @default("pending")
+  // pending | commented | approved | rejected
+  orderIndex    Int
+  metadata      String  @default("{}") // JSON for extra XLIFF attrs
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  comments Comment[]
+
+  @@unique([projectId, xliffUnitId])
+  @@index([projectId, orderIndex])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  unitId    String
+  authorId  String
+  body      String
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  unit   TranslationUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  author User            @relation(fields: [authorId], references: [id])
+}
+
+model ReviewSession {
+  id             String    @id @default(cuid())
+  projectId      String
+  reviewerId     String
+  startedAt      DateTime  @default(now())
+  submittedAt    DateTime?
+  approvalStatus String    @default("in_progress")
+  // in_progress | submitted | approved | rejected
+
+  project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  reviewer User    @relation(fields: [reviewerId], references: [id])
+}
+
+// Key-value store for system-wide admin settings (e.g. AI provider API keys)
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+// A translation job: one source file translated into N languages via AI
+model TranslationJob {
+  id             String   @id @default(cuid())
+  name           String
+  createdById    String
+  sourceFileUrl  String   // path to uploaded JSON/CSV
+  unitsFileUrl   String   // path to parsed units JSON cache
+  sourceFormat   String   // "json" | "csv"
+  sourceLanguage String   @default("en-US")
+  provider       String   // "anthropic" | "openai" | "deepseek" | "gemini"
+  model          String
+  status         String   @default("pending")
+  // pending | running | completed | failed
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  createdBy User              @relation(fields: [createdById], references: [id])
+  tasks     TranslationTask[]
+}
+
+// One task = one target language within a job
+model TranslationTask {
+  id             String   @id @default(cuid())
+  jobId          String
+  targetLanguage String
+  status         String   @default("pending")
+  // pending | running | completed | failed | imported
+  totalUnits     Int      @default(0)
+  completedUnits Int      @default(0)
+  errorMessage   String?
+  xliffFileUrl   String?
+  projectId      String?  @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  job     TranslationJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  project Project?       @relation(fields: [projectId], references: [id])
+
+  @@unique([jobId, targetLanguage])
+  @@index([jobId])
+}

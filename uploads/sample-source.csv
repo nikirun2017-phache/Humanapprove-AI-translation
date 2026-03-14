@@ -1,0 +1,36 @@
+id,source
+nav.home,Home
+nav.about,About
+nav.pricing,Pricing
+nav.blog,Blog
+nav.contact,Contact
+auth.login,Log in
+auth.logout,Log out
+auth.signup,Sign up
+auth.forgot_password,Forgot your password?
+auth.reset_password,Reset password
+auth.email_placeholder,Enter your email
+auth.password_placeholder,Enter your password
+dashboard.welcome,"Welcome back, {name}!"
+dashboard.projects_count,You have {count} active projects
+dashboard.last_updated,Last updated {date}
+dashboard.empty_state,No projects yet. Create your first one.
+buttons.save,Save
+buttons.cancel,Cancel
+buttons.delete,Delete
+buttons.edit,Edit
+buttons.submit,Submit
+buttons.confirm,Confirm
+buttons.back,Back
+buttons.next,Next
+buttons.upload,Upload
+errors.required,This field is required
+errors.invalid_email,Please enter a valid email address
+errors.password_too_short,Password must be at least 8 characters
+errors.something_went_wrong,"Something went wrong. Please try again."
+errors.not_found,Page not found
+errors.unauthorized,You are not authorized to view this page
+success.saved,Changes saved successfully
+success.deleted,Item deleted
+success.uploaded,File uploaded successfully
+success.sent,Message sent

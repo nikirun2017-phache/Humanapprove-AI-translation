@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="en-US" target-language="zh-CN" original="sample.md" datatype="plaintext">
+    <body>
+      <trans-unit id="welcome_title">
+        <source>Welcome to our platform</source>
+        <target>欢迎来到我们的平台</target>
+      </trans-unit>
+      <trans-unit id="signup_button">
+        <source>Sign up for free</source>
+        <target>免费注册</target>
+      </trans-unit>
+      <trans-unit id="login_prompt">
+        <source>Already have an account? Log in</source>
+        <target>已有账户？登录</target>
+      </trans-unit>
+      <trans-unit id="feature_1_title">
+        <source>Fast and reliable</source>
+        <target>快速且可靠</target>
+      </trans-unit>
+      <trans-unit id="feature_1_desc">
+        <source>Our platform processes requests in milliseconds so you never wait.</source>
+        <target>我们的平台在毫秒内处理请求，让您无需等待。</target>
+      </trans-unit>
+      <trans-unit id="feature_2_title">
+        <source>Secure by default</source>
+        <target>默认安全</target>
+      </trans-unit>
+      <trans-unit id="feature_2_desc">
+        <source>All data is encrypted at rest and in transit using industry-standard protocols.</source>
+        <target>所有数据均使用行业标准协议在存储和传输时进行加密。</target>
+      </trans-unit>
+      <trans-unit id="cta_heading">
+        <source>Ready to get started?</source>
+        <target>准备好开始了吗？</target>
+      </trans-unit>
+      <trans-unit id="cta_subtext">
+        <source>Join thousands of teams already using our service.</source>
+        <target>加入已在使用我们服务的数千个团队。</target>
+      </trans-unit>
+      <trans-unit id="footer_privacy">
+        <source>Privacy Policy</source>
+        <target>隐私政策</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
