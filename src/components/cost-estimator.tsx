@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react"
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 
 const MARKUP = 30
 const WORDS_PER_PAGE = 800      // average marketing/doc page
@@ -38,6 +39,7 @@ function fmt(n: number): string {
 }
 
 export function CostEstimator() {
+  const t = useTranslations("estimator")
   const [mode, setMode] = useState<"pages" | "words">("pages")
   const [pages, setPages] = useState(10)
   const [words, setWords] = useState(8000)
@@ -53,8 +55,8 @@ export function CostEstimator() {
     <div className="bg-white border border-indigo-200 rounded-2xl overflow-hidden shadow-sm">
       {/* Header */}
       <div className="bg-indigo-600 px-6 py-4">
-        <p className="text-xs font-semibold text-indigo-200 uppercase tracking-widest mb-0.5">Cost estimator</p>
-        <p className="text-white text-sm">Estimate your translation cost before signing up</p>
+        <p className="text-xs font-semibold text-indigo-200 uppercase tracking-widest mb-0.5">{t("title")}</p>
+        <p className="text-white text-sm">{t("subtitle")}</p>
       </div>
 
       <div className="p-6 space-y-5">
@@ -66,7 +68,7 @@ export function CostEstimator() {
               mode === "pages" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            By pages
+            {t("byPages")}
           </button>
           <button
             onClick={() => setMode("words")}
@@ -74,14 +76,14 @@ export function CostEstimator() {
               mode === "words" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            By word count
+            {t("byWords")}
           </button>
         </div>
 
         {/* Content input */}
         {mode === "pages" ? (
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">Number of pages</label>
+            <label className="text-sm font-medium text-gray-700 block mb-2">{t("pagesLabel")}</label>
             <p className="text-3xl font-extrabold text-indigo-600 text-center mb-2">{pages.toLocaleString()}</p>
             <input
               type="range"
@@ -98,7 +100,7 @@ export function CostEstimator() {
           </div>
         ) : (
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">Word count</label>
+            <label className="text-sm font-medium text-gray-700 block mb-2">{t("wordsLabel")}</label>
             <p className="text-3xl font-extrabold text-indigo-600 text-center mb-2">{words.toLocaleString()}</p>
             <input
               type="range"
@@ -117,7 +119,7 @@ export function CostEstimator() {
 
         {/* Languages */}
         <div>
-          <label className="text-sm font-medium text-gray-700 block mb-2">Target languages</label>
+          <label className="text-sm font-medium text-gray-700 block mb-2">{t("langLabel")}</label>
           <p className="text-3xl font-extrabold text-indigo-600 text-center mb-2">{languages}</p>
           <div>
           <input
@@ -136,7 +138,7 @@ export function CostEstimator() {
 
         {/* Model */}
         <div>
-          <label className="text-sm font-medium text-gray-700 block mb-2">AI model</label>
+          <label className="text-sm font-medium text-gray-700 block mb-2">{t("modelLabel")}</label>
           <select
             value={modelId}
             onChange={(e) => setModelId(e.target.value)}
@@ -151,7 +153,7 @@ export function CostEstimator() {
         {/* Result */}
         <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-5 py-4 flex items-center justify-between gap-4">
           <div>
-            <p className="text-xs text-indigo-400 font-medium uppercase tracking-wide mb-0.5">Estimated cost</p>
+            <p className="text-xs text-indigo-400 font-medium uppercase tracking-wide mb-0.5">{t("estimatedCost")}</p>
             <p className="text-3xl font-extrabold text-indigo-600">{fmt(cost)}</p>
             <p className="text-xs text-indigo-400 mt-0.5">
               {totalWords.toLocaleString()} words · {languages} language{languages !== 1 ? "s" : ""} · {model.label}
@@ -161,12 +163,12 @@ export function CostEstimator() {
             href="/login"
             className="shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
           >
-            Start free →
+            {t("startFree")}
           </Link>
         </div>
 
         <p className="text-xs text-gray-400 text-center">
-          Estimate only. Final cost depends on actual content length and model output.
+          {t("disclaimer")}
         </p>
       </div>
     </div>

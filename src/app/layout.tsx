@@ -6,7 +6,7 @@ import { SessionProvider } from "@/components/session-provider"
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" })
 
 export const metadata: Metadata = {
-  title: "Reviso",
+  title: "Jendee AI",
   description: "AI-powered translation with human review — fast, accurate, auditable.",
 }
 

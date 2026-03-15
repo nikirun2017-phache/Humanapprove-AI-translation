@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { useSession } from "next-auth/react"
@@ -61,7 +61,7 @@ function cardLabel(brand: string | null, last4: string | null): string {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function BillingPage() {
+function BillingPageInner() {
   const { data: session } = useSession()
   const searchParams = useSearchParams()
   const [usage, setUsage] = useState<UsageData | null>(null)
@@ -487,5 +487,13 @@ function RequesterView({
         </div>
       )}
     </>
+  )
+}
+
+export default function BillingPage() {
+  return (
+    <Suspense>
+      <BillingPageInner />
+    </Suspense>
   )
 }
