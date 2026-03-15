@@ -27,47 +27,34 @@ export async function POST(req: NextRequest) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session
         const userId = session.metadata?.userId
-        const planId = session.metadata?.planId
-        const subscriptionId = session.subscription as string | null
-        if (userId && planId) {
-          await db.user.update({
-            where: { id: userId },
-            data: {
-              plan: planId,
-              subscriptionStatus: "active",
-              subscriptionId: subscriptionId ?? undefined,
-              stripeCustomerId: session.customer as string,
-            },
-          })
+
+        if (!userId) break
+
+        if (session.mode === "setup" && session.setup_intent) {
+          // User attached a card — save the PaymentMethod ID
+          const setupIntent = await stripe.setupIntents.retrieve(session.setup_intent as string)
+          const paymentMethodId = setupIntent.payment_method as string | null
+          if (paymentMethodId) {
+            await db.user.update({
+              where: { id: userId },
+              data: {
+                subscriptionId: paymentMethodId,   // reuse field to store PM ID
+                subscriptionStatus: "active",
+                plan: "payg",
+                stripeCustomerId: session.customer as string,
+              },
+            })
+          }
         }
         break
       }
 
-      case "customer.subscription.updated": {
-        const sub = event.data.object as Stripe.Subscription
-        const userId = sub.metadata?.userId
-        if (userId) {
-          const status = sub.status // active | past_due | canceled | trialing | etc.
-          const planId = (sub.metadata?.planId ?? "free") as string
-          await db.user.update({
-            where: { id: userId },
-            data: {
-              subscriptionStatus: status,
-              plan: status === "active" || status === "trialing" ? planId : "free",
-              subscriptionId: sub.id,
-            },
-          })
-        }
-        break
-      }
-
-      case "customer.subscription.deleted": {
-        const sub = event.data.object as Stripe.Subscription
-        const userId = sub.metadata?.userId
-        if (userId) {
-          await db.user.update({
-            where: { id: userId },
-            data: { plan: "free", subscriptionStatus: "canceled", subscriptionId: null },
+      case "invoice.paid": {
+        const invoice = event.data.object as Stripe.Invoice
+        if (invoice.customer) {
+          await db.user.updateMany({
+            where: { stripeCustomerId: invoice.customer as string },
+            data: { subscriptionStatus: "active" },
           })
         }
         break
@@ -75,7 +62,6 @@ export async function POST(req: NextRequest) {
 
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice
-        // Find user by Stripe customer ID
         if (invoice.customer) {
           await db.user.updateMany({
             where: { stripeCustomerId: invoice.customer as string },

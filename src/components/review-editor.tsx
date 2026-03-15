@@ -40,6 +40,7 @@ interface ReviewEditorProps {
   currentUserId: string
   totalCount: number
   approvedCount: number
+  sourceFormat?: string // set for Studio-origin projects; undefined for direct XLIFF uploads
 }
 
 const STATUS_ICON: Record<string, string> = {
@@ -56,6 +57,7 @@ export function ReviewEditor({
   currentUserId,
   totalCount,
   approvedCount: initialApproved,
+  sourceFormat,
 }: ReviewEditorProps) {
   const router = useRouter()
   const [units, setUnits] = useState<Unit[]>([])
@@ -543,21 +545,46 @@ export function ReviewEditor({
               </div>
             )}
 
-            {/* Export button (for non-reviewers / admin when approved) */}
-            {!isReviewer ||
-              (projectStatus === "approved" || projectStatus === "exported" ? (
-                <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between">
-                  <p className="text-sm text-gray-600">
-                    Review {projectStatus}. Download revised XLIFF.
-                  </p>
-                  <a
-                    href={`/api/projects/${projectId}/export`}
-                    className="bg-gray-800 hover:bg-gray-900 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors"
-                  >
-                    ↓ Export XLIFF
-                  </a>
+            {/* Export section — visible whenever there are approved units or review is done */}
+            {(approvedCount > 0 || projectStatus === "approved" || projectStatus === "exported") && (
+                <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">Export translations</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {approvedCount} of {totalCount} units approved · download anytime
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    {/* Original format export — only for Studio-origin projects */}
+                    {sourceFormat && (
+                      <a
+                        href={`/api/projects/${projectId}/export-original`}
+                        className="flex items-center justify-between bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors"
+                      >
+                        <span>
+                          ↓ Download as {sourceFormat === "json" ? "JSON" : sourceFormat === "csv" ? "CSV" : sourceFormat === "md" ? "Markdown" : "TXT (from PDF)"}
+                        </span>
+                        <span className="text-xs opacity-75 ml-2">target language only</span>
+                      </a>
+                    )}
+
+                    {/* XLIFF export — always available */}
+                    <a
+                      href={`/api/projects/${projectId}/export`}
+                      className={cn(
+                        "flex items-center justify-between text-sm font-medium px-4 py-2.5 rounded-lg transition-colors",
+                        sourceFormat
+                          ? "border border-gray-300 hover:bg-gray-50 text-gray-700"
+                          : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                      )}
+                    >
+                      <span>↓ Download XLIFF</span>
+                      <span className={cn("text-xs ml-2", sourceFormat ? "text-gray-400" : "opacity-75")}>bilingual source + target</span>
+                    </a>
+                  </div>
                 </div>
-              ) : null)}
+            )}
           </>
         ) : (
           <div className="flex-1 bg-white rounded-xl border border-gray-200 flex items-center justify-center">

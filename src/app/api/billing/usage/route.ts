@@ -1,11 +1,29 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { stripe, PAYG_MARKUP } from "@/lib/stripe"
 import { PROVIDER_INFO } from "@/lib/ai-providers/registry"
 
 const ALL_MODELS = PROVIDER_INFO.flatMap((p) => p.models)
+const COST_PER_CHAR = 3 / 1_000_000 / 4  // rough: $3/M tokens, 4 chars/token
 
-const COST_PER_CHAR = 3 / 1_000_000 / 4  // rough: $3/M tokens, 4 chars/token (Sonnet equivalent)
+/** Estimate AI cost in USD from a list of tasks with their job model */
+function estimateCost(tasks: Array<{ totalUnits: number; job: { model: string } }>): number {
+  let total = 0
+  for (const task of tasks) {
+    const model = ALL_MODELS.find((m) => m.id === task.job.model)
+    const units = task.totalUnits || 0
+    const charsPerUnit = 300
+    const inputTokens = Math.ceil((units * charsPerUnit) / 4)
+    const outputTokens = Math.ceil(inputTokens * 1.1)
+    if (model) {
+      total += (inputTokens * model.inputPricePer1M + outputTokens * model.outputPricePer1M) / 1_000_000
+    } else {
+      total += units * charsPerUnit * 2.1 * COST_PER_CHAR
+    }
+  }
+  return total
+}
 
 export async function GET() {
   const session = await auth()
@@ -17,56 +35,116 @@ export async function GET() {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
 
-  const jobWhere = role === "admin" ? {} : { createdById: userId }
+  // ── ADMIN: platform-wide revenue view ────────────────────────────────────────
+  if (role === "admin") {
+    const [allTasksThisMonth, totalJobs, allRequesters] = await Promise.all([
+      db.translationTask.findMany({
+        where: { createdAt: { gte: startOfMonth }, status: { in: ["completed", "imported"] } },
+        include: { job: { select: { model: true, createdById: true } } },
+      }),
+      db.translationJob.count({ where: { createdAt: { gte: startOfMonth } } }),
+      db.user.findMany({
+        where: { role: "requester" },
+        select: {
+          id: true, name: true, email: true,
+          subscriptionId: true, subscriptionStatus: true, stripeCustomerId: true,
+          translationJobs: {
+            where: { createdAt: { gte: startOfMonth } },
+            select: { id: true },
+          },
+        },
+      }),
+    ])
 
-  const [jobsThisMonth, jobsLastMonth, allTasks, projectsThisMonth, totalProjects] = await Promise.all([
-    db.translationJob.count({
-      where: { ...jobWhere, createdAt: { gte: startOfMonth } },
-    }),
-    db.translationJob.count({
-      where: { ...jobWhere, createdAt: { gte: startOfLastMonth, lt: startOfMonth } },
-    }),
-    db.translationTask.findMany({
-      where: {
-        createdAt: { gte: startOfMonth },
-        status: { in: ["completed", "imported"] },
-        job: jobWhere,
-      },
-      include: { job: { select: { model: true } } },
-    }),
-    db.project.count({
-      where: role === "admin" ? { createdAt: { gte: startOfMonth } } : { createdById: userId, createdAt: { gte: startOfMonth } },
-    }),
-    db.project.count({
-      where: role === "admin" ? {} : { createdById: userId },
-    }),
-  ])
+    // Aggregate cost per user
+    const costByUser = new Map<string, number>()
+    for (const task of allTasksThisMonth) {
+      const uid = task.job.createdById
+      const prev = costByUser.get(uid) ?? 0
+      costByUser.set(uid, prev + estimateCost([task]))
+    }
 
-  // Estimate cost from completed tasks: totalUnits * ~300 chars/unit * cost_per_char * 2.1 (in+out)
-  let estimatedCostThisMonth = 0
-  for (const task of allTasks) {
-    const model = ALL_MODELS.find((m) => m.id === task.job.model)
-    const units = task.totalUnits || 0
-    const charsPerUnit = 300
-    const inputTokens = Math.ceil((units * charsPerUnit) / 4)
-    const outputTokens = Math.ceil(inputTokens * 1.1)
-    if (model) {
-      estimatedCostThisMonth +=
-        (inputTokens * model.inputPricePer1M + outputTokens * model.outputPricePer1M) / 1_000_000
-    } else {
-      // fallback
-      estimatedCostThisMonth += units * charsPerUnit * 2.1 * COST_PER_CHAR
+    const totalApiCost = Array.from(costByUser.values()).reduce((s, v) => s + v, 0)
+    const totalRevenue = totalApiCost * PAYG_MARKUP
+    const activeCustomers = allRequesters.filter((u) => u.subscriptionStatus === "active").length
+
+    const users = allRequesters.map((u) => {
+      const apiCost = costByUser.get(u.id) ?? 0
+      return {
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        jobsThisMonth: u.translationJobs.length,
+        apiCost: Math.round(apiCost * 10000) / 10000,
+        platformRevenue: Math.round(apiCost * PAYG_MARKUP * 100) / 100,
+        cardStatus: u.subscriptionStatus,
+        hasCard: u.subscriptionStatus === "active",
+      }
+    }).sort((a, b) => b.platformRevenue - a.platformRevenue)
+
+    return NextResponse.json({
+      mode: "admin",
+      totalApiCost: Math.round(totalApiCost * 100) / 100,
+      totalRevenue: Math.round(totalRevenue * 100) / 100,
+      grossMarginPct: totalRevenue > 0 ? Math.round(((totalRevenue - totalApiCost) / totalRevenue) * 100) : 0,
+      totalJobs,
+      activeCustomers,
+      markup: PAYG_MARKUP,
+      users,
+    })
+  }
+
+  // ── REQUESTER / REVIEWER: personal usage view ─────────────────────────────────
+  const [jobsThisMonth, jobsLastMonth, tasksThisMonth, projectsThisMonth, totalProjects, user] =
+    await Promise.all([
+      db.translationJob.count({ where: { createdById: userId, createdAt: { gte: startOfMonth } } }),
+      db.translationJob.count({
+        where: { createdById: userId, createdAt: { gte: startOfLastMonth, lt: startOfMonth } },
+      }),
+      db.translationTask.findMany({
+        where: {
+          createdAt: { gte: startOfMonth },
+          status: { in: ["completed", "imported"] },
+          job: { createdById: userId },
+        },
+        include: { job: { select: { model: true } } },
+      }),
+      db.project.count({ where: { createdById: userId, createdAt: { gte: startOfMonth } } }),
+      db.project.count({ where: { createdById: userId } }),
+      db.user.findUnique({
+        where: { id: userId },
+        select: { subscriptionId: true, subscriptionStatus: true, stripeCustomerId: true },
+      }),
+    ])
+
+  const estimatedApiCost = estimateCost(tasksThisMonth)
+  const estimatedCharge = estimatedApiCost * PAYG_MARKUP
+
+  // Fetch card details from Stripe if a payment method is saved
+  let cardLast4: string | null = null
+  let cardBrand: string | null = null
+  if (user?.subscriptionId) {
+    try {
+      const pm = await stripe.paymentMethods.retrieve(user.subscriptionId)
+      cardLast4 = pm.card?.last4 ?? null
+      cardBrand = pm.card?.brand ?? null
+    } catch {
+      // Payment method may have been removed from Stripe
     }
   }
 
-  const languagesThisMonth = allTasks.length
-
   return NextResponse.json({
+    mode: "requester",
     jobsThisMonth,
     jobsLastMonth,
-    languagesThisMonth,
-    estimatedCostThisMonth: Math.round(estimatedCostThisMonth * 100) / 100,
+    languagesThisMonth: tasksThisMonth.length,
+    estimatedApiCost: Math.round(estimatedApiCost * 10000) / 10000,
+    estimatedCharge: Math.round(estimatedCharge * 100) / 100,
     projectsThisMonth,
     totalProjects,
+    markup: PAYG_MARKUP,
+    cardStatus: user?.subscriptionStatus ?? "none",
+    cardLast4,
+    cardBrand,
   })
 }

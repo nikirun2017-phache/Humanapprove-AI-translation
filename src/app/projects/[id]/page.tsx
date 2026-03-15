@@ -22,6 +22,7 @@ export default async function ProjectPage({
     include: {
       createdBy: { select: { name: true } },
       assignedReviewer: { select: { id: true, name: true } },
+      translationTask: { include: { job: { select: { sourceFormat: true } } } },
     },
   })
 
@@ -85,6 +86,7 @@ export default async function ProjectPage({
           currentUserId={userId}
           totalCount={totalCount}
           approvedCount={approvedCount}
+          sourceFormat={project.translationTask?.job?.sourceFormat ?? (project.originalFormat !== "xliff" ? project.originalFormat : undefined)}
         />
       </div>
     </div>

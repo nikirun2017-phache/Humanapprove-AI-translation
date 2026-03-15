@@ -30,6 +30,7 @@ export default async function DashboardPage() {
         createdBy: { select: { name: true } },
         assignedReviewer: { select: { id: true, name: true } },
         _count: { select: { units: true } },
+        translationTask: { include: { job: { select: { sourceFormat: true } } } },
       },
     }),
     db.user.findMany({
@@ -54,7 +55,10 @@ export default async function DashboardPage() {
       const approvedCount = await db.translationUnit.count({
         where: { projectId: p.id, status: "approved" },
       })
-      return { ...p, approvedCount }
+      const sourceFormat =
+        p.translationTask?.job?.sourceFormat ??
+        (p.originalFormat !== "xliff" ? p.originalFormat : undefined)
+      return { ...p, approvedCount, sourceFormat: sourceFormat ?? null }
     })
   )
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { parseJsonSource, parseCsvSource, parseMarkdownSource, parsePdfSource } from "@/lib/source-parser"
+import { parseJsonSource, parseCsvSource, parseMarkdownSource, parsePdfSource, parseXliffSource } from "@/lib/source-parser"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
 
@@ -51,15 +51,15 @@ export async function POST(req: NextRequest) {
   const model = formData.get("model") as string
   const targetLanguagesRaw = formData.get("targetLanguages") as string
   const apiKey = formData.get("apiKey") as string | null
-  const sourceLanguage = (formData.get("sourceLanguage") as string) || "en-US"
+  let sourceLanguage = (formData.get("sourceLanguage") as string) || "en-US"
 
   if (!file || !name || !provider || !model || !targetLanguagesRaw) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
   }
 
   const ext = file.name.split(".").pop()?.toLowerCase()
-  if (ext !== "json" && ext !== "csv" && ext !== "md" && ext !== "pdf") {
-    return NextResponse.json({ error: "Only .json, .csv, .md, or .pdf files are accepted" }, { status: 400 })
+  if (ext !== "json" && ext !== "csv" && ext !== "md" && ext !== "pdf" && ext !== "xliff") {
+    return NextResponse.json({ error: "Only .json, .csv, .md, .pdf, or .xliff files are accepted" }, { status: 400 })
   }
 
   let targetLanguages: string[]
@@ -84,6 +84,15 @@ export async function POST(req: NextRequest) {
       // anthropicKey may be empty string — parsePdfSource will throw a clear error
       // only if the PDF is scanned and no key is available.
       units = await parsePdfSource(buffer, anthropicKey || undefined)
+    } else if (ext === "xliff") {
+      const content = await file.text()
+      const result = parseXliffSource(content)
+      units = result.units
+      // Use the source language embedded in the XLIFF (overrides formData default)
+      if (result.sourceLanguage) sourceLanguage = result.sourceLanguage
+      if (units.length === 0) {
+        return NextResponse.json({ error: "XLIFF file has no untranslated units — all <target> elements are already filled" }, { status: 400 })
+      }
     } else {
       const content = await file.text()
       units = ext === "json" ? parseJsonSource(content) : ext === "md" ? parseMarkdownSource(content) : parseCsvSource(content)
@@ -109,7 +118,7 @@ export async function POST(req: NextRequest) {
 
   const sourceFileContent = ext === "pdf"
     ? Buffer.from(await file.arrayBuffer())
-    : await file.text()
+    : Buffer.from(await file.arrayBuffer())
 
   await Promise.all([
     writeFile(sourceFilePath, sourceFileContent),

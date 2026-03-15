@@ -7,6 +7,7 @@ import type { ProviderInfo } from "@/lib/ai-providers/types"
 
 interface Props {
   providers: ProviderInfo[]
+  hasCard: boolean
 }
 
 type Step = 1 | 2 | 3
@@ -23,6 +24,12 @@ interface PdfProbe {
   estimatedUnits: number
 }
 
+interface XliffMeta {
+  sourceLanguage: string
+  targetLanguage: string   // suggested (from file header)
+  emptyUnitCount: number   // units with empty <target>
+}
+
 interface FileEntry {
   key: string          // stable React key
   file: File
@@ -30,6 +37,7 @@ interface FileEntry {
   parseError: string
   pdfProbe?: PdfProbe  // set after server-side probe for PDF files
   probePending?: boolean
+  xliffMeta?: XliffMeta
 }
 
 function fileKey(f: File) {
@@ -41,7 +49,36 @@ function fileTypeLabel(name: string) {
   if (name.endsWith(".json")) return "JSON"
   if (name.endsWith(".csv")) return "CSV"
   if (name.endsWith(".md")) return "MD"
+  if (name.endsWith(".xliff")) return "XLIFF"
   return "file"
+}
+
+/** Client-side XLIFF metadata extraction — regex-based, no full parse needed */
+function parseXliffMeta(content: string): XliffMeta {
+  const sourceLang = content.match(/source-language="([^"]+)"/)?.[1] ?? "en-US"
+  const targetLang = content.match(/target-language="([^"]+)"/)?.[1] ?? ""
+
+  // Count trans-units (XLIFF 1.x) or units (XLIFF 2.0) where target is empty/missing
+  let emptyUnitCount = 0
+  const unitRegex = /<trans-unit[\s\S]*?<\/trans-unit>/g
+  const unitMatches = content.match(unitRegex) ?? []
+  for (const unit of unitMatches) {
+    const targetMatch = unit.match(/<target[^>]*>([\s\S]*?)<\/target>/)
+    const targetText = targetMatch?.[1]?.replace(/<[^>]+>/g, "").trim() ?? ""
+    if (!targetText) emptyUnitCount++
+  }
+  // XLIFF 2.0 <unit> elements
+  if (emptyUnitCount === 0) {
+    const unit2Regex = /<unit[\s\S]*?<\/unit>/g
+    const unit2Matches = content.match(unit2Regex) ?? []
+    for (const unit of unit2Matches) {
+      const seg = unit.match(/<segment[\s\S]*?<\/segment>/)?.[0] ?? unit
+      const targetText = seg.match(/<target[^>]*>([\s\S]*?)<\/target>/)?.[1]?.replace(/<[^>]+>/g, "").trim() ?? ""
+      if (!targetText) emptyUnitCount++
+    }
+  }
+
+  return { sourceLanguage: sourceLang, targetLanguage: targetLang, emptyUnitCount }
 }
 
 function formatBytes(bytes: number) {
@@ -50,9 +87,10 @@ function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-export function TranslationWizard({ providers }: Props) {
+export function TranslationWizard({ providers, hasCard }: Props) {
   const router = useRouter()
   const [step, setStep] = useState<Step>(1)
+  const [addingCard, setAddingCard] = useState(false)
 
   // Step 1 state — multiple files
   const [entries, setEntries] = useState<FileEntry[]>([])
@@ -68,6 +106,22 @@ export function TranslationWizard({ providers }: Props) {
   // Step 3 state
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
+
+  async function addCard() {
+    setAddingCard(true)
+    try {
+      const res = await fetch("/api/billing/setup-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ returnPath: "/translation-studio" }),
+      })
+      const data = await res.json() as { url?: string; error?: string }
+      if (!res.ok || !data.url) throw new Error(data.error ?? "Failed to start card setup")
+      window.location.href = data.url
+    } catch {
+      setAddingCard(false)
+    }
+  }
 
   const currentProvider = providers.find((p) => p.name === provider)!
 
@@ -90,17 +144,34 @@ export function TranslationWizard({ providers }: Props) {
       reader.onload = (e) => {
         const content = e.target?.result as string
         try {
-          let units: SourceUnit[]
-          if (f.name.endsWith(".json")) {
-            units = flattenForPreview(JSON.parse(content) as unknown)
-          } else if (f.name.endsWith(".md")) {
-            units = parseMarkdownPreview(content)
+          if (f.name.endsWith(".xliff")) {
+            const meta = parseXliffMeta(content)
+            if (meta.emptyUnitCount === 0) {
+              resolve({ key, file: f, preview: [], parseError: "No untranslated units found — all <target> elements are already filled.", xliffMeta: meta })
+            } else {
+              // Build a simple preview from <source> elements
+              const sourceTexts: SourceUnit[] = []
+              const unitRegex = /<trans-unit[^>]+id="([^"]+)"[\s\S]*?<source[^>]*>([\s\S]*?)<\/source>/g
+              let m
+              while ((m = unitRegex.exec(content)) !== null && sourceTexts.length < 10) {
+                const text = m[2].replace(/<[^>]+>/g, "").trim()
+                if (text) sourceTexts.push({ id: m[1], sourceText: text })
+              }
+              resolve({ key, file: f, preview: sourceTexts, parseError: "", xliffMeta: meta })
+            }
           } else {
-            units = parseCsvPreview(content)
+            let units: SourceUnit[]
+            if (f.name.endsWith(".json")) {
+              units = flattenForPreview(JSON.parse(content) as unknown)
+            } else if (f.name.endsWith(".md")) {
+              units = parseMarkdownPreview(content)
+            } else {
+              units = parseCsvPreview(content)
+            }
+            resolve({ key, file: f, preview: units, parseError: "" })
           }
-          resolve({ key, file: f, preview: units, parseError: "" })
         } catch {
-          resolve({ key, file: f, preview: [], parseError: "Could not parse file — check that it is valid JSON, CSV, or Markdown." })
+          resolve({ key, file: f, preview: [], parseError: "Could not parse file — check that it is valid JSON, CSV, Markdown, or XLIFF." })
         }
       }
       reader.readAsText(f)
@@ -136,10 +207,20 @@ export function TranslationWizard({ providers }: Props) {
     setEntries((prev) => {
       const next = [...prev, ...parsed]
       if (!jobName && next.length > 0) {
-        setJobName(next[0].file.name.replace(/\.(json|csv|md|pdf)$/i, ""))
+        setJobName(next[0].file.name.replace(/\.(json|csv|md|pdf|xliff)$/i, ""))
       }
       return next
     })
+
+    // Auto-select detected target language from XLIFF files
+    for (const entry of parsed) {
+      if (entry.xliffMeta?.targetLanguage) {
+        const lang = entry.xliffMeta.targetLanguage
+        if (STUDIO_LANGUAGES.some((l) => l.code === lang)) {
+          setSelectedLangs((s) => new Set([...s, lang]))
+        }
+      }
+    }
 
     // Fire PDF probes in background
     for (const entry of parsed) {
@@ -163,7 +244,7 @@ export function TranslationWizard({ providers }: Props) {
   const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault()
     const files = Array.from(e.dataTransfer.files).filter((f) =>
-      /\.(json|csv|md|pdf)$/i.test(f.name)
+      /\.(json|csv|md|pdf|xliff)$/i.test(f.name)
     )
     await addFiles(files)
   }, [entries, jobName]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -190,10 +271,11 @@ export function TranslationWizard({ providers }: Props) {
     for (const entry of entries) {
       const fd = new FormData()
       fd.append("file", entry.file)
-      fd.append("name", entries.length === 1 ? jobName : `${jobName} — ${entry.file.name.replace(/\.(json|csv|md|pdf)$/i, "")}`)
+      fd.append("name", entries.length === 1 ? jobName : `${jobName} — ${entry.file.name.replace(/\.(json|csv|md|pdf|xliff)$/i, "")}`)
       fd.append("provider", provider)
       fd.append("model", model)
       fd.append("targetLanguages", langs)
+      fd.append("sourceLanguage", entry.xliffMeta?.sourceLanguage ?? "en-US")
 
       const res = await fetch("/api/translation-studio/jobs", { method: "POST", body: fd })
       const data = await res.json() as { jobId?: string; error?: string }
@@ -307,15 +389,15 @@ export function TranslationWizard({ providers }: Props) {
             <input
               id="file-input"
               type="file"
-              accept=".json,.csv,.md,.pdf"
+              accept=".json,.csv,.md,.pdf,.xliff"
               multiple
               className="hidden"
               onChange={handleInputChange}
             />
             <p className="text-gray-500">
-              Drop <strong>.json</strong>, <strong>.csv</strong>, <strong>.md</strong>, or <strong>.pdf</strong> files here, or click to browse
+              Drop <strong>.json</strong>, <strong>.csv</strong>, <strong>.md</strong>, <strong>.pdf</strong>, or <strong>.xliff</strong> files here, or click to browse
             </p>
-            <p className="text-xs text-gray-400 mt-1">Multiple files supported — each becomes a separate translation job</p>
+            <p className="text-xs text-gray-400 mt-1">Multiple files supported — each becomes a separate translation job. XLIFF files must have empty &lt;target&gt; elements.</p>
           </div>
 
           {/* File list */}
@@ -337,6 +419,7 @@ export function TranslationWizard({ providers }: Props) {
                 const isPdf = entry.file.name.endsWith(".pdf")
                 const stringCount = isPdf ? null : entry.preview.length
                 const probe = entry.pdfProbe
+                const isXliff = entry.file.name.endsWith(".xliff")
                 return (
                   <div
                     key={entry.key}
@@ -361,9 +444,19 @@ export function TranslationWizard({ providers }: Props) {
                             ? ` · ${probe.numPages} page${probe.numPages !== 1 ? "s" : ""} · ~${probe.estimatedUnits} strings`
                             : isPdf && entry.probePending
                               ? " · analysing…"
-                              : stringCount !== null
-                                ? ` · ${stringCount} string${stringCount !== 1 ? "s" : ""} detected`
-                                : ""}
+                              : isXliff && entry.xliffMeta
+                                ? ` · ${entry.xliffMeta.emptyUnitCount} untranslated unit${entry.xliffMeta.emptyUnitCount !== 1 ? "s" : ""}`
+                                : stringCount !== null
+                                  ? ` · ${stringCount} string${stringCount !== 1 ? "s" : ""} detected`
+                                  : ""}
+                        </p>
+                      )}
+                      {isXliff && entry.xliffMeta && !entry.parseError && (
+                        <p className="text-xs text-indigo-600 mt-0.5">
+                          Source: <strong>{entry.xliffMeta.sourceLanguage}</strong>
+                          {entry.xliffMeta.targetLanguage && (
+                            <> · Detected target: <strong>{entry.xliffMeta.targetLanguage}</strong> (auto-selected)</>
+                          )}
                         </p>
                       )}
                       {isPdf && probe && !entry.parseError && (
@@ -622,6 +715,7 @@ export function TranslationWizard({ providers }: Props) {
         // Per-file cost rows
         const fileRows = entries.map((entry) => {
           const isPdf = entry.file.name.endsWith(".pdf")
+          const isXliff = entry.file.name.endsWith(".xliff")
           const probe = entry.pdfProbe
 
           let strings: number
@@ -647,6 +741,8 @@ export function TranslationWizard({ providers }: Props) {
               strings = fallbackPages * 40
               pdfLabel = `~${fallbackPages} pages (estimated)`
             }
+          } else if (isXliff) {
+            strings = entry.xliffMeta?.emptyUnitCount ?? entry.preview.length
           } else {
             strings = entry.preview.length
           }
@@ -742,13 +838,31 @@ export function TranslationWizard({ providers }: Props) {
               <pre className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2 whitespace-pre-wrap">{submitError}</pre>
             )}
 
+            {!hasCard && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-amber-900">Payment method required</p>
+                  <p className="text-xs text-amber-700 mt-0.5">
+                    Add a credit card to start AI translations. You will be billed 30× the AI cost, invoiced monthly.
+                  </p>
+                </div>
+                <button
+                  onClick={addCard}
+                  disabled={addingCard}
+                  className="shrink-0 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg"
+                >
+                  {addingCard ? "Redirecting…" : "Add card →"}
+                </button>
+              </div>
+            )}
+
             <div className="flex justify-between">
               <button onClick={() => setStep(2)} className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
                 ← Back
               </button>
               <button
                 onClick={submit}
-                disabled={submitting}
+                disabled={submitting || !hasCard}
                 className="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
               >
                 {submitting

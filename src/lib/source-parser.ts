@@ -3,6 +3,32 @@ export interface SourceUnit {
   sourceText: string
 }
 
+/**
+ * Parse a source-only (or partially translated) XLIFF file into translation units.
+ * Only units where <target> is empty or missing are returned — already-translated
+ * units are skipped so users can complete partial translations.
+ */
+export function parseXliffSource(content: string): {
+  units: SourceUnit[]
+  sourceLanguage: string
+  suggestedTargetLanguage: string
+} {
+  // Lazy-import to avoid circular dependency issues at module load time
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { parseXliff } = require("@/lib/xliff-parser") as typeof import("@/lib/xliff-parser")
+  const parsed = parseXliff(content)
+
+  const units: SourceUnit[] = parsed.units
+    .filter((u) => !u.targetText || u.targetText.trim() === "")
+    .map((u) => ({ id: u.id, sourceText: u.sourceText }))
+
+  return {
+    units,
+    sourceLanguage: parsed.sourceLanguage || "en-US",
+    suggestedTargetLanguage: parsed.targetLanguage || "",
+  }
+}
+
 // Minimum average words per page to consider a PDF "text-based" (not scanned)
 const MIN_WORDS_PER_PAGE = 15
 

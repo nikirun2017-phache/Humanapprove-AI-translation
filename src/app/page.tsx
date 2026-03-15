@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
 import Link from "next/link"
+import { CostEstimator } from "@/components/cost-estimator"
 
 export default async function Home() {
   const session = await auth()
@@ -11,12 +12,20 @@ export default async function Home() {
       {/* Nav */}
       <header className="border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-6xl mx-auto">
         <span className="font-bold text-indigo-600 text-xl tracking-tight">Reviso</span>
-        <Link
-          href="/login"
-          className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          Sign in →
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link
+            href="/vision"
+            className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+          >
+            Our vision
+          </Link>
+          <Link
+            href="/login"
+            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            Sign in →
+          </Link>
+        </div>
       </header>
 
       {/* Hero */}
@@ -169,67 +178,81 @@ export default async function Home() {
       {/* Pricing */}
       <section className="bg-gray-50 border-y border-gray-100 py-20">
         <div className="max-w-4xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-3">Simple pricing</h2>
-          <p className="text-center text-gray-500 text-sm mb-12">Start free. Scale when you need to.</p>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-3">Pay as you go</h2>
+          <p className="text-center text-gray-500 text-sm mb-12">No subscription. No seat fees. Pay only for what you translate.</p>
+
+          {/* Examples */}
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest text-center mb-4">Real-world examples</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             {[
               {
-                name: "Free", price: "$0", period: "", highlight: false,
-                features: ["Up to 3 active projects", "1 reviewer", "Basic XLIFF review", "Community support"],
-                cta: "Get started", href: "/login",
+                scenario: "Small app localization",
+                detail: "500 strings · Claude Sonnet · 5 languages",
+                charge: "$2.40",
+                note: "Typical mobile app update",
               },
               {
-                name: "Basic", price: "$5", period: "/month", highlight: false,
-                features: ["Up to 10 active projects", "Up to 3 reviewers", "XLIFF review & export", "AI Translation Studio", "Email support"],
-                cta: "Start Basic", href: "/login",
+                scenario: "Patient consent forms",
+                detail: "12 documents · Claude Sonnet · 4 languages",
+                charge: "$31.00",
+                note: "Hospital onboarding packet",
+                highlight: true,
               },
               {
-                name: "Pro", price: "$29", period: "/month", highlight: true,
-                features: ["Unlimited projects", "Up to 10 reviewers", "AI Translation Studio", "Priority support", "Advanced analytics"],
-                cta: "Start Pro", href: "/login",
+                scenario: "Scanned PDF manual",
+                detail: "40-page PDF · Vision extraction · 2 languages",
+                charge: "$54.00",
+                note: "Includes Vision AI extraction",
               },
-              {
-                name: "Enterprise", price: "$99", period: "/month", highlight: false,
-                features: ["Everything in Pro", "Unlimited reviewers", "PDF + Vision AI", "SSO & permissions", "Dedicated success manager", "99.9% SLA"],
-                cta: "Contact sales", href: "mailto:sales@reviso.io",
-              },
-            ].map((plan) => (
+            ].map((ex) => (
               <div
-                key={plan.name}
-                className={`relative rounded-xl border p-6 flex flex-col bg-white ${
-                  plan.highlight ? "border-indigo-400 shadow-md" : "border-gray-200"
+                key={ex.scenario}
+                className={`relative rounded-xl border p-5 bg-white ${
+                  ex.highlight ? "border-indigo-300 shadow-sm" : "border-gray-200"
                 }`}
               >
-                {plan.highlight && (
+                {ex.highlight && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-indigo-600 text-white text-xs font-medium px-3 py-1 rounded-full">Most popular</span>
+                    <span className="bg-indigo-600 text-white text-xs font-medium px-3 py-1 rounded-full">Most common</span>
                   </div>
                 )}
-                <h3 className="font-bold text-gray-900 text-lg">{plan.name}</h3>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {plan.price}
-                  {plan.period && <span className="text-sm font-normal text-gray-400">{plan.period}</span>}
-                </p>
-                <ul className="mt-4 mb-6 flex-1 space-y-2">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-gray-600">
-                      <span className="text-green-500 mt-0.5 shrink-0">✓</span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href={plan.href}
-                  className={`block text-center py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    plan.highlight
-                      ? "bg-indigo-600 hover:bg-indigo-700 text-white"
-                      : "border border-gray-300 hover:bg-gray-50 text-gray-700"
-                  }`}
-                >
-                  {plan.cta}
-                </Link>
+                <p className="font-semibold text-gray-900 text-sm mb-1">{ex.scenario}</p>
+                <p className="text-xs text-gray-400 mb-4 leading-relaxed">{ex.detail}</p>
+                <div className="border-t border-gray-100 pt-3 text-right">
+                  <p className="text-xs text-gray-400">Estimated cost</p>
+                  <p className="text-2xl font-bold text-indigo-600">{ex.charge}</p>
+                </div>
+                <p className="text-xs text-gray-400 mt-2 italic">{ex.note}</p>
               </div>
             ))}
+          </div>
+
+          {/* Estimator */}
+          <div className="mb-8">
+            <CostEstimator />
+          </div>
+
+          {/* Included */}
+          <div className="bg-white border border-gray-200 rounded-2xl p-6">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Everything included — no tiers</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {[
+                "Unlimited projects & languages",
+                "All AI models (Claude, GPT-4o, Gemini, DeepSeek)",
+                "Human review workflow",
+                "PDF & Vision AI extraction",
+                "Full audit trail",
+                "XLIFF, JSON, CSV, Markdown support",
+                "Role-based access (admin, reviewer, requester)",
+                "Download in original format",
+                "Email support",
+              ].map((f) => (
+                <div key={f} className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-green-500 mt-0.5 shrink-0">✓</span>
+                  {f}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

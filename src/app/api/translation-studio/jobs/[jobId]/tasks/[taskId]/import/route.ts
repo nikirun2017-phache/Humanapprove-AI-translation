@@ -62,6 +62,7 @@ export async function POST(
         sourceLanguage: parsed.sourceLanguage,
         targetLanguage: parsed.targetLanguage,
         xliffFileUrl: task.xliffFileUrl!,
+        originalFormat: job.sourceFormat, // enables "export as original format" later
         status: reviewerId ? "in_review" : "pending_assignment",
         createdById: userId,
         assignedReviewerId: reviewerId,

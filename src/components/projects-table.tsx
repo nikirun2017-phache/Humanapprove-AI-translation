@@ -16,6 +16,7 @@ interface Project {
   _count: { units: number }
   createdBy: { name: string }
   assignedReviewer: { id: string; name: string } | null
+  sourceFormat: string | null
 }
 
 interface ReviewerUser {
@@ -38,6 +39,7 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [deleting, setDeleting] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [exportingCleaned, setExportingCleaned] = useState(false)
 
   const reviewers = useMemo(() => {
     const names = new Set(projects.map((p) => p.assignedReviewer?.name).filter(Boolean) as string[])
@@ -117,6 +119,19 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
     )
   }
 
+  async function exportOriginal(id: string, name: string, format: string) {
+    const res = await fetch(`/api/projects/${id}/export-original`)
+    if (!res.ok) return
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    const ext = format === "pdf" ? "txt" : format
+    a.download = `${name.replace(/[^a-z0-9]/gi, "_")}-translated.${ext}`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   async function assignReviewer(projectId: string, reviewerId: string | null) {
     const res = await fetch(`/api/projects/${projectId}`, {
       method: "PATCH",
@@ -143,6 +158,20 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
     }
     setExporting(false)
   }
+
+  async function exportSelectedCleaned() {
+    setExportingCleaned(true)
+    for (const id of Array.from(selected)) {
+      const project = projects.find((p) => p.id === id)
+      if (project?.sourceFormat) await exportOriginal(id, project.name, project.sourceFormat)
+    }
+    setExportingCleaned(false)
+  }
+
+  const selectedWithCleanedCount = Array.from(selected).filter((id) => {
+    const p = projects.find((p) => p.id === id)
+    return p?.sourceFormat
+  }).length
 
   const selectedCount = selected.size
 
@@ -183,10 +212,19 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
             <button
               onClick={exportSelected}
               disabled={exporting}
-              className="text-sm bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-3 py-2 rounded-lg font-medium"
+              className="text-sm border border-gray-300 hover:bg-gray-50 disabled:opacity-50 text-gray-700 px-3 py-2 rounded-lg font-medium"
             >
-              {exporting ? "Exporting…" : `Export ${selectedCount}`}
+              {exporting ? "Exporting…" : `↓ XLIFF (${selectedCount})`}
             </button>
+            {selectedWithCleanedCount > 0 && (
+              <button
+                onClick={exportSelectedCleaned}
+                disabled={exportingCleaned}
+                className="text-sm bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-3 py-2 rounded-lg font-medium"
+              >
+                {exportingCleaned ? "Downloading…" : `↓ Cleaned (${selectedWithCleanedCount})`}
+              </button>
+            )}
             {(role === "admin" || role === "requester") && (
               <button
                 onClick={deleteSelected}
@@ -307,12 +345,21 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
                         >
                           {role === "reviewer" ? "Review →" : "View →"}
                         </Link>
+                        {project.sourceFormat && (
+                          <button
+                            onClick={() => exportOriginal(project.id, project.name, project.sourceFormat!)}
+                            className="text-indigo-500 hover:text-indigo-700 text-xs font-medium"
+                            title={`Download cleaned ${project.sourceFormat.toUpperCase()}`}
+                          >
+                            ↓ {project.sourceFormat === "pdf" ? "TXT" : project.sourceFormat.toUpperCase()}
+                          </button>
+                        )}
                         <button
                           onClick={() => exportProject(project.id, project.name)}
                           className="text-gray-400 hover:text-gray-600 text-xs"
                           title="Export XLIFF"
                         >
-                          Export
+                          ↓ XLIFF
                         </button>
                         {(role === "admin" || role === "requester") && (
                           <button
