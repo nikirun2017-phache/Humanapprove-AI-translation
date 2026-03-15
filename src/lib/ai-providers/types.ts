@@ -28,6 +28,8 @@ export interface AIProvider {
 export interface ModelOption {
   id: string
   label: string
+  inputPricePer1M: number  // USD per million input tokens
+  outputPricePer1M: number // USD per million output tokens
 }
 
 export interface ProviderInfo {

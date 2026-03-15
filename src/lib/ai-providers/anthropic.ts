@@ -59,16 +59,17 @@ function parseTranslationResponse(
   // Extract JSON array from the response (handles markdown code fences)
   const jsonMatch = text.match(/\[[\s\S]*\]/)
   if (!jsonMatch) {
-    // Fallback: return empty translations
-    return originalUnits.map((u) => ({ id: u.id, translatedText: u.sourceText }))
+    throw new Error(`Translation response did not contain a JSON array. Model output: ${text.slice(0, 300)}`)
   }
-  try {
-    const parsed = JSON.parse(jsonMatch[0]) as { id: string; translatedText: string }[]
-    return parsed.map((item) => ({
-      id: String(item.id),
-      translatedText: String(item.translatedText ?? ""),
-    }))
-  } catch {
-    return originalUnits.map((u) => ({ id: u.id, translatedText: u.sourceText }))
+  const parsed = JSON.parse(jsonMatch[0]) as { id: string; translatedText: string }[]
+  const result = parsed.map((item) => ({
+    id: String(item.id),
+    translatedText: String(item.translatedText ?? ""),
+  }))
+  // Sanity check: if every item came back empty or identical to source, reject
+  const allEmpty = result.every((r) => !r.translatedText.trim())
+  if (allEmpty) {
+    throw new Error("Translation response returned empty translations for all units")
   }
+  return result
 }

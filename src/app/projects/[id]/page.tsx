@@ -37,7 +37,9 @@ export default async function ProjectPage({
   }
 
   const isReviewer =
-    role === "admin" || project.assignedReviewerId === userId
+    role === "admin" ||
+    project.assignedReviewerId === userId ||
+    project.createdById === userId
 
   const totalCount = await db.translationUnit.count({ where: { projectId: id } })
   const approvedCount = await db.translationUnit.count({

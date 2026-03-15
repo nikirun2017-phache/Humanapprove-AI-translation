@@ -20,6 +20,11 @@ export default function NewProjectPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [detectedLang, setDetectedLang] = useState<{ src: string; tgt: string } | null>(null)
+  const [fileStats, setFileStats] = useState<{
+    unitCount: number
+    wordCount: number
+    isBilingual: boolean
+  } | null>(null)
 
   useEffect(() => {
     fetch("/api/users?role=reviewer")
@@ -43,6 +48,16 @@ export default function NewProjectPage() {
           tgt: tgtMatch?.[1] || "?",
         })
       }
+
+      // Count segments and target words
+      const unitCount = (text.match(/<trans-unit|<unit\b/g) || []).length
+      const targetMatches = [...text.matchAll(/<target[^>]*>([\s\S]*?)<\/target>/g)]
+      const targetWords = targetMatches
+        .map((m) => m[1].replace(/<[^>]+>/g, " ").trim())
+        .join(" ")
+        .split(/\s+/)
+        .filter(Boolean).length
+      setFileStats({ unitCount, wordCount: targetWords, isBilingual: targetWords > 0 })
     } catch {
       // ignore
     }
@@ -151,6 +166,94 @@ export default function NewProjectPage() {
               </label>
             </div>
           </div>
+
+          {file && fileStats && (() => {
+            const LIGHT_RATE = 0.02
+            const LQA_RATE = 0.05
+            const WORDS_PER_HOUR = 1200
+            const hours = fileStats.wordCount / WORDS_PER_HOUR
+            const lightCost = fileStats.wordCount * LIGHT_RATE
+            const lqaCost = fileStats.wordCount * LQA_RATE
+
+            function fmtCost(n: number) {
+              return `$${n.toFixed(2)}`
+            }
+
+            return (
+              <div className="rounded-xl border border-gray-200 overflow-hidden text-sm">
+                <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100">
+                  <span className="font-medium text-gray-900">
+                    {fileStats.isBilingual ? "Human Review Estimate" : "File Analysis"}
+                  </span>
+                  {fileStats.isBilingual ? (
+                    <span className="text-xs font-medium bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                      Bilingual ✓
+                    </span>
+                  ) : (
+                    <span className="text-xs font-medium bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+                      Source-only
+                    </span>
+                  )}
+                </div>
+
+                <div className="px-4 py-3 space-y-1.5 border-b border-gray-100">
+                  <div className="flex justify-between text-gray-600">
+                    <span>Segments</span>
+                    <span className="font-medium text-gray-900">{fileStats.unitCount.toLocaleString()} units</span>
+                  </div>
+                  {fileStats.isBilingual ? (
+                    <>
+                      <div className="flex justify-between text-gray-600">
+                        <span>Word count (target)</span>
+                        <span className="font-medium text-gray-900">{fileStats.wordCount.toLocaleString()} words</span>
+                      </div>
+                      <div className="flex justify-between text-gray-600">
+                        <span>Est. review time</span>
+                        <span className="font-medium text-gray-900">
+                          ~{hours < 1 ? `${Math.round(hours * 60)} min` : `${hours.toFixed(1)} hrs`}
+                          <span className="text-xs text-gray-400 ml-1">@ {WORDS_PER_HOUR.toLocaleString()} words/hr</span>
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex justify-between text-gray-600">
+                      <span>Target content</span>
+                      <span className="text-gray-400 italic">None detected</span>
+                    </div>
+                  )}
+                </div>
+
+                {fileStats.isBilingual ? (
+                  <>
+                    <div className="grid grid-cols-3 px-4 py-2 bg-gray-50 text-xs text-gray-500 border-b border-gray-100">
+                      <span></span>
+                      <span className="text-center font-medium">Light review</span>
+                      <span className="text-center font-medium">Full LQA</span>
+                    </div>
+                    <div className="grid grid-cols-3 px-4 py-2 text-gray-600 border-b border-gray-100">
+                      <span>Rate</span>
+                      <span className="text-center">${LIGHT_RATE.toFixed(2)}/word</span>
+                      <span className="text-center">${LQA_RATE.toFixed(2)}/word</span>
+                    </div>
+                    <div className="grid grid-cols-3 px-4 py-2.5 text-gray-900 font-semibold border-b border-gray-100">
+                      <span>Est. cost</span>
+                      <span className="text-center text-indigo-700">{fmtCost(lightCost)}</span>
+                      <span className="text-center text-indigo-700">{fmtCost(lqaCost)}</span>
+                    </div>
+                    <div className="px-4 py-2.5 bg-amber-50 text-xs text-amber-700">
+                      ⚠ Estimate only. Actual cost varies by content complexity and reviewer speed.
+                    </div>
+                  </>
+                ) : (
+                  <div className="px-4 py-3 bg-blue-50 text-xs text-blue-700">
+                    Human review estimate not applicable — no existing translations found. Use{" "}
+                    <a href="/translation-studio" className="underline font-medium">Translation Studio</a>{" "}
+                    to generate AI translations first.
+                  </div>
+                )}
+              </div>
+            )
+          })()}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">

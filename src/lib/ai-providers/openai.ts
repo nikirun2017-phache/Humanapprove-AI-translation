@@ -54,21 +54,23 @@ function buildProvider(baseUrl: string, providerName: "openai" | "deepseek"): AI
 }
 
 function parseResponse(text: string, original: TranslationBatch["units"]): TranslatedUnit[] {
-  try {
-    const parsed = JSON.parse(text) as Record<string, unknown>
-    // Handle { "translations": [...] } or direct array
-    const arr = Array.isArray(parsed)
-      ? parsed
-      : Array.isArray(parsed.translations)
-        ? (parsed.translations as unknown[])
-        : []
-    return (arr as { id: string; translatedText: string }[]).map((item) => ({
-      id: String(item.id),
-      translatedText: String(item.translatedText ?? ""),
-    }))
-  } catch {
-    return original.map((u) => ({ id: u.id, translatedText: u.sourceText }))
+  const parsed = JSON.parse(text) as Record<string, unknown>
+  // Handle { "translations": [...] } or direct array
+  const arr = Array.isArray(parsed)
+    ? parsed
+    : Array.isArray(parsed.translations)
+      ? (parsed.translations as unknown[])
+      : []
+  if (arr.length === 0) {
+    throw new Error(`Translation response contained no items. Model output: ${text.slice(0, 300)}`)
   }
+  const result = (arr as { id: string; translatedText: string }[]).map((item) => ({
+    id: String(item.id),
+    translatedText: String(item.translatedText ?? ""),
+  }))
+  const allEmpty = result.every((r) => !r.translatedText.trim())
+  if (allEmpty) throw new Error("Translation response returned empty translations for all units")
+  return result
 }
 
 export const openaiProvider = buildProvider("https://api.openai.com/v1", "openai")

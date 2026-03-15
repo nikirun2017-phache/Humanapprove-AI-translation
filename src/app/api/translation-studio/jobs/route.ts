@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { parseJsonSource, parseCsvSource, parseMarkdownSource } from "@/lib/source-parser"
+import { parseJsonSource, parseCsvSource, parseMarkdownSource, parsePdfSource } from "@/lib/source-parser"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
 
@@ -58,8 +58,8 @@ export async function POST(req: NextRequest) {
   }
 
   const ext = file.name.split(".").pop()?.toLowerCase()
-  if (ext !== "json" && ext !== "csv" && ext !== "md") {
-    return NextResponse.json({ error: "Only .json, .csv, or .md files are accepted" }, { status: 400 })
+  if (ext !== "json" && ext !== "csv" && ext !== "md" && ext !== "pdf") {
+    return NextResponse.json({ error: "Only .json, .csv, .md, or .pdf files are accepted" }, { status: 400 })
   }
 
   let targetLanguages: string[]
@@ -70,10 +70,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "targetLanguages must be a non-empty JSON array" }, { status: 400 })
   }
 
-  const content = await file.text()
   let units
   try {
-    units = ext === "json" ? parseJsonSource(content) : ext === "md" ? parseMarkdownSource(content) : parseCsvSource(content)
+    if (ext === "pdf") {
+      // Resolve Anthropic API key — only needed as fallback for scanned PDFs.
+      // Text-based PDFs are extracted directly (free, no API key required).
+      let anthropicKey = apiKey?.trim() || ""
+      if (!anthropicKey) {
+        const systemKey = await db.systemSetting.findUnique({ where: { key: "ai_anthropic_key" } })
+        anthropicKey = systemKey?.value ?? ""
+      }
+      const buffer = Buffer.from(await file.arrayBuffer())
+      // anthropicKey may be empty string — parsePdfSource will throw a clear error
+      // only if the PDF is scanned and no key is available.
+      units = await parsePdfSource(buffer, anthropicKey || undefined)
+    } else {
+      const content = await file.text()
+      units = ext === "json" ? parseJsonSource(content) : ext === "md" ? parseMarkdownSource(content) : parseCsvSource(content)
+    }
   } catch (err) {
     return NextResponse.json({ error: `Failed to parse file: ${(err as Error).message}` }, { status: 400 })
   }
@@ -93,8 +107,12 @@ export async function POST(req: NextRequest) {
   const sourceFilePath = path.join(uploadDir, sourceFileName)
   const unitsFilePath = path.join(uploadDir, unitsFileName)
 
+  const sourceFileContent = ext === "pdf"
+    ? Buffer.from(await file.arrayBuffer())
+    : await file.text()
+
   await Promise.all([
-    writeFile(sourceFilePath, content, "utf-8"),
+    writeFile(sourceFilePath, sourceFileContent),
     writeFile(unitsFilePath, JSON.stringify(units), "utf-8"),
   ])
 

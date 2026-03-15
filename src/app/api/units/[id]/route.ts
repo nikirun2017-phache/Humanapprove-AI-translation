@@ -23,12 +23,8 @@ export async function PATCH(
 
   if (!unit) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
-  // Only the assigned reviewer or admin can edit
   const { id: userId, role } = session.user
-  if (
-    role !== "admin" &&
-    unit.project.assignedReviewerId !== userId
-  ) {
+  if (role !== "admin" && unit.project.assignedReviewerId !== userId && unit.project.createdById !== userId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
@@ -39,6 +35,19 @@ export async function PATCH(
       ...(status !== undefined && { status }),
     },
   })
+
+  // Write audit log when target text is actually revised
+  if (revisedTarget !== undefined && revisedTarget !== unit.revisedTarget && revisedTarget !== unit.targetText) {
+    await db.auditLog.create({
+      data: {
+        projectId: unit.projectId,
+        unitId: id,
+        userId,
+        action: "revised",
+        detail: null,
+      },
+    })
+  }
 
   return NextResponse.json(updated)
 }

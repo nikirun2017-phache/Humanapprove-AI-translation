@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { getStudioLanguageName } from "@/lib/languages"
 import { cn } from "@/lib/utils"
 
@@ -38,9 +39,11 @@ const STATUS_STYLES: Record<string, string> = {
 }
 
 export function JobProgress({ initialJob }: Props) {
+  const router = useRouter()
   const [job, setJob] = useState<Job>(initialJob)
   const [paused, setPaused] = useState(false)
   const [importing, setImporting] = useState<Record<string, boolean>>({})
+  const [importingAll, setImportingAll] = useState(false)
   const [retrying, setRetrying] = useState<Record<string, boolean>>({})
   const runningRef = useRef(false)
   const pausedRef = useRef(false)
@@ -140,10 +143,13 @@ export function JobProgress({ initialJob }: Props) {
   }
 
   async function handleImportAll() {
+    setImportingAll(true)
     const completed = job.tasks.filter((t) => t.status === "completed")
     for (const task of completed) {
       await handleImport(task)
     }
+    setImportingAll(false)
+    router.push("/dashboard")
   }
 
   function downloadTask(task: Task) {
@@ -163,9 +169,10 @@ export function JobProgress({ initialJob }: Props) {
     }
   }
 
-  const completedCount = tasks.filter((t) => t.status === "completed" || t.status === "imported").length
+  const completedCount = tasks.filter((t) => t.status === "completed").length
   const failedCount = tasks.filter((t) => t.status === "failed").length
   const importedCount = tasks.filter((t) => t.status === "imported").length
+  const readyCount = tasks.filter((t) => t.status === "completed" || t.status === "imported").length
 
   return (
     <div className="space-y-5">
@@ -201,21 +208,13 @@ export function JobProgress({ initialJob }: Props) {
               Retry failed ({failedCount})
             </button>
           )}
-          {completedCount > 0 && (
-            <>
-              <button
-                onClick={downloadAll}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Download all ({completedCount})
-              </button>
-              <button
-                onClick={handleImportAll}
-                className="px-3 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-              >
-                Import all as projects
-              </button>
-            </>
+          {readyCount > 0 && (
+            <button
+              onClick={downloadAll}
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Download all ({readyCount})
+            </button>
           )}
         </div>
       </div>
@@ -236,16 +235,55 @@ export function JobProgress({ initialJob }: Props) {
             style={{ width: `${overallPct}%` }}
           />
         </div>
-        {allDone && (
-          <p className="text-xs text-green-600 mt-2 font-medium">
-            All languages processed.{" "}
-            <Link href="/dashboard" className="underline">Go to Dashboard</Link>
-          </p>
-        )}
         {paused && !allDone && (
           <p className="text-xs text-yellow-600 mt-2">Paused — remaining languages will not start until resumed.</p>
         )}
       </div>
+
+      {/* Completion banner — shown when all done and at least one task can be imported */}
+      {allDone && completedCount > 0 && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-5 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-green-900">
+              Translation complete — {completedCount} language{completedCount !== 1 ? "s" : ""} ready for human review
+            </p>
+            <p className="text-xs text-green-700 mt-0.5">
+              Import {completedCount === 1 ? "it" : "all"} as a review project to start approving, rejecting, and editing segments.
+            </p>
+          </div>
+          <button
+            onClick={handleImportAll}
+            disabled={importingAll}
+            className="shrink-0 bg-green-700 hover:bg-green-800 disabled:opacity-60 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors whitespace-nowrap"
+          >
+            {importingAll
+              ? "Importing…"
+              : completedCount === 1
+                ? "Import as review project →"
+                : `Import all ${completedCount} as review projects →`}
+          </button>
+        </div>
+      )}
+
+      {/* All imported banner */}
+      {allDone && completedCount === 0 && importedCount > 0 && (
+        <div className="bg-purple-50 border border-purple-200 rounded-xl p-5 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-purple-900">
+              {importedCount} review project{importedCount !== 1 ? "s" : ""} created
+            </p>
+            <p className="text-xs text-purple-700 mt-0.5">
+              Head to your dashboard to assign reviewers and start the review workflow.
+            </p>
+          </div>
+          <Link
+            href="/dashboard"
+            className="shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors whitespace-nowrap"
+          >
+            Go to Dashboard →
+          </Link>
+        </div>
+      )}
 
       {/* Task list */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">

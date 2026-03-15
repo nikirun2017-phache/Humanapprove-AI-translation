@@ -23,11 +23,10 @@ export async function POST(
   if (!unit) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
   const { id: userId, role } = session.user
-  if (role !== "admin" && unit.project.assignedReviewerId !== userId) {
+  if (role !== "admin" && unit.project.assignedReviewerId !== userId && unit.project.createdById !== userId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  // Set status to rejected; optionally add a comment with the reason
   const [updated] = await db.$transaction([
     db.translationUnit.update({
       where: { id },
@@ -44,6 +43,15 @@ export async function POST(
           }),
         ]
       : []),
+    db.auditLog.create({
+      data: {
+        projectId: unit.projectId,
+        unitId: id,
+        userId,
+        action: "rejected",
+        detail: reason ?? null,
+      },
+    }),
   ])
 
   return NextResponse.json(updated)

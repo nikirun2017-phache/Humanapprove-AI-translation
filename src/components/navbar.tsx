@@ -19,13 +19,14 @@ export function Navbar() {
     ...(role !== "reviewer" ? [{ href: "/translation-studio", label: "Translation Studio" }] : []),
     ...(role === "admin" ? [{ href: "/admin/users", label: "Users" }] : []),
     ...(role === "admin" ? [{ href: "/admin/settings", label: "Settings" }] : []),
+    { href: "/billing", label: "Billing" },
   ]
 
   return (
     <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-6">
-        <Link href="/dashboard" className="font-semibold text-indigo-600 text-lg">
-          XLIFF Review
+        <Link href="/dashboard" className="font-semibold text-indigo-600 text-lg tracking-tight">
+          Reviso
         </Link>
         <div className="flex gap-4">
           {links.map((link) => (

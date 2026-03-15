@@ -3,16 +3,12 @@ import { redirect } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { TranslationWizard } from "@/components/translation-wizard"
 import { PROVIDER_INFO } from "@/lib/ai-providers/registry"
-import { getProviderKeyStatus } from "@/lib/api-key-resolver"
-
 export const dynamic = "force-dynamic"
 
 export default async function TranslationStudioPage() {
   const session = await auth()
   if (!session?.user) redirect("/login")
   if (session.user.role === "reviewer") redirect("/dashboard")
-
-  const keyStatus = await getProviderKeyStatus()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -24,7 +20,7 @@ export default async function TranslationStudioPage() {
             Convert JSON or CSV files to XLIFF using AI, then import them for review.
           </p>
         </div>
-        <TranslationWizard providers={PROVIDER_INFO} keyStatus={keyStatus} />
+        <TranslationWizard providers={PROVIDER_INFO} />
       </main>
     </div>
   )

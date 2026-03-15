@@ -16,6 +16,12 @@ model User {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
+  // Billing
+  stripeCustomerId   String?
+  plan               String  @default("free") // free | pro | enterprise
+  subscriptionStatus String  @default("none") // none | active | canceled | past_due | trialing
+  subscriptionId     String?
+
   projectsCreated  Project[]       @relation("ProjectCreator")
   projectsAssigned Project[]       @relation("ProjectReviewer")
   comments         Comment[]
@@ -23,6 +29,7 @@ model User {
   accounts         Account[]
   sessions         Session[]
   translationJobs  TranslationJob[]
+  auditLogs        AuditLog[]
 }
 
 model Account {
@@ -81,6 +88,7 @@ model Project {
   units            TranslationUnit[]
   reviewSessions   ReviewSession[]
   translationTask  TranslationTask?
+  auditLogs        AuditLog[]
 }
 
 model TranslationUnit {
@@ -156,6 +164,22 @@ model TranslationJob {
 
   createdBy User              @relation(fields: [createdById], references: [id])
   tasks     TranslationTask[]
+}
+
+// Immutable log of reviewer actions: approve, reject, revise, submit
+model AuditLog {
+  id        String   @id @default(cuid())
+  projectId String
+  unitId    String?  // null for project-level events (e.g. "submitted")
+  userId    String
+  action    String   // "approved" | "rejected" | "revised" | "submitted" | "approve_all"
+  detail    String?  // rejection reason, or diff summary
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@index([projectId, createdAt])
 }
 
 // One task = one target language within a job

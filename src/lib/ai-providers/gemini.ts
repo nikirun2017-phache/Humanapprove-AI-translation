@@ -57,14 +57,15 @@ export const geminiProvider: AIProvider = {
 
 function parseResponse(text: string, original: TranslationBatch["units"]): TranslatedUnit[] {
   const jsonMatch = text.match(/\[[\s\S]*\]/)
-  if (!jsonMatch) return original.map((u) => ({ id: u.id, translatedText: u.sourceText }))
-  try {
-    const parsed = JSON.parse(jsonMatch[0]) as { id: string; translatedText: string }[]
-    return parsed.map((item) => ({
-      id: String(item.id),
-      translatedText: String(item.translatedText ?? ""),
-    }))
-  } catch {
-    return original.map((u) => ({ id: u.id, translatedText: u.sourceText }))
+  if (!jsonMatch) {
+    throw new Error(`Translation response did not contain a JSON array. Model output: ${text.slice(0, 300)}`)
   }
+  const parsed = JSON.parse(jsonMatch[0]) as { id: string; translatedText: string }[]
+  const result = parsed.map((item) => ({
+    id: String(item.id),
+    translatedText: String(item.translatedText ?? ""),
+  }))
+  const allEmpty = result.every((r) => !r.translatedText.trim())
+  if (allEmpty) throw new Error("Translation response returned empty translations for all units")
+  return result
 }

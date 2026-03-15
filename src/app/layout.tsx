@@ -6,8 +6,8 @@ import { SessionProvider } from "@/components/session-provider"
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" })
 
 export const metadata: Metadata = {
-  title: "XLIFF Review",
-  description: "Collaborative XLIFF translation review platform",
+  title: "Reviso",
+  description: "AI-powered translation with human review — fast, accurate, auditable.",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

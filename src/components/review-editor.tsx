@@ -5,6 +5,15 @@ import { useRouter } from "next/navigation"
 import { cn, UNIT_STATUS_COLORS } from "@/lib/utils"
 import { CommentPanel } from "@/components/comment-panel"
 
+interface AuditEntry {
+  id: string
+  action: string
+  detail: string | null
+  createdAt: string
+  user: string
+  unit: { id: string; xliffUnitId: string; sourceText: string } | null
+}
+
 interface Comment {
   id: string
   body: string
@@ -67,6 +76,9 @@ export function ReviewEditor({
   const [showApproveAllDialog, setShowApproveAllDialog] = useState(false)
   const [approvingAll, setApprovingAll] = useState(false)
   const [approveAllConfirmText, setApproveAllConfirmText] = useState("")
+  const [rightTab, setRightTab] = useState<"comments" | "audit">("comments")
+  const [auditLog, setAuditLog] = useState<AuditEntry[]>([])
+  const [auditLoading, setAuditLoading] = useState(false)
 
   const PAGE_SIZE = 50
 
@@ -144,17 +156,20 @@ export function ReviewEditor({
   async function approveUnit(unitId: string) {
     if (isDirty) await saveIfDirty(unitId, draftValue)
     setSaving(unitId)
-    const res = await fetch(`/api/units/${unitId}/approve`, { method: "POST" })
-    if (res.ok) {
-      setUnits((prev) =>
-        prev.map((u) => (u.id === unitId ? { ...u, status: "approved" } : u))
-      )
-      setApprovedCount((c) => c + 1)
-      const idx = units.findIndex((u) => u.id === unitId)
-      const next = units.slice(idx + 1).find((u) => u.status !== "approved")
-      if (next) setSelectedId(next.id)
+    try {
+      const res = await fetch(`/api/units/${unitId}/approve`, { method: "POST" })
+      if (res.ok) {
+        setUnits((prev) =>
+          prev.map((u) => (u.id === unitId ? { ...u, status: "approved" } : u))
+        )
+        setApprovedCount((c) => c + 1)
+        const idx = units.findIndex((u) => u.id === unitId)
+        const next = units.slice(idx + 1).find((u) => u.status !== "approved")
+        if (next) setSelectedId(next.id)
+      }
+    } finally {
+      setSaving(null)
     }
-    setSaving(null)
   }
 
   async function rejectUnit(unitId: string) {
@@ -193,14 +208,16 @@ export function ReviewEditor({
     setApprovingAll(true)
     setShowApproveAllDialog(false)
     setApproveAllConfirmText("")
-    const res = await fetch(`/api/projects/${projectId}/approve-all`, { method: "POST" })
-    if (res.ok) {
-      const data = await res.json() as { totalApproved: number }
-      setApprovedCount(data.totalApproved)
-      // Refresh the unit list to reflect new statuses
-      await fetchUnits()
+    try {
+      const res = await fetch(`/api/projects/${projectId}/approve-all`, { method: "POST" })
+      if (res.ok) {
+        const data = await res.json() as { totalApproved: number }
+        setApprovedCount(data.totalApproved)
+        await fetchUnits()
+      }
+    } finally {
+      setApprovingAll(false)
     }
-    setApprovingAll(false)
   }
 
   async function handleCommentAdded(unitId: string, comment: Comment) {
@@ -226,6 +243,29 @@ export function ReviewEditor({
         ),
       }))
     )
+  }
+
+  async function fetchAuditLog() {
+    setAuditLoading(true)
+    const res = await fetch(`/api/projects/${projectId}/audit`)
+    if (res.ok) {
+      const data = await res.json() as AuditEntry[]
+      setAuditLog(data)
+    }
+    setAuditLoading(false)
+  }
+
+  function handleRightTab(tab: "comments" | "audit") {
+    setRightTab(tab)
+    if (tab === "audit" && auditLog.length === 0) fetchAuditLog()
+  }
+
+  const ACTION_LABEL: Record<string, { label: string; color: string }> = {
+    approved: { label: "Approved", color: "text-green-600" },
+    rejected: { label: "Rejected", color: "text-red-500" },
+    revised: { label: "Revised", color: "text-indigo-600" },
+    submitted: { label: "Submitted review", color: "text-purple-600" },
+    approve_all: { label: "Bulk approved", color: "text-amber-600" },
   }
 
   const displayedUnits = units
@@ -526,19 +566,82 @@ export function ReviewEditor({
         )}
       </div>
 
-      {/* Right: Comments */}
-      <div className="w-72 flex-shrink-0">
-        {selectedUnit ? (
-          <CommentPanel
-            unit={selectedUnit}
-            currentUserId={currentUserId}
-            isReviewer={isReviewer}
-            onCommentAdded={(c) => handleCommentAdded(selectedUnit.id, c)}
-            onCommentResolved={handleCommentResolved}
-          />
+      {/* Right: Comments + Audit */}
+      <div className="w-72 flex-shrink-0 flex flex-col gap-0 bg-white rounded-xl border border-gray-200 overflow-hidden">
+        {/* Tab bar */}
+        <div className="flex border-b border-gray-100">
+          <button
+            onClick={() => handleRightTab("comments")}
+            className={cn(
+              "flex-1 text-xs font-medium py-2.5 transition-colors",
+              rightTab === "comments"
+                ? "text-indigo-600 border-b-2 border-indigo-500"
+                : "text-gray-500 hover:text-gray-800"
+            )}
+          >
+            Comments
+          </button>
+          <button
+            onClick={() => handleRightTab("audit")}
+            className={cn(
+              "flex-1 text-xs font-medium py-2.5 transition-colors",
+              rightTab === "audit"
+                ? "text-indigo-600 border-b-2 border-indigo-500"
+                : "text-gray-500 hover:text-gray-800"
+            )}
+          >
+            Audit trail
+          </button>
+        </div>
+
+        {rightTab === "comments" ? (
+          selectedUnit ? (
+            <CommentPanel
+              unit={selectedUnit}
+              currentUserId={currentUserId}
+              isReviewer={isReviewer}
+              onCommentAdded={(c) => handleCommentAdded(selectedUnit.id, c)}
+              onCommentResolved={handleCommentResolved}
+            />
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <p className="text-gray-400 text-xs">No unit selected</p>
+            </div>
+          )
         ) : (
-          <div className="bg-white rounded-xl border border-gray-200 h-full flex items-center justify-center">
-            <p className="text-gray-400 text-xs">No unit selected</p>
+          /* Audit timeline */
+          <div className="flex-1 overflow-y-auto">
+            {auditLoading ? (
+              <div className="p-4 text-xs text-gray-400 text-center">Loading…</div>
+            ) : auditLog.length === 0 ? (
+              <div className="p-4 text-xs text-gray-400 text-center">No activity yet.</div>
+            ) : (
+              <div className="divide-y divide-gray-50">
+                {auditLog.map((entry) => {
+                  const meta = ACTION_LABEL[entry.action] ?? { label: entry.action, color: "text-gray-600" }
+                  return (
+                    <div key={entry.id} className="px-4 py-3">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className={`text-xs font-semibold ${meta.color}`}>{meta.label}</span>
+                        <span className="text-xs text-gray-400">
+                          {new Date(entry.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500">{entry.user}</p>
+                      {entry.unit && (
+                        <p className="text-xs text-gray-400 font-mono mt-0.5 truncate">{entry.unit.xliffUnitId}</p>
+                      )}
+                      {entry.detail && (
+                        <p className="text-xs text-gray-400 mt-0.5 italic">"{entry.detail}"</p>
+                      )}
+                      <p className="text-xs text-gray-300 mt-1">
+                        {new Date(entry.createdAt).toLocaleDateString([], { month: "short", day: "numeric" })}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -16,7 +16,7 @@ export async function POST(
   const project = await db.project.findUnique({ where: { id: projectId } })
   if (!project) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
-  if (role !== "admin" && project.assignedReviewerId !== userId) {
+  if (role !== "admin" && project.assignedReviewerId !== userId && project.createdById !== userId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
@@ -31,6 +31,18 @@ export async function POST(
   const totalApproved = await db.translationUnit.count({
     where: { projectId, status: "approved" },
   })
+
+  // Single audit entry summarising the bulk action
+  if (count > 0) {
+    await db.auditLog.create({
+      data: {
+        projectId,
+        userId,
+        action: "approve_all",
+        detail: `${count} unit${count !== 1 ? "s" : ""} bulk-approved`,
+      },
+    })
+  }
 
   return NextResponse.json({ updated: count, totalApproved })
 }

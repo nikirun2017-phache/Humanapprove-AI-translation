@@ -21,14 +21,24 @@ export async function POST(
   if (!unit) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
   const { id: userId, role } = session.user
-  if (role !== "admin" && unit.project.assignedReviewerId !== userId) {
+  if (role !== "admin" && unit.project.assignedReviewerId !== userId && unit.project.createdById !== userId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  const updated = await db.translationUnit.update({
-    where: { id },
-    data: { status: "approved" },
-  })
+  const [updated] = await db.$transaction([
+    db.translationUnit.update({
+      where: { id },
+      data: { status: "approved" },
+    }),
+    db.auditLog.create({
+      data: {
+        projectId: unit.projectId,
+        unitId: id,
+        userId,
+        action: "approved",
+      },
+    }),
+  ])
 
   return NextResponse.json(updated)
 }
