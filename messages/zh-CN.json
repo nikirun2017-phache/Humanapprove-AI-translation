@@ -1,6 +1,6 @@
 {
   "nav": {
-    "brand": "Jendee AI",
+    "brand": "真谛 AI",
     "vision": "我们的愿景",
     "signIn": "登录 →",
     "home": "首页",
@@ -15,16 +15,16 @@
     "cta2": "了解工作原理"
   },
   "mockPreview": {
-    "caption": "Jendee AI 审核编辑器——一键批准、拒绝或修改"
+    "caption": "真谛 AI 审核编辑器——一键批准、拒绝或修改"
   },
   "howItWorks": {
     "heading": "工作原理",
     "step1Title": "上传您的内容",
-    "step1Body": "拖放 JSON、CSV、Markdown、XLIFF 或 PDF 文件。Jendee AI 自动解析并提取所有可翻译字符串。",
+    "step1Body": "拖放 JSON、CSV、Markdown、XLIFF 或 PDF 文件。真谛 AI 自动解析并提取所有可翻译字符串。",
     "step2Title": "AI 即时翻译",
-    "step2Body": "选择 Claude、GPT-4o、DeepSeek 或 Gemini。提交前获取每种语言的费用估算。翻译同时并行处理所有目标语言。",
+    "step2Body": "选择 Claude、GPT-5、DeepSeek 或 Gemini。提交前获取每种语言的费用估算。翻译同时并行处理所有目标语言。",
     "step3Title": "人工审核与批准",
-    "step3Body": "审核员并排查看原文和译文，就地编辑，一键批准或拒绝。每项操作均记录在审计追踪中。"
+    "step3Body": "审核员查看原文和译文，就地编辑，一键批准或拒绝。每项操作均记录在审计追踪中。"
   },
   "features": {
     "heading": "专为翻译团队打造",
@@ -85,11 +85,11 @@
   },
   "cta": {
     "heading": "准备好发布更好的翻译了吗？",
-    "body": "加入信任 Jendee AI 的团队，更快地完成准确翻译的审核和批准。",
+    "body": "使用真谛 AI 的团队，更快地完成准确翻译的审核和批准。",
     "button": "免费开始 →"
   },
   "footer": {
-    "rights": "© {year} Jendee AI. 保留所有权利。"
+    "rights": "© {year} 真谛 AI. 保留所有权利。"
   },
   "login": {
     "subtitle": "登录您的账户",
@@ -107,7 +107,7 @@
     "description": "大多数翻译工具只是将 AI 附加到现有工作流程上。我们围绕 AI 使之成为可能的事情构建了工作流程。以下是定义它的五大转变。",
     "theShift": "转变",
     "ctaHeading": "准备好在这些支柱上构建了吗？",
-    "ctaBody": "Jendee AI 是这些想法今天在生产中运行的平台。从 AI 翻译、人工审核和完整审计追踪开始——免费。",
+    "ctaBody": "真谛 AI 是这些想法今天在生产中运行的平台。从 AI 翻译、人工审核和完整审计追踪开始——免费。",
     "ctaPrimary": "免费开始",
     "ctaSecondary": "查看产品 →",
     "p1Title": "上下文智能",
