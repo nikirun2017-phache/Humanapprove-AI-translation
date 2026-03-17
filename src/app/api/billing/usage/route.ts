@@ -1,32 +1,38 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { stripe, PAYG_MARKUP } from "@/lib/stripe"
+import { stripe, PAYG_MARKUP, PLATFORM_FEE_PER_WORD, PLATFORM_REVIEW_RATE, AVG_WORDS_PER_UNIT, MIN_JOB_FEE } from "@/lib/stripe"
 import { PROVIDER_INFO } from "@/lib/ai-providers/registry"
 
 const ALL_MODELS = PROVIDER_INFO.flatMap((p) => p.models)
 const COST_PER_CHAR = 3 / 1_000_000 / 4  // rough: $3/M tokens, 4 chars/token
+const CHARS_PER_UNIT = 300
+const WORDS_PER_CHAR = 1 / 5 // ~5 chars per word
 
-// Platform reviewer fee: $0.02/word base rate × 1.5 platform surcharge = $0.03/word
-const PLATFORM_REVIEW_RATE = 0.03
-const AVG_WORDS_PER_UNIT = 15
-
-/** Estimate AI cost in USD from a list of tasks with their job model */
-function estimateCost(tasks: Array<{ totalUnits: number; job: { model: string } }>): number {
+/** Raw AI API cost — what we pay the model provider */
+function estimateApiCost(tasks: Array<{ totalUnits: number; job: { model: string } }>): number {
   let total = 0
   for (const task of tasks) {
     const model = ALL_MODELS.find((m) => m.id === task.job.model)
     const units = task.totalUnits || 0
-    const charsPerUnit = 300
-    const inputTokens = Math.ceil((units * charsPerUnit) / 4)
+    const inputTokens = Math.ceil((units * CHARS_PER_UNIT) / 4)
     const outputTokens = Math.ceil(inputTokens * 1.1)
-    if (model) {
-      total += (inputTokens * model.inputPricePer1M + outputTokens * model.outputPricePer1M) / 1_000_000
-    } else {
-      total += units * charsPerUnit * 2.1 * COST_PER_CHAR
-    }
+    total += model
+      ? (inputTokens * model.inputPricePer1M + outputTokens * model.outputPricePer1M) / 1_000_000
+      : units * CHARS_PER_UNIT * 2.1 * COST_PER_CHAR
   }
   return total
+}
+
+/** Platform service fee based on total words translated */
+function estimatePlatformFee(tasks: Array<{ totalUnits: number }>): number {
+  const totalWords = tasks.reduce((s, t) => s + t.totalUnits * CHARS_PER_UNIT * WORDS_PER_CHAR, 0)
+  return Math.max(MIN_JOB_FEE * tasks.length, totalWords * PLATFORM_FEE_PER_WORD)
+}
+
+/** Total charge to customer = (API cost × markup) + platform fee */
+function estimateCharge(tasks: Array<{ totalUnits: number; job: { model: string } }>): number {
+  return estimateApiCost(tasks) * PAYG_MARKUP + estimatePlatformFee(tasks)
 }
 
 export async function GET() {
@@ -60,27 +66,32 @@ export async function GET() {
       }),
     ])
 
-    // Aggregate cost per user
-    const costByUser = new Map<string, number>()
+    // Aggregate tasks per user, then compute charge (API×markup + platform fee)
+    const tasksByUser = new Map<string, typeof allTasksThisMonth>()
     for (const task of allTasksThisMonth) {
       const uid = task.job.createdById
-      const prev = costByUser.get(uid) ?? 0
-      costByUser.set(uid, prev + estimateCost([task]))
+      const arr = tasksByUser.get(uid) ?? []
+      arr.push(task)
+      tasksByUser.set(uid, arr)
     }
 
-    const totalApiCost = Array.from(costByUser.values()).reduce((s, v) => s + v, 0)
-    const totalRevenue = totalApiCost * PAYG_MARKUP
+    let totalApiCost = 0
+    let totalRevenue = 0
     const activeCustomers = allRequesters.filter((u) => u.subscriptionStatus === "active").length
 
     const users = allRequesters.map((u) => {
-      const apiCost = costByUser.get(u.id) ?? 0
+      const tasks = tasksByUser.get(u.id) ?? []
+      const apiCost = estimateApiCost(tasks)
+      const charge = estimateCharge(tasks)
+      totalApiCost += apiCost
+      totalRevenue += charge
       return {
         id: u.id,
         name: u.name,
         email: u.email,
         jobsThisMonth: u.translationJobs.length,
         apiCost: Math.round(apiCost * 10000) / 10000,
-        platformRevenue: Math.round(apiCost * PAYG_MARKUP * 100) / 100,
+        platformRevenue: Math.round(charge * 100) / 100,
         cardStatus: u.subscriptionStatus,
         hasCard: u.subscriptionStatus === "active",
       }
@@ -126,12 +137,12 @@ export async function GET() {
       }),
     ])
 
-  const estimatedApiCost = estimateCost(tasksThisMonth)
+  const estimatedApiCost = estimateApiCost(tasksThisMonth)
   const platformReviewerFee = platformProjects.reduce(
     (sum, p) => sum + p._count.units * AVG_WORDS_PER_UNIT * PLATFORM_REVIEW_RATE,
     0
   )
-  const estimatedCharge = estimatedApiCost * PAYG_MARKUP + platformReviewerFee
+  const estimatedCharge = estimateCharge(tasksThisMonth) + platformReviewerFee
 
   // Fetch card details from Stripe if a payment method is saved
   let cardLast4: string | null = null

@@ -1123,7 +1123,7 @@ export function TranslationWizard({ providers, hasCard }: Props) {
                 <div>
                   <p className="text-sm font-semibold text-amber-900">Payment method required</p>
                   <p className="text-xs text-amber-700 mt-0.5">
-                    Add a credit card to start AI translations. You will be billed 30× the AI cost, invoiced monthly.
+                    Add a credit card to start AI translations. Billed at 5× the raw AI cost plus a $0.007/word platform fee, invoiced monthly.
                   </p>
                 </div>
                 <button

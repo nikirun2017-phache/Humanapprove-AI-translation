@@ -173,8 +173,8 @@ export default function NewProjectPage() {
           </div>
 
           {file && fileStats && (() => {
-            const LIGHT_RATE = 0.02
-            const LQA_RATE = 0.05
+            const LIGHT_RATE = 0.035
+            const LQA_RATE = 0.090
             const WORDS_PER_HOUR = 1200
             const hours = fileStats.wordCount / WORDS_PER_HOUR
             const lightCost = fileStats.wordCount * LIGHT_RATE
@@ -315,7 +315,7 @@ export default function NewProjectPage() {
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-1">Platform reviewers</p>
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 mb-2 text-xs text-amber-700">
-                  Platform reviewers are certified linguists managed by Jendee AI. A <strong>+150% reviewer fee</strong> ($0.03/word) is added to your invoice.
+                  Platform reviewers are certified linguists managed by Jendee AI. A reviewer fee of <strong>$0.055/word</strong> is added to your invoice.
                 </div>
                 {reviewers.filter((r) => r.isPlatformReviewer).map((r) => {
                   let langs = "no languages"
@@ -334,7 +334,7 @@ export default function NewProjectPage() {
                         <p className="text-sm font-medium text-gray-800">{r.name}</p>
                         <p className="text-xs text-gray-400 truncate">{langs}</p>
                       </div>
-                      <span className="shrink-0 text-xs font-semibold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">+150% fee</span>
+                      <span className="shrink-0 text-xs font-semibold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">$0.055/word</span>
                     </label>
                   )
                 })}
@@ -345,8 +345,8 @@ export default function NewProjectPage() {
             {reviewerType === "platform" && assignedReviewerId && fileStats?.isBilingual && (
               <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                 Platform reviewer fee estimate:{" "}
-                <strong>${(fileStats.wordCount * 0.03).toFixed(2)}</strong>{" "}
-                ({fileStats.wordCount.toLocaleString()} words × $0.03/word)
+                <strong>${(fileStats.wordCount * 0.055).toFixed(2)}</strong>{" "}
+                ({fileStats.wordCount.toLocaleString()} words × $0.055/word)
               </div>
             )}
           </div>
