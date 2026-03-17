@@ -67,26 +67,40 @@ export async function DELETE(
   return new NextResponse(null, { status: 204 })
 }
 
-// PATCH /api/projects/:id - admin can reassign reviewer
+// PATCH /api/projects/:id - admin or project creator can reassign reviewer / update status
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth()
-  if (!session?.user || session.user.role !== "admin") {
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const { id: userId, role } = session.user
+  const { id } = await params
+
+  const project = await db.project.findUnique({ where: { id } })
+  if (!project) return NextResponse.json({ error: "Not found" }, { status: 404 })
+
+  // Admins can patch any project; requesters can only patch their own
+  if (role !== "admin" && project.createdById !== userId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  const { id } = await params
   const body = await req.json()
-  const { assignedReviewerId, status } = body
+  const { assignedReviewerId, reviewerType, status } = body
 
   const updated = await db.project.update({
     where: { id },
     data: {
       ...(assignedReviewerId !== undefined && { assignedReviewerId }),
+      ...(reviewerType !== undefined && { reviewerType }),
       ...(status !== undefined && { status }),
+      // When a reviewer is assigned, move from pending_assignment to in_review
+      ...(assignedReviewerId && project.status === "pending_assignment" && { status: "in_review" }),
+      // When reviewer is cleared, move back to pending_assignment
+      ...(assignedReviewerId === null && { status: "pending_assignment" }),
     },
+    include: { assignedReviewer: { select: { id: true, name: true, isPlatformReviewer: true } } },
   })
 
   return NextResponse.json(updated)

@@ -7,6 +7,10 @@ import { PROVIDER_INFO } from "@/lib/ai-providers/registry"
 const ALL_MODELS = PROVIDER_INFO.flatMap((p) => p.models)
 const COST_PER_CHAR = 3 / 1_000_000 / 4  // rough: $3/M tokens, 4 chars/token
 
+// Platform reviewer fee: $0.02/word base rate × 1.5 platform surcharge = $0.03/word
+const PLATFORM_REVIEW_RATE = 0.03
+const AVG_WORDS_PER_UNIT = 15
+
 /** Estimate AI cost in USD from a list of tasks with their job model */
 function estimateCost(tasks: Array<{ totalUnits: number; job: { model: string } }>): number {
   let total = 0
@@ -95,7 +99,7 @@ export async function GET() {
   }
 
   // ── REQUESTER / REVIEWER: personal usage view ─────────────────────────────────
-  const [jobsThisMonth, jobsLastMonth, tasksThisMonth, projectsThisMonth, totalProjects, user] =
+  const [jobsThisMonth, jobsLastMonth, tasksThisMonth, projectsThisMonth, totalProjects, user, platformProjects] =
     await Promise.all([
       db.translationJob.count({ where: { createdById: userId, createdAt: { gte: startOfMonth } } }),
       db.translationJob.count({
@@ -115,10 +119,19 @@ export async function GET() {
         where: { id: userId },
         select: { subscriptionId: true, subscriptionStatus: true, stripeCustomerId: true },
       }),
+      // Platform reviewer projects this month — billed at $0.03/word
+      db.project.findMany({
+        where: { createdById: userId, reviewerType: "platform", createdAt: { gte: startOfMonth } },
+        include: { _count: { select: { units: true } } },
+      }),
     ])
 
   const estimatedApiCost = estimateCost(tasksThisMonth)
-  const estimatedCharge = estimatedApiCost * PAYG_MARKUP
+  const platformReviewerFee = platformProjects.reduce(
+    (sum, p) => sum + p._count.units * AVG_WORDS_PER_UNIT * PLATFORM_REVIEW_RATE,
+    0
+  )
+  const estimatedCharge = estimatedApiCost * PAYG_MARKUP + platformReviewerFee
 
   // Fetch card details from Stripe if a payment method is saved
   let cardLast4: string | null = null
@@ -140,6 +153,8 @@ export async function GET() {
     languagesThisMonth: tasksThisMonth.length,
     estimatedApiCost: Math.round(estimatedApiCost * 10000) / 10000,
     estimatedCharge: Math.round(estimatedCharge * 100) / 100,
+    platformReviewerFee: Math.round(platformReviewerFee * 100) / 100,
+    platformReviewProjects: platformProjects.length,
     projectsThisMonth,
     totalProjects,
     markup: PAYG_MARKUP,

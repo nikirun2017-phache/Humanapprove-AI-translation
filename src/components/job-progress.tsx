@@ -22,6 +22,7 @@ interface Job {
   provider: string
   model: string
   status: string
+  sourceFormat: string
   tasks: Task[]
   createdBy: { name: string }
 }
@@ -218,6 +219,16 @@ export function JobProgress({ initialJob }: Props) {
           )}
         </div>
       </div>
+
+      {/* PDF text-only notice */}
+      {job.sourceFormat === "pdf" && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-start gap-2">
+          <span className="text-blue-500 mt-0.5 shrink-0">ℹ</span>
+          <p className="text-sm text-blue-800">
+            <strong>Plain text output only.</strong> Translated content is available as .xliff — the original PDF layout and formatting are not reconstructed.
+          </p>
+        </div>
+      )}
 
       {/* Overall progress */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">

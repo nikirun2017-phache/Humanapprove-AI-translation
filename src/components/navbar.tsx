@@ -2,6 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 
@@ -16,6 +17,7 @@ export function Navbar() {
   const links = [
     { href: "/dashboard", label: "Dashboard" },
     ...(role !== "reviewer" ? [{ href: "/projects/new", label: "Upload XLIFF" }] : []),
+    ...(role !== "reviewer" ? [{ href: "/file-pairer", label: "File Pairer" }] : []),
     ...(role !== "reviewer" ? [{ href: "/translation-studio", label: "Translation Studio" }] : []),
     ...(role === "admin" ? [{ href: "/admin/users", label: "Users" }] : []),
     ...(role === "admin" ? [{ href: "/admin/settings", label: "Settings" }] : []),
@@ -25,8 +27,9 @@ export function Navbar() {
   return (
     <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-6">
-        <Link href="/dashboard" className="font-semibold text-indigo-600 text-lg tracking-tight">
-          Jendee AI
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <Image src="/logo.png" alt="Jendee AI" width={32} height={32} className="rounded-full" />
+          <span className="font-semibold text-indigo-600 text-lg tracking-tight">Jendee AI</span>
         </Link>
         <div className="flex gap-4">
           {links.map((link) => (

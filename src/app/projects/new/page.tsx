@@ -9,6 +9,7 @@ interface Reviewer {
   name: string
   email: string
   languages: string
+  isPlatformReviewer: boolean
 }
 
 export default function NewProjectPage() {
@@ -17,6 +18,7 @@ export default function NewProjectPage() {
   const [file, setFile] = useState<File | null>(null)
   const [reviewers, setReviewers] = useState<Reviewer[]>([])
   const [assignedReviewerId, setAssignedReviewerId] = useState("")
+  const [reviewerType, setReviewerType] = useState<"own" | "platform">("own")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [detectedLang, setDetectedLang] = useState<{ src: string; tgt: string } | null>(null)
@@ -76,7 +78,10 @@ export default function NewProjectPage() {
     const formData = new FormData()
     formData.append("name", name.trim())
     formData.append("file", file)
-    if (assignedReviewerId) formData.append("assignedReviewerId", assignedReviewerId)
+    if (assignedReviewerId) {
+      formData.append("assignedReviewerId", assignedReviewerId)
+      formData.append("reviewerType", reviewerType)
+    }
 
     const res = await fetch("/api/projects", {
       method: "POST",
@@ -255,30 +260,95 @@ export default function NewProjectPage() {
             )
           })()}
 
+          {/* ── Reviewer assignment ─────────────────────────────────────── */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Assign reviewer{" "}
               <span className="text-gray-400 font-normal">(optional — auto-matched by language)</span>
             </label>
-            <select
-              value={assignedReviewerId}
-              onChange={(e) => setAssignedReviewerId(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-            >
-              <option value="">Auto-assign by language</option>
-              {reviewers.map((r) => {
-                let langs = "no languages set"
-                try {
-                  const l: string[] = JSON.parse(r.languages)
-                  if (l.length) langs = l.join(", ")
-                } catch {}
-                return (
-                  <option key={r.id} value={r.id}>
-                    {r.name} ({langs})
-                  </option>
-                )
-              })}
-            </select>
+
+            {/* Auto-assign option */}
+            <label className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border cursor-pointer mb-2 transition-colors ${assignedReviewerId === "" ? "border-indigo-400 bg-indigo-50" : "border-gray-200 hover:bg-gray-50"}`}>
+              <input
+                type="radio"
+                name="reviewer"
+                value=""
+                checked={assignedReviewerId === ""}
+                onChange={() => { setAssignedReviewerId(""); setReviewerType("own") }}
+                className="accent-indigo-600"
+              />
+              <div>
+                <p className="text-sm font-medium text-gray-800">Auto-assign by language</p>
+                <p className="text-xs text-gray-400">Platform picks the best available reviewer for the target language</p>
+              </div>
+            </label>
+
+            {/* Your reviewers */}
+            {reviewers.filter((r) => !r.isPlatformReviewer).length > 0 && (
+              <div className="mb-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-1">Your reviewers</p>
+                {reviewers.filter((r) => !r.isPlatformReviewer).map((r) => {
+                  let langs = "no languages"
+                  try { const l: string[] = JSON.parse(r.languages); if (l.length) langs = l.join(", ") } catch {}
+                  return (
+                    <label key={r.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border cursor-pointer mb-1 transition-colors ${assignedReviewerId === r.id && reviewerType === "own" ? "border-indigo-400 bg-indigo-50" : "border-gray-200 hover:bg-gray-50"}`}>
+                      <input
+                        type="radio"
+                        name="reviewer"
+                        value={r.id}
+                        checked={assignedReviewerId === r.id && reviewerType === "own"}
+                        onChange={() => { setAssignedReviewerId(r.id); setReviewerType("own") }}
+                        className="accent-indigo-600"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800">{r.name}</p>
+                        <p className="text-xs text-gray-400 truncate">{langs}</p>
+                      </div>
+                    </label>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Platform reviewers */}
+            {reviewers.filter((r) => r.isPlatformReviewer).length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-1">Platform reviewers</p>
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 mb-2 text-xs text-amber-700">
+                  Platform reviewers are certified linguists managed by Jendee AI. A <strong>+150% reviewer fee</strong> ($0.03/word) is added to your invoice.
+                </div>
+                {reviewers.filter((r) => r.isPlatformReviewer).map((r) => {
+                  let langs = "no languages"
+                  try { const l: string[] = JSON.parse(r.languages); if (l.length) langs = l.join(", ") } catch {}
+                  return (
+                    <label key={r.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border cursor-pointer mb-1 transition-colors ${assignedReviewerId === r.id && reviewerType === "platform" ? "border-amber-400 bg-amber-50" : "border-gray-200 hover:bg-gray-50"}`}>
+                      <input
+                        type="radio"
+                        name="reviewer"
+                        value={r.id}
+                        checked={assignedReviewerId === r.id && reviewerType === "platform"}
+                        onChange={() => { setAssignedReviewerId(r.id); setReviewerType("platform") }}
+                        className="accent-amber-600"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800">{r.name}</p>
+                        <p className="text-xs text-gray-400 truncate">{langs}</p>
+                      </div>
+                      <span className="shrink-0 text-xs font-semibold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">+150% fee</span>
+                    </label>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Platform reviewer fee note when selected */}
+            {reviewerType === "platform" && assignedReviewerId && fileStats?.isBilingual && (
+              <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                Platform reviewer fee estimate:{" "}
+                <strong>${(fileStats.wordCount * 0.03).toFixed(2)}</strong>{" "}
+                ({fileStats.wordCount.toLocaleString()} words × $0.03/word)
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3 pt-2">

@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
       email: true,
       role: true,
       languages: true,
+      isPlatformReviewer: true,
       createdAt: true,
     },
     orderBy: { name: "asc" },

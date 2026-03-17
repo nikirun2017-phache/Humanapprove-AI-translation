@@ -11,8 +11,9 @@ model User {
   email          String    @unique
   name           String
   hashedPassword String?
-  role           String    @default("reviewer") // admin | reviewer | requester
-  languages      String    @default("[]") // JSON array of BCP-47 codes e.g. ["ja-JP","zh-CN"]
+  role               String    @default("reviewer") // admin | reviewer | requester
+  languages          String    @default("[]") // JSON array of BCP-47 codes e.g. ["ja-JP","zh-CN"]
+  isPlatformReviewer Boolean   @default(false)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -79,6 +80,7 @@ model Project {
 
   createdById        String
   assignedReviewerId String?
+  reviewerType       String  @default("own") // "own" | "platform"
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -159,6 +161,9 @@ model TranslationJob {
   model          String
   status         String   @default("pending")
   // pending | running | completed | failed
+  githubPrUrl      String?  // original PR URL, e.g. https://github.com/owner/repo/pull/42
+  githubBranch     String?  // PR head branch, for write-back
+  githubSourcePath String?  // original file path in the repo, for write-back
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

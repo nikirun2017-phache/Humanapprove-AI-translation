@@ -28,15 +28,15 @@ export default async function DashboardPage() {
       orderBy: { createdAt: "desc" },
       include: {
         createdBy: { select: { name: true } },
-        assignedReviewer: { select: { id: true, name: true } },
+        assignedReviewer: { select: { id: true, name: true, isPlatformReviewer: true } },
         _count: { select: { units: true } },
         translationTask: { include: { job: { select: { sourceFormat: true } } } },
       },
     }),
     db.user.findMany({
       where: { role: "reviewer" },
-      select: { id: true, name: true },
-      orderBy: { name: "asc" },
+      select: { id: true, name: true, isPlatformReviewer: true },
+      orderBy: [{ isPlatformReviewer: "asc" }, { name: "asc" }],
     }),
     db.translationUnit.count({ where: { project: where } }),
     db.translationUnit.count({ where: { project: where, status: "approved" } }),
@@ -58,7 +58,7 @@ export default async function DashboardPage() {
       const sourceFormat =
         p.translationTask?.job?.sourceFormat ??
         (p.originalFormat !== "xliff" ? p.originalFormat : undefined)
-      return { ...p, approvedCount, sourceFormat: sourceFormat ?? null }
+      return { ...p, approvedCount, sourceFormat: sourceFormat ?? null, reviewerType: p.reviewerType ?? "own" }
     })
   )
 
@@ -142,6 +142,22 @@ export default async function DashboardPage() {
                   className="shrink-0 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
                 >
                   Upload XLIFF →
+                </Link>
+              </div>
+
+              {/* Workflow C — File Pairer */}
+              <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">Have source + target files?</p>
+                  <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                    Upload a <strong>JSON, CSV, or Markdown</strong> source file alongside its translation to generate a bilingual XLIFF and start a side-by-side review.
+                  </p>
+                </div>
+                <Link
+                  href="/file-pairer"
+                  className="shrink-0 border border-indigo-300 hover:bg-indigo-50 text-indigo-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+                >
+                  File Pairer →
                 </Link>
               </div>
             </div>

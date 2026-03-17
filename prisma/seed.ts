@@ -169,11 +169,53 @@ async function main() {
     console.log("Created sample project:", project.id)
   }
 
+  // ── Platform reviewer accounts (one per supported locale) ────────────────
+  const PLATFORM_REVIEWERS: { locale: string; name: string }[] = [
+    { locale: "en-US",  name: "Platform Reviewer · English (US)" },
+    { locale: "en-GB",  name: "Platform Reviewer · English (UK)" },
+    { locale: "en-CA",  name: "Platform Reviewer · English (Canada)" },
+    { locale: "en-AU",  name: "Platform Reviewer · English (Australia)" },
+    { locale: "en-IN",  name: "Platform Reviewer · English (India)" },
+    { locale: "es-ES",  name: "Platform Reviewer · Spanish (Spain)" },
+    { locale: "es-419", name: "Platform Reviewer · Spanish (Latin America)" },
+    { locale: "pt-BR",  name: "Platform Reviewer · Portuguese (Brazil)" },
+    { locale: "fr-FR",  name: "Platform Reviewer · French (France)" },
+    { locale: "fr-CA",  name: "Platform Reviewer · French (Canada)" },
+    { locale: "de-DE",  name: "Platform Reviewer · German" },
+    { locale: "it-IT",  name: "Platform Reviewer · Italian" },
+    { locale: "nl-NL",  name: "Platform Reviewer · Dutch" },
+    { locale: "sv-SE",  name: "Platform Reviewer · Swedish" },
+    { locale: "ja-JP",  name: "Platform Reviewer · Japanese" },
+    { locale: "zh-CN",  name: "Platform Reviewer · Chinese (Simplified)" },
+    { locale: "zh-TW",  name: "Platform Reviewer · Chinese (Traditional)" },
+    { locale: "ko-KR",  name: "Platform Reviewer · Korean" },
+    { locale: "th-TH",  name: "Platform Reviewer · Thai" },
+  ]
+
+  for (const { locale, name } of PLATFORM_REVIEWERS) {
+    const email = `platform-reviewer+${locale.toLowerCase()}@jendee.ai`
+    await prisma.user.upsert({
+      where: { email },
+      update: {},
+      create: {
+        email,
+        name,
+        // Random password — platform reviewer accounts are not used for login
+        hashedPassword: await bcrypt.hash(`platform-${locale}-${Date.now()}`, 12),
+        role: "reviewer",
+        isPlatformReviewer: true,
+        languages: JSON.stringify([locale]),
+      },
+    })
+    console.log(`  Platform reviewer: ${name}`)
+  }
+
   console.log("\nSeed complete! Test accounts:")
   console.log("  Admin:     admin@example.com / admin123")
   console.log("  Reviewer:  keiko@example.com / reviewer123  (ja-JP)")
   console.log("  Reviewer:  wei@example.com   / reviewer123  (zh-CN)")
   console.log("  Requester: requester@example.com / requester123")
+  console.log("  + 19 platform reviewer accounts created (platform-reviewer+<locale>@jendee.ai)")
 }
 
 main()

@@ -48,22 +48,31 @@ export async function GET(
   }
 
   const job = project.translationTask?.job
-  if (!job) {
+
+  // Determine source format: from TranslationJob (AI-translated) or from project.originalFormat (File Pairer)
+  const sourceFormat = job?.sourceFormat ?? project.originalFormat
+
+  let originalUnits: SourceUnit[]
+
+  if (job) {
+    // Translation Studio path: load original parsed units from disk cache
+    try {
+      const raw = await readFile(job.unitsFileUrl, "utf-8")
+      originalUnits = JSON.parse(raw) as SourceUnit[]
+    } catch {
+      return NextResponse.json({ error: "Original source units file not found on disk." }, { status: 500 })
+    }
+  } else if (sourceFormat !== "xliff") {
+    // File Pairer path: reconstruct from DB units (xliffUnitId = original key, orderIndex for order)
+    originalUnits = project.units.map((u) => ({
+      id: u.xliffUnitId,
+      sourceText: u.sourceText,
+    }))
+  } else {
     return NextResponse.json(
       { error: "This project was uploaded directly as XLIFF — no original source file is available. Use 'Download XLIFF' instead." },
       { status: 400 }
     )
-  }
-
-  const sourceFormat = job.sourceFormat // "json" | "csv" | "md" | "pdf"
-
-  // Load the original parsed units (preserves original key order and IDs)
-  let originalUnits: SourceUnit[]
-  try {
-    const raw = await readFile(job.unitsFileUrl, "utf-8")
-    originalUnits = JSON.parse(raw) as SourceUnit[]
-  } catch {
-    return NextResponse.json({ error: "Original source units file not found on disk." }, { status: 500 })
   }
 
   // Map xliffUnitId → best translation from the reviewed project

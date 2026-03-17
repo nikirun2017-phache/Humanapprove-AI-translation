@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
   const file = formData.get("file") as File | null
   const name = formData.get("name") as string
   const assignedReviewerId = formData.get("assignedReviewerId") as string | null
+  const reviewerType = (formData.get("reviewerType") as string | null) ?? "own"
 
   if (!file || !name) {
     return NextResponse.json({ error: "name and file are required" }, { status: 400 })
@@ -92,13 +93,13 @@ export async function POST(req: NextRequest) {
   const filePath = path.join(uploadDir, fileName)
   await writeFile(filePath, xmlContent, "utf-8")
 
-  // Auto-assign reviewer if not specified: find first reviewer whose languages include targetLanguage
+  // Auto-assign reviewer if not specified: prefer own (non-platform) reviewers whose languages
+  // include the target language; fall back to platform reviewers if none found.
   let reviewerId = assignedReviewerId || null
+  let resolvedReviewerType = reviewerType
   if (!reviewerId) {
-    const candidates = await db.user.findMany({
-      where: { role: "reviewer" },
-    })
-    const match = candidates.find((u) => {
+    const candidates = await db.user.findMany({ where: { role: "reviewer" } })
+    const matches = candidates.filter((u) => {
       try {
         const langs: string[] = JSON.parse(u.languages)
         return langs.some(
@@ -110,7 +111,15 @@ export async function POST(req: NextRequest) {
         return false
       }
     })
-    if (match) reviewerId = match.id
+    const ownMatch = matches.find((u) => !u.isPlatformReviewer)
+    const platformMatch = matches.find((u) => u.isPlatformReviewer)
+    if (ownMatch) {
+      reviewerId = ownMatch.id
+      resolvedReviewerType = "own"
+    } else if (platformMatch) {
+      reviewerId = platformMatch.id
+      resolvedReviewerType = "platform"
+    }
   }
 
   // Create project and translation units in one transaction
@@ -124,6 +133,7 @@ export async function POST(req: NextRequest) {
         status: reviewerId ? "in_review" : "pending_assignment",
         createdById: session.user.id,
         assignedReviewerId: reviewerId,
+        reviewerType: resolvedReviewerType,
       },
     })
 

@@ -87,6 +87,26 @@ function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
+interface GithubPrFile {
+  path: string
+  ext: string
+  content: string
+  unitCount: number
+  wordCount: number
+  sourceLanguage?: string
+}
+
+interface GithubPrAnalysis {
+  owner: string
+  repo: string
+  prNumber: number
+  branch: string
+  files: GithubPrFile[]
+  skippedFiles: { path: string; reason: string }[]
+  totalUnits: number
+  totalWordCount: number
+}
+
 export function TranslationWizard({ providers, hasCard }: Props) {
   const router = useRouter()
   const [step, setStep] = useState<Step>(1)
@@ -94,6 +114,16 @@ export function TranslationWizard({ providers, hasCard }: Props) {
 
   // Step 1 state — multiple files
   const [entries, setEntries] = useState<FileEntry[]>([])
+
+  // Step 1 GitHub PR tab state
+  const [sourceMode, setSourceMode] = useState<"file" | "github-pr">("file")
+  const [prUrl, setPrUrl] = useState("")
+  const [githubToken, setGithubToken] = useState("")
+  const [prAnalyzing, setPrAnalyzing] = useState(false)
+  const [prAnalysis, setPrAnalysis] = useState<GithubPrAnalysis | null>(null)
+  const [prError, setPrError] = useState("")
+  // Stored for write-back: keyed by synthetic file key → original GH path
+  const [githubFileMeta, setGithubFileMeta] = useState<Map<string, { prUrl: string; branch: string; sourcePath: string }>>(new Map())
 
   // Step 2 state
   const [jobName, setJobName] = useState("")
@@ -125,12 +155,18 @@ export function TranslationWizard({ providers, hasCard }: Props) {
 
   const currentProvider = providers.find((p) => p.name === provider)!
 
+  // Languages pinned to the top of the browser: en-US + CJKV (highest-volume markets)
+  const PINNED_CODES = ["en-US", "zh-CN", "zh-TW", "ja-JP", "ko-KR"]
+
   const filteredLangs = STUDIO_LANGUAGES.filter((l) => {
     const matchSearch = l.name.toLowerCase().includes(langSearch.toLowerCase()) ||
       l.code.toLowerCase().includes(langSearch.toLowerCase())
     const matchRegion = !regionFilter || l.region === regionFilter
     return matchSearch && matchRegion
   })
+
+  const pinnedLangs = filteredLangs.filter((l) => PINNED_CODES.includes(l.code))
+  const unpinnedLangs = filteredLangs.filter((l) => !PINNED_CODES.includes(l.code))
 
   const activePresetId = LANGUAGE_PRESETS.find((p) => {
     const validCodes = p.codes.filter((c) => STUDIO_LANGUAGES.some((l) => l.code === c))
@@ -248,6 +284,49 @@ export function TranslationWizard({ providers, hasCard }: Props) {
     )
     await addFiles(files)
   }, [entries, jobName]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function analyzePr() {
+    setPrError("")
+    setPrAnalysis(null)
+    setPrAnalyzing(true)
+    try {
+      const res = await fetch("/api/translation-studio/probe-github-pr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: prUrl.trim(), token: githubToken.trim() || undefined }),
+      })
+      const data = await res.json() as GithubPrAnalysis & { error?: string; message?: string }
+      if (!res.ok) {
+        setPrError(data.error ?? "Failed to analyze PR")
+        return
+      }
+      setPrAnalysis(data)
+      if (data.message) setPrError(data.message)
+    } catch {
+      setPrError("Network error — could not reach GitHub API.")
+    } finally {
+      setPrAnalyzing(false)
+    }
+  }
+
+  async function usePrFiles() {
+    if (!prAnalysis) return
+    const newFiles: File[] = []
+    const newMeta = new Map(githubFileMeta)
+
+    for (const f of prAnalysis.files) {
+      const blob = new Blob([f.content], { type: "text/plain" })
+      const filename = f.path.split("/").pop() ?? f.path
+      const file = new File([blob], filename, { type: "text/plain" })
+      const key = fileKey(file)
+      newFiles.push(file)
+      newMeta.set(key, { prUrl: prUrl.trim(), branch: prAnalysis.branch, sourcePath: f.path })
+    }
+
+    setGithubFileMeta(newMeta)
+    await addFiles(newFiles)
+    setSourceMode("file") // switch back to file tab to show the queued files
+  }
 
   function toggleLang(code: string) {
     setSelectedLangs((s) => {
@@ -379,6 +458,147 @@ export function TranslationWizard({ providers, hasCard }: Props) {
       {/* ── Step 1 — Upload ── */}
       {step === 1 && (
         <div className="space-y-4">
+          {/* Source mode tabs */}
+          <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+            <button
+              onClick={() => setSourceMode("file")}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${sourceMode === "file" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              Upload files
+            </button>
+            <button
+              onClick={() => setSourceMode("github-pr")}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${sourceMode === "github-pr" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              GitHub PR
+            </button>
+          </div>
+
+          {/* ── GitHub PR panel ── */}
+          {sourceMode === "github-pr" && (
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Pull Request URL</label>
+                  <input
+                    type="url"
+                    value={prUrl}
+                    onChange={(e) => { setPrUrl(e.target.value); setPrAnalysis(null); setPrError("") }}
+                    placeholder="https://github.com/owner/repo/pull/123"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    GitHub token{" "}
+                    <span className="text-gray-400 font-normal">(optional — required for private repos)</span>
+                  </label>
+                  <input
+                    type="password"
+                    value={githubToken}
+                    onChange={(e) => setGithubToken(e.target.value)}
+                    placeholder="ghp_••••••••••••••••••••••••••••••••••••••"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Token needs <code>repo</code> read scope. Also used to push translations back to the branch.
+                  </p>
+                </div>
+                <button
+                  onClick={analyzePr}
+                  disabled={!prUrl.trim() || prAnalyzing}
+                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+                >
+                  {prAnalyzing ? "Analyzing…" : "Analyze PR"}
+                </button>
+              </div>
+
+              {prError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {prError}
+                </div>
+              )}
+
+              {prAnalysis && (
+                <div className="space-y-4">
+                  {/* PR meta */}
+                  <div className="bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-indigo-900">
+                        {prAnalysis.owner}/{prAnalysis.repo} #{prAnalysis.prNumber}
+                      </p>
+                      <p className="text-xs text-indigo-600 mt-0.5">
+                        Branch: <code>{prAnalysis.branch}</code> · {prAnalysis.totalUnits.toLocaleString()} strings · {prAnalysis.totalWordCount.toLocaleString()} words
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* File table */}
+                  {prAnalysis.files.length > 0 && (
+                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 border-b border-gray-200">
+                          <tr>
+                            <th className="text-left px-4 py-2 text-xs font-medium text-gray-500">File</th>
+                            <th className="text-right px-4 py-2 text-xs font-medium text-gray-500">Strings</th>
+                            <th className="text-right px-4 py-2 text-xs font-medium text-gray-500">Words</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {prAnalysis.files.map((f) => (
+                            <tr key={f.path}>
+                              <td className="px-4 py-2 font-mono text-xs text-gray-700 truncate max-w-xs">
+                                <span className="text-gray-400 mr-1.5 bg-gray-100 px-1 rounded">.{f.ext}</span>
+                                {f.path}
+                              </td>
+                              <td className="px-4 py-2 text-right text-gray-600">{f.unitCount.toLocaleString()}</td>
+                              <td className="px-4 py-2 text-right text-gray-600">{f.wordCount.toLocaleString()}</td>
+                            </tr>
+                          ))}
+                          <tr className="bg-gray-50 font-medium">
+                            <td className="px-4 py-2 text-xs text-gray-700">Total</td>
+                            <td className="px-4 py-2 text-right text-gray-900">{prAnalysis.totalUnits.toLocaleString()}</td>
+                            <td className="px-4 py-2 text-right text-gray-900">{prAnalysis.totalWordCount.toLocaleString()}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* Skipped files */}
+                  {prAnalysis.skippedFiles.length > 0 && (
+                    <div className="border border-amber-200 rounded-lg overflow-hidden">
+                      <div className="bg-amber-50 px-4 py-2 border-b border-amber-200">
+                        <p className="text-xs font-medium text-amber-800">
+                          {prAnalysis.skippedFiles.length} file{prAnalysis.skippedFiles.length !== 1 ? "s" : ""} skipped
+                        </p>
+                      </div>
+                      <div className="divide-y divide-amber-100">
+                        {prAnalysis.skippedFiles.map((f) => (
+                          <div key={f.path} className="px-4 py-2 flex items-start gap-3 text-xs">
+                            <code className="text-gray-500 truncate flex-1">{f.path}</code>
+                            <span className="text-amber-700 shrink-0">{f.reason}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {prAnalysis.files.length > 0 && (
+                    <button
+                      onClick={usePrFiles}
+                      className="w-full px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                    >
+                      Use these {prAnalysis.files.length} file{prAnalysis.files.length !== 1 ? "s" : ""} →
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── File upload panel ── */}
+          {sourceMode === "file" && (<>
           {/* Drop zone */}
           <div
             onDrop={handleDrop}
@@ -460,11 +680,16 @@ export function TranslationWizard({ providers, hasCard }: Props) {
                         </p>
                       )}
                       {isPdf && probe && !entry.parseError && (
-                        <p className={`text-xs mt-0.5 ${probe.isScanned ? "text-amber-600" : "text-green-600"}`}>
-                          {probe.isScanned
-                            ? "Scanned PDF — Claude Vision will extract text (Anthropic key required)"
-                            : `Text-based PDF — extracted directly (${probe.wordCount.toLocaleString()} words, no Vision API cost)`}
-                        </p>
+                        <>
+                          <p className={`text-xs mt-0.5 ${probe.isScanned ? "text-amber-600" : "text-green-600"}`}>
+                            {probe.isScanned
+                              ? "Scanned PDF — Claude Vision will extract text (Anthropic key required)"
+                              : `Text-based PDF — extracted directly (${probe.wordCount.toLocaleString()} words, no Vision API cost)`}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            Download: plain text (.xliff) only — no PDF layout or formatting reconstruction
+                          </p>
+                        </>
                       )}
                       {entry.file.name.endsWith(".md") && !entry.parseError && (
                         <p className="text-xs text-amber-600 mt-0.5">
@@ -517,12 +742,13 @@ export function TranslationWizard({ providers, hasCard }: Props) {
           <div className="flex justify-end">
             <button
               onClick={() => setStep(2)}
-              disabled={!canProceed}
+              disabled={!canProceed || entries.some((e) => e.probePending)}
               className="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-40"
             >
               Next: Configure →
             </button>
           </div>
+          </>)}
         </div>
       )}
 
@@ -580,15 +806,21 @@ export function TranslationWizard({ providers, hasCard }: Props) {
 
           <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="font-medium text-gray-900">
-                Target languages
-                {selectedLangs.size > 0 && (
-                  <span className="ml-2 text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
-                    {selectedLangs.size} selected
-                  </span>
-                )}
-              </h2>
-              <button onClick={clearAll} className="text-xs text-gray-400 hover:underline">Clear</button>
+              <div>
+                <h2 className="font-medium text-gray-900">
+                  Target languages
+                  {selectedLangs.size > 0 && (
+                    <span className="ml-2 text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
+                      {selectedLangs.size} selected
+                    </span>
+                  )}
+                </h2>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Pick one or more languages. Use presets for common markets, or browse all {STUDIO_LANGUAGES.length} languages below.
+                  Each language becomes a separate translation task billed individually.
+                </p>
+              </div>
+              <button onClick={clearAll} className="text-xs text-gray-400 hover:underline shrink-0 ml-4">Clear</button>
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -666,35 +898,77 @@ export function TranslationWizard({ providers, hasCard }: Props) {
                     ))}
                   </select>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-60 overflow-y-auto pr-1">
-                  {filteredLangs.map((lang) => (
-                    <button
-                      key={lang.code}
-                      type="button"
-                      onClick={() => toggleLang(lang.code)}
-                      className={`text-xs px-2.5 py-1.5 rounded-lg border text-left transition-colors ${
-                        selectedLangs.has(lang.code)
-                          ? "bg-indigo-600 text-white border-indigo-600"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-indigo-300"
-                      }`}
-                    >
-                      <span className="block font-medium truncate">{lang.name}</span>
-                      <span className="block opacity-60">{lang.code}</span>
-                    </button>
-                  ))}
+                <div className="max-h-72 overflow-y-auto pr-1 space-y-2">
+                  {/* Pinned: en-US + CJKV */}
+                  {pinnedLangs.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1 px-0.5">
+                        Popular
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                        {pinnedLangs.map((lang) => (
+                          <button
+                            key={lang.code}
+                            type="button"
+                            onClick={() => toggleLang(lang.code)}
+                            className={`text-xs px-2.5 py-1.5 rounded-lg border text-left transition-colors ${
+                              selectedLangs.has(lang.code)
+                                ? "bg-indigo-600 text-white border-indigo-600"
+                                : "bg-indigo-50 text-gray-700 border-indigo-100 hover:border-indigo-400"
+                            }`}
+                          >
+                            <span className="block font-medium truncate">{lang.name}</span>
+                            <span className="block opacity-60">{lang.code}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* Divider */}
+                  {pinnedLangs.length > 0 && unpinnedLangs.length > 0 && (
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-0.5 pt-1">
+                      All languages
+                    </p>
+                  )}
+                  {/* Rest */}
+                  {unpinnedLangs.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                      {unpinnedLangs.map((lang) => (
+                        <button
+                          key={lang.code}
+                          type="button"
+                          onClick={() => toggleLang(lang.code)}
+                          className={`text-xs px-2.5 py-1.5 rounded-lg border text-left transition-colors ${
+                            selectedLangs.has(lang.code)
+                              ? "bg-indigo-600 text-white border-indigo-600"
+                              : "bg-white text-gray-600 border-gray-200 hover:border-indigo-300"
+                          }`}
+                        >
+                          <span className="block font-medium truncate">{lang.name}</span>
+                          <span className="block opacity-60">{lang.code}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </details>
           </div>
 
+          {entries.some((e) => e.probePending) && (
+            <p className="text-xs text-amber-600 text-right">
+              Analysing PDF… please wait before proceeding.
+            </p>
+          )}
           <div className="flex justify-between">
             <button onClick={() => setStep(1)} className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
               ← Back
             </button>
             <button
               onClick={() => setStep(3)}
-              disabled={!jobName.trim() || selectedLangs.size === 0}
+              disabled={!jobName.trim() || selectedLangs.size === 0 || entries.some((e) => e.probePending)}
               className="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-40"
+              title={entries.some((e) => e.probePending) ? "Wait for PDF analysis to complete" : undefined}
             >
               Next: Confirm →
             </button>
@@ -737,7 +1011,8 @@ export function TranslationWizard({ providers, hasCard }: Props) {
               }
             } else {
               // Probe still loading or failed — fall back to size estimate
-              const fallbackPages = Math.max(1, Math.ceil(entry.file.size / (400 * 1024)))
+              // Scanned PDFs average ~150 KB/page at 150 dpi
+              const fallbackPages = Math.max(1, Math.ceil(entry.file.size / (150 * 1024)))
               strings = fallbackPages * 40
               pdfLabel = `~${fallbackPages} pages (estimated)`
             }
@@ -827,10 +1102,15 @@ export function TranslationWizard({ providers, hasCard }: Props) {
                 </tfoot>
               </table>
 
-              <div className="px-5 py-3 bg-amber-50 border-t border-amber-100">
+              <div className="px-5 py-3 bg-amber-50 border-t border-amber-100 space-y-1">
                 <p className="text-xs text-amber-700">
                   ⚠ Rough estimate. Actual cost varies by content verbosity and retries. PDFs use file-size estimation only.
                 </p>
+                {fileRows.some((r) => r.isPdf) && (
+                  <p className="text-xs text-amber-700">
+                    PDF output: translated text is delivered as plain text (.xliff) — original PDF layout and formatting are not reconstructed.
+                  </p>
+                )}
               </div>
             </div>
 

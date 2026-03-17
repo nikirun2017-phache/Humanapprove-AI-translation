@@ -15,13 +15,15 @@ interface Project {
   approvedCount: number
   _count: { units: number }
   createdBy: { name: string }
-  assignedReviewer: { id: string; name: string } | null
+  assignedReviewer: { id: string; name: string; isPlatformReviewer?: boolean } | null
+  reviewerType: string
   sourceFormat: string | null
 }
 
 interface ReviewerUser {
   id: string
   name: string
+  isPlatformReviewer: boolean
 }
 
 interface Props {
@@ -133,17 +135,21 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
   }
 
   async function assignReviewer(projectId: string, reviewerId: string | null) {
+    const reviewer = reviewerUsers.find((r) => r.id === reviewerId) ?? null
+    const reviewerType = reviewer?.isPlatformReviewer ? "platform" : "own"
     const res = await fetch(`/api/projects/${projectId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ assignedReviewerId: reviewerId }),
+      body: JSON.stringify({
+        assignedReviewerId: reviewerId,
+        reviewerType: reviewerId ? reviewerType : "own",
+      }),
     })
     if (res.ok) {
-      const reviewer = reviewerUsers.find((r) => r.id === reviewerId) ?? null
       setProjects((ps) =>
         ps.map((p) =>
           p.id === projectId
-            ? { ...p, assignedReviewer: reviewer }
+            ? { ...p, assignedReviewer: reviewer, reviewerType: reviewerId ? reviewerType : "own" }
             : p
         )
       )
@@ -317,21 +323,40 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-600">
-                      {role === "admin" && reviewerUsers.length > 0 ? (
-                        <select
-                          value={project.assignedReviewer?.id ?? ""}
-                          onChange={(e) => assignReviewer(project.id, e.target.value || null)}
-                          className="text-xs border border-gray-200 rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 text-gray-700 max-w-[140px]"
-                        >
-                          <option value="">— unassigned —</option>
-                          {reviewerUsers.map((r) => (
-                            <option key={r.id} value={r.id}>{r.name}</option>
-                          ))}
-                        </select>
+                      {(role === "admin" || role === "requester") && reviewerUsers.length > 0 ? (
+                        <div className="space-y-0.5">
+                          <select
+                            value={project.assignedReviewer?.id ?? ""}
+                            onChange={(e) => assignReviewer(project.id, e.target.value || null)}
+                            className="text-xs border border-gray-200 rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 text-gray-700 max-w-[160px]"
+                          >
+                            <option value="">— unassigned —</option>
+                            {reviewerUsers.filter((r) => !r.isPlatformReviewer).length > 0 && (
+                              <optgroup label="Your reviewers">
+                                {reviewerUsers.filter((r) => !r.isPlatformReviewer).map((r) => (
+                                  <option key={r.id} value={r.id}>{r.name}</option>
+                                ))}
+                              </optgroup>
+                            )}
+                            {reviewerUsers.filter((r) => r.isPlatformReviewer).length > 0 && (
+                              <optgroup label="Platform reviewers (+150% fee)">
+                                {reviewerUsers.filter((r) => r.isPlatformReviewer).map((r) => (
+                                  <option key={r.id} value={r.id}>{r.name}</option>
+                                ))}
+                              </optgroup>
+                            )}
+                          </select>
+                          {project.reviewerType === "platform" && project.assignedReviewer && (
+                            <span className="block text-xs font-semibold text-amber-600">+150% fee</span>
+                          )}
+                        </div>
                       ) : (
-                        project.assignedReviewer?.name || (
-                          <span className="text-gray-400 italic">unassigned</span>
-                        )
+                        <div>
+                          <span>{project.assignedReviewer?.name || <span className="text-gray-400 italic">unassigned</span>}</span>
+                          {project.reviewerType === "platform" && project.assignedReviewer && (
+                            <span className="ml-1.5 text-xs font-semibold bg-amber-100 text-amber-700 px-1 py-0.5 rounded">Platform</span>
+                          )}
+                        </div>
                       )}
                     </td>
                     <td className="px-4 py-3 text-gray-400 text-xs">

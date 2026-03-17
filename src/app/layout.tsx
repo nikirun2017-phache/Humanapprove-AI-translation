@@ -8,6 +8,13 @@ const geist = Geist({ subsets: ["latin"], variable: "--font-geist" })
 export const metadata: Metadata = {
   title: "Jendee AI",
   description: "AI-powered translation with human review — fast, accurate, auditable.",
+  icons: {
+    icon: [
+      { url: "/favicon.png", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+    shortcut: "/favicon.png",
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

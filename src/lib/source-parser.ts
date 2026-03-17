@@ -32,6 +32,20 @@ export function parseXliffSource(content: string): {
 // Minimum average words per page to consider a PDF "text-based" (not scanned)
 const MIN_WORDS_PER_PAGE = 15
 
+/** Count PDF pages from raw bytes — see probe-pdf/route.ts for rationale. */
+function countPagesFromRaw(buffer: Buffer): number {
+  try {
+    const raw = buffer.toString("latin1")
+    const counts: number[] = []
+    const re = /\/Count\s+(\d+)/g
+    let m: RegExpExecArray | null
+    while ((m = re.exec(raw)) !== null) counts.push(parseInt(m[1], 10))
+    return counts.length > 0 ? Math.max(...counts) : 0
+  } catch {
+    return 0
+  }
+}
+
 /**
  * Extract translatable text from a PDF using a multi-strategy approach:
  *
@@ -88,7 +102,10 @@ async function tryExtractPdfText(
 
     const data = await pdfParse(buffer, { max: 0 }) // max:0 = all pages
     const wordCount = data.text.trim().split(/\s+/).filter(Boolean).length
-    return { text: data.text, numPages: data.numpages, wordCount }
+    // Cross-check with raw-byte /Count scan — pdf-parse under-reports on some PDFs
+    const rawPages = countPagesFromRaw(buffer)
+    const numPages = Math.max(data.numpages, rawPages)
+    return { text: data.text, numPages, wordCount }
   } catch {
     return null
   }
@@ -133,12 +150,48 @@ function segmentPdfText(rawText: string): SourceUnit[] {
   return units
 }
 
+// Pages processed per Claude API call. Keeps output well within max_tokens.
+const PDF_CHUNK_SIZE = 20
+
 /**
  * Use Claude's native document API to extract text from scanned / image PDFs.
- * Claude applies vision to each page and returns semantically segmented units.
+ * For large PDFs (> PDF_CHUNK_SIZE pages), the document is processed in chunks
+ * of PDF_CHUNK_SIZE pages each to avoid hitting output token limits.
  */
 async function parsePdfWithClaude(buffer: Buffer, anthropicApiKey: string): Promise<SourceUnit[]> {
+  // Get total page count via pdf-parse (works even for scanned PDFs since it
+  // reads the PDF cross-reference table, not the text content).
+  const extracted = await tryExtractPdfText(buffer)
+  const totalPages = extracted?.numPages ?? 1
+
   const base64 = buffer.toString("base64")
+  const allUnits: SourceUnit[] = []
+  let globalIndex = 0
+
+  // Build page-range chunks: [[1,20], [21,40], [41,60], [61,62], …]
+  for (let startPage = 1; startPage <= totalPages; startPage += PDF_CHUNK_SIZE) {
+    const endPage = Math.min(startPage + PDF_CHUNK_SIZE - 1, totalPages)
+    const chunkUnits = await extractPdfChunk(base64, anthropicApiKey, startPage, endPage, globalIndex)
+    allUnits.push(...chunkUnits)
+    globalIndex += chunkUnits.length
+  }
+
+  return allUnits
+}
+
+/**
+ * Call Claude Vision to extract text from a specific page range of a PDF.
+ * The full PDF is sent but Claude is instructed to focus only on the given pages,
+ * keeping each chunk's output within max_tokens.
+ */
+async function extractPdfChunk(
+  base64: string,
+  anthropicApiKey: string,
+  startPage: number,
+  endPage: number,
+  indexOffset: number
+): Promise<SourceUnit[]> {
+  const pageInstruction = `\nIMPORTANT: Extract text ONLY from pages ${startPage} to ${endPage}. Skip all other pages entirely.`
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -149,7 +202,7 @@ async function parsePdfWithClaude(buffer: Buffer, anthropicApiKey: string): Prom
     },
     body: JSON.stringify({
       model: "claude-sonnet-4-6",
-      max_tokens: 8192,
+      max_tokens: 16000,
       messages: [
         {
           role: "user",
@@ -164,11 +217,11 @@ async function parsePdfWithClaude(buffer: Buffer, anthropicApiKey: string): Prom
             },
             {
               type: "text",
-              text: `Extract all translatable text from this PDF document.
+              text: `Extract all translatable text from this PDF document.${pageInstruction}
 Return ONLY a valid JSON array where each element is: {"id": "p_N", "sourceText": "..."}
 Rules:
 - Each paragraph, heading, bullet point, list item, table cell, or caption is its own entry
-- Number entries sequentially starting from p_0
+- Number entries sequentially starting from p_${indexOffset}
 - Skip page numbers, repeating headers/footers, URLs, purely numeric values, and decorative symbols
 - Preserve the original text exactly including punctuation and casing
 - For scanned pages, use your vision to read the text accurately
@@ -189,7 +242,7 @@ Rules:
   const text = data.content.find((c) => c.type === "text")?.text ?? ""
 
   const jsonMatch = text.match(/\[[\s\S]*\]/)
-  if (!jsonMatch) throw new Error("Could not extract text from PDF — no JSON returned by Claude")
+  if (!jsonMatch) throw new Error(`Could not extract text from PDF pages ${startPage}–${endPage} — no JSON returned by Claude`)
 
   const units = JSON.parse(jsonMatch[0]) as { id: string; sourceText: string }[]
   return units.filter((u) => u.id && u.sourceText?.trim())

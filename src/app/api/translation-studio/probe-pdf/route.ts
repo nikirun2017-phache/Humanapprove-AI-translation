@@ -4,6 +4,40 @@ import { auth } from "@/lib/auth"
 const MIN_WORDS_PER_PAGE = 15
 
 /**
+ * Count PDF pages directly from raw bytes by scanning for /Count entries in the
+ * page tree dictionary. This is a reliable fallback for PDFs where PDF.js / pdf-parse
+ * under-reports the page count (non-standard page trees, linearized PDFs, some scanner
+ * outputs).
+ *
+ * Works on PDFs with an uncompressed cross-reference table (the vast majority of
+ * scanned documents). For PDFs with a compressed xref stream the raw bytes are
+ * partially opaque, but in practice the /Pages /Count entry is always in the clear
+ * header section of the file.
+ *
+ * Returns 0 if nothing is found so callers can fall back gracefully.
+ */
+function countPagesFromRaw(buffer: Buffer): number {
+  try {
+    // Use latin1 so every byte maps 1:1 to a character — no UTF-8 decoding errors
+    const raw = buffer.toString("latin1")
+
+    // Collect every /Count N that appears in the document.
+    // Page tree internal nodes carry /Count = total descendant pages.
+    // The root /Pages node has the global page count (the maximum).
+    const counts: number[] = []
+    const re = /\/Count\s+(\d+)/g
+    let m: RegExpExecArray | null
+    while ((m = re.exec(raw)) !== null) {
+      counts.push(parseInt(m[1], 10))
+    }
+
+    return counts.length > 0 ? Math.max(...counts) : 0
+  } catch {
+    return 0
+  }
+}
+
+/**
  * POST /api/translation-studio/probe-pdf
  * Accepts a PDF file and returns metadata for cost estimation:
  *   - numPages: actual page count
@@ -32,7 +66,11 @@ export async function POST(req: NextRequest) {
     ) => Promise<{ text: string; numpages: number }>
 
     const data = await pdfParse(buffer, { max: 0 })
-    const numPages = data.numpages
+    // pdf-parse/PDF.js occasionally under-reports page count for non-standard page trees
+    // (linearized PDFs, some scanner outputs). Cross-check with a raw-byte scan and take
+    // the higher value.
+    const rawPages = countPagesFromRaw(buffer)
+    const numPages = Math.max(data.numpages, rawPages)
     const wordCount = data.text.trim().split(/\s+/).filter(Boolean).length
     const wordDensity = wordCount / Math.max(1, numPages)
     const isScanned = wordDensity < MIN_WORDS_PER_PAGE
@@ -46,8 +84,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ numPages, isScanned, wordCount, estimatedUnits })
   } catch {
-    // If pdf-parse fails entirely (corrupt file etc.), return conservative scanned estimate
-    const approxPages = Math.max(1, Math.ceil(buffer.byteLength / (400 * 1024)))
+    // If pdf-parse fails entirely (corrupt file etc.), return conservative scanned estimate.
+    // Typical scanned PDFs average ~150 KB/page at 150 dpi.
+    const approxPages = Math.max(1, Math.ceil(buffer.byteLength / (150 * 1024)))
     return NextResponse.json({
       numPages: approxPages,
       isScanned: true,
