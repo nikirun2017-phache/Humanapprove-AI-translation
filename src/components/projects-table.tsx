@@ -5,6 +5,12 @@ import Link from "next/link"
 import { getLanguageName, STATUS_COLORS } from "@/lib/utils"
 import { cn } from "@/lib/utils"
 
+interface LastActivity {
+  createdAt: Date | string
+  action: string
+  user: { name: string }
+}
+
 interface Project {
   id: string
   name: string
@@ -18,6 +24,7 @@ interface Project {
   assignedReviewer: { id: string; name: string; isPlatformReviewer?: boolean } | null
   reviewerType: string
   sourceFormat: string | null
+  lastActivity?: LastActivity | null
 }
 
 interface ReviewerUser {
@@ -266,6 +273,7 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
                 <th className="px-4 py-3 font-medium text-gray-600">Progress</th>
                 <th className="px-4 py-3 font-medium text-gray-600">Status</th>
                 <th className="px-4 py-3 font-medium text-gray-600">Reviewer</th>
+                <th className="px-4 py-3 font-medium text-gray-600">Last activity</th>
                 <th className="px-4 py-3 font-medium text-gray-600">Created</th>
                 <th className="px-4 py-3"></th>
               </tr>
@@ -357,6 +365,19 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
                             <span className="ml-1.5 text-xs font-semibold bg-amber-100 text-amber-700 px-1 py-0.5 rounded">Platform</span>
                           )}
                         </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-xs">
+                      {project.lastActivity ? (
+                        <div>
+                          <span className="text-gray-700 font-medium">{project.lastActivity.user.name}</span>
+                          <span className="text-gray-400 ml-1">{project.lastActivity.action}</span>
+                          <div className="text-gray-400 mt-0.5">
+                            {new Date(project.lastActivity.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-300 italic">No activity yet</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-gray-400 text-xs">

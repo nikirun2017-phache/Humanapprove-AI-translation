@@ -50,6 +50,16 @@ export default async function DashboardPage() {
     }),
   ])
 
+  // Point 4: fetch latest reviewer audit activity per project
+  const projectIds = projects.map((p) => p.id)
+  const latestAuditLogs = await db.auditLog.findMany({
+    where: { projectId: { in: projectIds } },
+    orderBy: { createdAt: "desc" },
+    distinct: ["projectId"],
+    select: { projectId: true, createdAt: true, action: true, user: { select: { name: true } } },
+  })
+  const auditByProject = new Map(latestAuditLogs.map((l) => [l.projectId, l]))
+
   const projectsWithProgress = await Promise.all(
     projects.map(async (p) => {
       const approvedCount = await db.translationUnit.count({
@@ -58,11 +68,17 @@ export default async function DashboardPage() {
       const sourceFormat =
         p.translationTask?.job?.sourceFormat ??
         (p.originalFormat !== "xliff" ? p.originalFormat : undefined)
-      return { ...p, approvedCount, sourceFormat: sourceFormat ?? null, reviewerType: p.reviewerType ?? "own" }
+      const lastActivity = auditByProject.get(p.id) ?? null
+      return {
+        ...p,
+        approvedCount,
+        sourceFormat: sourceFormat ?? null,
+        reviewerType: p.reviewerType ?? "own",
+        lastActivity,
+      }
     })
   )
 
-  // Compute avg review time in hours from completed sessions
   const avgReviewHours =
     recentSessions.length > 0
       ? recentSessions.reduce((sum, s) => {
@@ -72,6 +88,7 @@ export default async function DashboardPage() {
       : null
 
   const approvalRate = totalUnits > 0 ? Math.round((approvedUnits / totalUnits) * 100) : null
+  const isFirstTime = projects.length === 0 && role !== "reviewer"
 
   const kpis = [
     {
@@ -98,7 +115,7 @@ export default async function DashboardPage() {
     {
       label: "Avg review time",
       value: avgReviewHours !== null ? `${avgReviewHours.toFixed(1)}h` : "—",
-      sub: recentSessions.length > 0 ? `based on ${recentSessions.length} completed session${recentSessions.length !== 1 ? "s" : ""}` : "no completed sessions yet",
+      sub: recentSessions.length > 0 ? `based on ${recentSessions.length} session${recentSessions.length !== 1 ? "s" : ""}` : "no completed sessions yet",
       color: "bg-purple-50 text-purple-700",
       dot: "bg-purple-400",
     },
@@ -107,101 +124,119 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+
+      {/* Point 5: persistent value-prop identity strip */}
+      <div className="bg-indigo-700 text-white text-center text-xs py-1.5 px-4 tracking-wide">
+        Jendee AI — AI translation at speed, human-reviewed for accuracy. Every segment auditable.
+      </div>
+
       <main className="max-w-6xl mx-auto px-6 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Dashboard</h1>
 
-          {role !== "reviewer" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
-              {/* Workflow A — AI Translation */}
-              <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold text-indigo-900">No translation yet?</p>
-                  <p className="text-xs text-indigo-700 mt-0.5 leading-relaxed">
-                    Use <strong>AI Translation</strong> to translate your JSON, CSV, Markdown, or PDF files using Claude, GPT-4o, or Gemini — then send the result for human review.
-                  </p>
-                </div>
-                <Link
-                  href="/translation-studio"
-                  className="shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
-                >
-                  AI Translation →
-                </Link>
-              </div>
+        {/* Point 1: Onboarding empty state for first-time users */}
+        {isFirstTime ? (
+          <div className="mb-10">
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">
+              Welcome to Jendee AI{session.user.name ? `, ${session.user.name.split(" ")[0]}` : ""}
+            </h1>
+            <p className="text-gray-500 text-sm mb-8">Here&apos;s how to get your first translation reviewed and approved.</p>
 
-              {/* Workflow B — Upload bilingual XLIFF */}
-              <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold text-gray-800">Already have a translation?</p>
-                  <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                    Upload a <strong>bilingual XLIFF</strong> file (source + target already filled) to start a human review project and approve, reject, or edit each segment.
-                  </p>
+            {/* 3-step guide */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              {[
+                {
+                  step: "1",
+                  title: "Bring your content",
+                  body: "Upload a JSON, CSV, Markdown, PDF, or XLIFF file — or paste a GitHub PR link. If you already have a translation, pair your source and target files.",
+                  icon: "📄",
+                },
+                {
+                  step: "2",
+                  title: "AI translates in seconds",
+                  body: "Choose Claude, GPT-4o, or Gemini. The model translates every segment. You see a cost estimate before anything runs.",
+                  icon: "✦",
+                },
+                {
+                  step: "3",
+                  title: "A human reviews & approves",
+                  body: "A reviewer checks each segment side-by-side, edits where needed, and approves. You download the clean, audited translation.",
+                  icon: "✓",
+                },
+              ].map(({ step, title, body, icon }) => (
+                <div key={step} className="bg-white rounded-2xl border border-gray-200 p-6 relative">
+                  <div className="absolute top-4 right-4 text-2xl opacity-20">{icon}</div>
+                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-bold mb-4">
+                    {step}
+                  </span>
+                  <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{body}</p>
                 </div>
-                <Link
-                  href="/projects/new"
-                  className="shrink-0 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
-                >
-                  Upload XLIFF →
-                </Link>
-              </div>
-
-              {/* Workflow C — File Pairer */}
-              <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold text-gray-800">Have source + target files?</p>
-                  <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                    Upload a <strong>JSON, CSV, or Markdown</strong> source file alongside its translation to generate a bilingual XLIFF and start a side-by-side review.
-                  </p>
-                </div>
-                <Link
-                  href="/file-pairer"
-                  className="shrink-0 border border-indigo-300 hover:bg-indigo-50 text-indigo-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
-                >
-                  File Pairer →
-                </Link>
-              </div>
+              ))}
             </div>
-          )}
 
-          <p className="text-sm text-gray-500">
-            {projects.length} review project{projects.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-
-        {/* KPI Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {kpis.map((kpi) => (
-            <div key={kpi.label} className="bg-white rounded-xl border border-gray-200 p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <span className={`w-2 h-2 rounded-full ${kpi.dot}`} />
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{kpi.label}</p>
-              </div>
-              <p className={`text-3xl font-bold mb-1 ${kpi.color.split(" ")[1]}`}>{kpi.value}</p>
-              <p className="text-xs text-gray-400">{kpi.sub}</p>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/new"
+                className="bg-indigo-600 text-white font-medium px-6 py-2.5 rounded-xl hover:bg-indigo-700 transition-colors"
+              >
+                Start your first project →
+              </Link>
+              <Link href="/pricing" className="text-sm text-indigo-600 hover:underline">
+                See pricing first
+              </Link>
             </div>
-          ))}
-        </div>
-
-        {projectsWithProgress.length === 0 ? (
-          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-            <p className="text-gray-400 text-sm">No projects yet.</p>
+          </div>
+        ) : (
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-sm text-gray-400 mt-0.5">
+                {projects.length} project{projects.length !== 1 ? "s" : ""}
+                {pendingProjects > 0 && (
+                  <span className="ml-2 text-amber-600 font-medium">· {pendingProjects} need attention</span>
+                )}
+              </p>
+            </div>
             {role !== "reviewer" && (
               <Link
-                href="/projects/new"
-                className="inline-block mt-3 text-indigo-600 text-sm font-medium hover:underline"
+                href="/new"
+                className="bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
               >
-                Upload your first XLIFF →
+                + New project
               </Link>
             )}
           </div>
-        ) : (
+        )}
+
+        {/* KPI Cards — hidden on first-time empty state to avoid noise */}
+        {!isFirstTime && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {kpis.map((kpi) => (
+              <div key={kpi.label} className="bg-white rounded-xl border border-gray-200 p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className={`w-2 h-2 rounded-full ${kpi.dot}`} />
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{kpi.label}</p>
+                </div>
+                <p className={`text-3xl font-bold mb-1 ${kpi.color.split(" ")[1]}`}>{kpi.value}</p>
+                <p className="text-xs text-gray-400">{kpi.sub}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Projects table or reviewer empty state */}
+        {projectsWithProgress.length === 0 && role === "reviewer" ? (
+          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+            <p className="text-gray-400 text-sm">No projects assigned to you yet.</p>
+            <p className="text-xs text-gray-400 mt-1">Your manager will assign a project when a translation is ready for review.</p>
+          </div>
+        ) : !isFirstTime && projectsWithProgress.length > 0 ? (
           <ProjectsTable
             initialProjects={projectsWithProgress}
             role={role}
             currentUserId={userId}
             reviewerUsers={reviewerUsers}
           />
-        )}
+        ) : null}
       </main>
     </div>
   )

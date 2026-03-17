@@ -16,9 +16,8 @@ export function Navbar() {
 
   const links = [
     { href: "/dashboard", label: "Dashboard" },
-    ...(role !== "reviewer" ? [{ href: "/projects/new", label: "Upload XLIFF" }] : []),
-    ...(role !== "reviewer" ? [{ href: "/file-pairer", label: "File Pairer" }] : []),
-    ...(role !== "reviewer" ? [{ href: "/translation-studio", label: "Translation Studio" }] : []),
+    ...(role !== "reviewer" ? [{ href: "/new", label: "New project" }] : []),
+    { href: "/pricing", label: "Pricing" },
     ...(role === "admin" ? [{ href: "/admin/users", label: "Users" }] : []),
     ...(role === "admin" ? [{ href: "/admin/settings", label: "Settings" }] : []),
     { href: "/billing", label: "Billing" },
@@ -31,21 +30,31 @@ export function Navbar() {
           <Image src="/logo.png" alt="Jendee AI" width={32} height={32} className="rounded-full" />
           <span className="font-semibold text-indigo-600 text-lg tracking-tight">Jendee AI</span>
         </Link>
-        <div className="flex gap-4">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "text-sm font-medium transition-colors",
-                pathname === link.href
-                  ? "text-indigo-600"
-                  : "text-gray-600 hover:text-gray-900"
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
+        <div className="flex items-center gap-4">
+          {links.map((link) =>
+            link.href === "/new" ? (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-sm font-medium bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                + New project
+              </Link>
+            ) : (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "text-sm font-medium transition-colors",
+                  pathname === link.href
+                    ? "text-indigo-600"
+                    : "text-gray-600 hover:text-gray-900"
+                )}
+              >
+                {link.label}
+              </Link>
+            )
+          )}
         </div>
       </div>
       <div className="flex items-center gap-3">

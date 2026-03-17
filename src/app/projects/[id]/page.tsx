@@ -50,6 +50,11 @@ export default async function ProjectPage({
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
+      {/* Point 5: identity context for any user landing on a shared review link */}
+      <div className="bg-indigo-700 text-indigo-100 text-xs text-center py-1.5 px-4">
+        Jendee AI — reviewing an AI-generated translation. Approve, edit, or reject each segment below.
+        {role === "reviewer" && " Your decisions are logged in a full audit trail."}
+      </div>
       <div className="bg-white border-b border-gray-200 px-6 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
@@ -59,6 +64,7 @@ export default async function ProjectPage({
               {project.assignedReviewer && (
                 <> · Reviewer: {project.assignedReviewer.name}</>
               )}
+              <> · Requested by {project.createdBy.name}</>
             </p>
           </div>
           <div className="flex items-center gap-3">
