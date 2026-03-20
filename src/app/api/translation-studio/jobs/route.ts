@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import type { PrismaClient } from "@prisma/client"
 import { parseJsonSource, parseCsvSource, parseMarkdownSource, parsePdfSource, parseXliffSource } from "@/lib/source-parser"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
@@ -129,7 +128,7 @@ export async function POST(req: NextRequest) {
   ])
 
   // Create job and tasks in a transaction
-  const job = await db.$transaction(async (tx: Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">) => {
+  const job = await db.$transaction(async (tx: Parameters<Parameters<typeof db.$transaction>[0]>[0]) => {
     const j = await tx.translationJob.create({
       data: {
         name,

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import type { PrismaClient } from "@prisma/client"
 import { parseXliff } from "@/lib/xliff-parser"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
@@ -124,7 +123,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Create project and translation units in one transaction
-  const project = await db.$transaction(async (tx: Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">) => {
+  const project = await db.$transaction(async (tx: Parameters<Parameters<typeof db.$transaction>[0]>[0]) => {
     const proj = await tx.project.create({
       data: {
         name,
