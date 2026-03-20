@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
+import { stripe } from "@/lib/stripe"
 import { Navbar } from "@/components/navbar"
 import { TranslationWizard } from "@/components/translation-wizard"
 import { PROVIDER_INFO } from "@/lib/ai-providers/registry"
@@ -23,9 +24,25 @@ export default async function TranslationStudioPage({
   if (!hasCard) {
     const user = await db.user.findUnique({
       where: { id: session.user.id },
-      select: { subscriptionStatus: true },
+      select: { subscriptionStatus: true, stripeCustomerId: true },
     })
-    hasCard = user?.subscriptionStatus === "active"
+
+    // If the webhook hasn't fired yet (common in dev), check Stripe directly
+    // when the user returns from card setup and update the DB immediately.
+    if (card_added === "true" && user?.stripeCustomerId && user.subscriptionStatus !== "active") {
+      try {
+        const pms = await stripe.customers.listPaymentMethods(user.stripeCustomerId, { limit: 1 })
+        if (pms.data.length > 0) {
+          await db.user.update({
+            where: { id: session.user.id },
+            data: { subscriptionStatus: "active", plan: "payg", subscriptionId: pms.data[0].id },
+          })
+          hasCard = true
+        }
+      } catch { /* fall through — webhook will catch it later */ }
+    } else {
+      hasCard = user?.subscriptionStatus === "active"
+    }
   }
 
   return (
@@ -52,7 +69,7 @@ export default async function TranslationStudioPage({
           </div>
         )}
 
-        <TranslationWizard providers={PROVIDER_INFO} hasCard={hasCard} />
+        <TranslationWizard providers={PROVIDER_INFO} hasCard={hasCard} restoringFromCardSetup={card_added === "true"} />
       </main>
     </div>
   )

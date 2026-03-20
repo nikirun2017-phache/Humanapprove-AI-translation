@@ -2,8 +2,9 @@ import type { AIProvider, TranslationBatch, TranslationResult, TranslatedUnit } 
 
 const SYSTEM_PROMPT = `You are a professional translator. Translate the provided JSON array of strings from {SOURCE} to {TARGET}.
 Rules:
-- Return ONLY a valid JSON array of objects with "id" and "translatedText" fields.
-- Preserve all placeholders like {variable}, {{variable}}, %s, %d, <tag>, HTML entities.
+- Return ONLY a valid JSON array of objects with "id" and "translatedText" fields. No markdown fences, no extra text.
+- Tokens like {{T1}}, {{T2}}, {{T3}}, etc. are XLIFF formatting placeholders. Copy them EXACTLY as-is in the translated text, keeping their position relative to the surrounding words. Never drop, duplicate, or alter any {{T…}} token.
+- Preserve all other placeholders exactly: {variable}, {{variable}}, %s, %d, HTML entities (&amp; &#x2019; &#x2014; etc.).
 - Keep the same tone and formality as the source.
 - Do not add explanations or notes outside the JSON.`
 
@@ -28,12 +29,12 @@ export const anthropicProvider: AIProvider = {
       },
       body: JSON.stringify({
         model,
-        max_tokens: 4096,
+        max_tokens: 16000,
         system: systemPrompt,
         messages: [
           {
             role: "user",
-            content: `Translate these strings to ${batch.targetLanguage}:\n${userContent}`,
+            content: `Translate these strings to ${batch.targetLanguage}. Return a JSON array where each item has "id" and "translatedText":\n${userContent}`,
           },
         ],
       }),
@@ -46,27 +47,67 @@ export const anthropicProvider: AIProvider = {
 
     const data = await response.json() as {
       content: { type: string; text: string }[]
+      stop_reason?: string
     }
     const text = data.content.find((c) => c.type === "text")?.text ?? ""
+
+    if (data.stop_reason === "max_tokens") {
+      throw new Error(`Translation response was truncated (max_tokens reached). Try a smaller batch or simpler content.`)
+    }
+
     return { units: parseTranslationResponse(text, batch.units) }
   },
+}
+
+/**
+ * Locate the first complete JSON array in `text` using a bracket-depth scanner.
+ * Unlike a greedy regex, this correctly handles ] characters that appear inside
+ * string values or in text the model appends after the JSON array.
+ */
+function extractJsonArray(text: string): string | null {
+  const start = text.indexOf("[")
+  if (start === -1) return null
+  let depth = 0
+  let inString = false
+  let escaped = false
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i]
+    if (escaped) { escaped = false; continue }
+    if (ch === "\\" && inString) { escaped = true; continue }
+    if (ch === '"') { inString = !inString; continue }
+    if (inString) continue
+    if (ch === "[") depth++
+    else if (ch === "]") { if (--depth === 0) return text.slice(start, i + 1) }
+  }
+  return null
 }
 
 function parseTranslationResponse(
   text: string,
   originalUnits: TranslationBatch["units"]
 ): TranslatedUnit[] {
-  // Extract JSON array from the response (handles markdown code fences)
-  const jsonMatch = text.match(/\[[\s\S]*\]/)
-  if (!jsonMatch) {
-    throw new Error(`Translation response did not contain a JSON array. Model output: ${text.slice(0, 300)}`)
+  // Extract the outermost JSON array using a bracket-depth scanner.
+  // A greedy regex like /\[[\s\S]*\]/ breaks when the model appends notes
+  // after the array that contain ] (e.g. "See footnote [1]"), causing it to
+  // capture content beyond the real closing bracket and producing invalid JSON.
+  const jsonArray = extractJsonArray(text)
+  if (!jsonArray) {
+    throw new Error(`Translation response did not contain a JSON array. Model output: ${text.slice(0, 400)}`)
   }
-  const parsed = JSON.parse(jsonMatch[0]) as { id: string; translatedText: string }[]
-  const result = parsed.map((item) => ({
+
+  let rawParsed: { id: string; translatedText?: string; text?: string }[]
+  try {
+    rawParsed = JSON.parse(jsonArray)
+  } catch {
+    throw new Error(`Failed to parse translation response as JSON. Model output: ${text.slice(0, 800)}`)
+  }
+
+  // Accept both "translatedText" (expected) and "text" (AI sometimes mirrors input key)
+  const result = rawParsed.map((item) => ({
     id: String(item.id),
-    translatedText: String(item.translatedText ?? ""),
+    translatedText: String(item.translatedText ?? item.text ?? ""),
   }))
-  // Sanity check: if every item came back empty or identical to source, reject
+
   const allEmpty = result.every((r) => !r.translatedText.trim())
   if (allEmpty) {
     throw new Error("Translation response returned empty translations for all units")

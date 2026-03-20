@@ -1,5 +1,7 @@
 import type { SourceUnit } from "./source-parser"
 
+// Used only for non-XLIFF formats (JSON, CSV, Markdown, PDF).
+// XLIFF files use markdown-based batching in xliff-markdown.ts instead.
 export const BATCH_SIZE = 50
 export const BATCH_CHAR_LIMIT = 8000
 

@@ -57,10 +57,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
   }
 
-  const ext = file.name.split(".").pop()?.toLowerCase()
-  if (ext !== "json" && ext !== "csv" && ext !== "md" && ext !== "pdf" && ext !== "xliff") {
-    return NextResponse.json({ error: "Only .json, .csv, .md, .pdf, or .xliff files are accepted" }, { status: 400 })
+  const rawExt = file.name.split(".").pop()?.toLowerCase()
+  if (rawExt !== "json" && rawExt !== "csv" && rawExt !== "md" && rawExt !== "pdf" && rawExt !== "xliff" && rawExt !== "xlf") {
+    return NextResponse.json({ error: "Only .json, .csv, .md, .pdf, .xliff, or .xlf files are accepted" }, { status: 400 })
   }
+  // Normalise .xlf → xliff so sourceFormat is consistent throughout
+  const ext = rawExt === "xlf" ? "xliff" : rawExt
 
   let targetLanguages: string[]
   try {

@@ -2,8 +2,9 @@ import type { AIProvider, TranslationBatch, TranslationResult, TranslatedUnit } 
 
 const SYSTEM_PROMPT = `You are a professional translator. Translate the provided JSON array of strings from {SOURCE} to {TARGET}.
 Rules:
-- Return ONLY a valid JSON array of objects with "id" and "translatedText" fields.
-- Preserve all placeholders like {variable}, {{variable}}, %s, %d, <tag>, HTML entities.
+- Return ONLY a valid JSON array of objects with "id" and "translatedText" fields. No markdown fences, no extra text.
+- Tokens like {{T1}}, {{T2}}, {{T3}}, etc. are XLIFF formatting placeholders. Copy them EXACTLY as-is in the translated text, keeping their position relative to the surrounding words. Never drop, duplicate, or alter any {{T…}} token.
+- Preserve all other placeholders exactly: {variable}, {{variable}}, %s, %d, HTML entities (&amp; &#x2019; &#x2014; etc.).
 - Keep the same tone and formality as the source.
 - Do not add explanations or notes outside the JSON.`
 

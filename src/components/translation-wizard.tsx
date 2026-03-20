@@ -1,13 +1,14 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { STUDIO_LANGUAGES, STUDIO_LANGUAGE_REGIONS, LANGUAGE_PRESETS } from "@/lib/languages"
-import type { ProviderInfo } from "@/lib/ai-providers/types"
+import type { ProviderInfo, ProviderName } from "@/lib/ai-providers/types"
 
 interface Props {
   providers: ProviderInfo[]
   hasCard: boolean
+  restoringFromCardSetup?: boolean
 }
 
 type Step = 1 | 2 | 3
@@ -28,6 +29,7 @@ interface XliffMeta {
   sourceLanguage: string
   targetLanguage: string   // suggested (from file header)
   emptyUnitCount: number   // units with empty <target>
+  sourceCharCount: number  // total chars in <source> elements (for cost estimation)
 }
 
 interface FileEntry {
@@ -49,7 +51,7 @@ function fileTypeLabel(name: string) {
   if (name.endsWith(".json")) return "JSON"
   if (name.endsWith(".csv")) return "CSV"
   if (name.endsWith(".md")) return "MD"
-  if (name.endsWith(".xliff")) return "XLIFF"
+  if (name.endsWith(".xliff") || name.endsWith(".xlf")) return "XLIFF"
   return "file"
 }
 
@@ -78,7 +80,14 @@ function parseXliffMeta(content: string): XliffMeta {
     }
   }
 
-  return { sourceLanguage: sourceLang, targetLanguage: targetLang, emptyUnitCount }
+  // Sum up char length of all <source> text (strip inline XML tags)
+  const sourceCharCount = (content.match(/<source[^>]*>([\s\S]*?)<\/source>/g) ?? [])
+    .reduce((sum, s) => {
+      const inner = s.replace(/^<source[^>]*>/, "").replace(/<\/source>$/, "")
+      return sum + inner.replace(/<[^>]+>/g, " ").trim().length
+    }, 0)
+
+  return { sourceLanguage: sourceLang, targetLanguage: targetLang, emptyUnitCount, sourceCharCount }
 }
 
 function formatBytes(bytes: number) {
@@ -107,7 +116,9 @@ interface GithubPrAnalysis {
   totalWordCount: number
 }
 
-export function TranslationWizard({ providers, hasCard }: Props) {
+const WIZARD_STORAGE_KEY = "translationWizardState"
+
+export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }: Props) {
   const router = useRouter()
   const [step, setStep] = useState<Step>(1)
   const [addingCard, setAddingCard] = useState(false)
@@ -136,9 +147,35 @@ export function TranslationWizard({ providers, hasCard }: Props) {
   // Step 3 state
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
+  const [cardError, setCardError] = useState("")
+
+  // Restore wizard config after returning from Stripe card setup
+  useEffect(() => {
+    if (!restoringFromCardSetup) return
+    try {
+      const raw = sessionStorage.getItem(WIZARD_STORAGE_KEY)
+      if (!raw) return
+      const saved = JSON.parse(raw) as { jobName: string; provider: string; model: string; selectedLangs: string[] }
+      sessionStorage.removeItem(WIZARD_STORAGE_KEY)
+      setJobName(saved.jobName)
+      if (providers.some((p) => p.name === saved.provider)) setProvider(saved.provider as ProviderName)
+      setModel(saved.model)
+      setSelectedLangs(new Set(saved.selectedLangs))
+    } catch { /* ignore */ }
+  }, [restoringFromCardSetup])
 
   async function addCard() {
     setAddingCard(true)
+    setCardError("")
+    // Save wizard config so it can be restored after Stripe redirect
+    try {
+      sessionStorage.setItem(WIZARD_STORAGE_KEY, JSON.stringify({
+        jobName,
+        provider,
+        model,
+        selectedLangs: [...selectedLangs],
+      }))
+    } catch { /* ignore */ }
     try {
       const res = await fetch("/api/billing/setup-payment", {
         method: "POST",
@@ -148,15 +185,16 @@ export function TranslationWizard({ providers, hasCard }: Props) {
       const data = await res.json() as { url?: string; error?: string }
       if (!res.ok || !data.url) throw new Error(data.error ?? "Failed to start card setup")
       window.location.href = data.url
-    } catch {
+    } catch (err) {
+      setCardError(err instanceof Error ? err.message : "Failed to open payment setup. Please try again.")
       setAddingCard(false)
     }
   }
 
   const currentProvider = providers.find((p) => p.name === provider)!
 
-  // Languages pinned to the top of the browser: en-US + CJKV (highest-volume markets)
-  const PINNED_CODES = ["en-US", "zh-CN", "zh-TW", "ja-JP", "ko-KR"]
+  // Languages pinned to the top of the browser
+  const PINNED_CODES = ["en-US", "zh-CN", "zh-TW", "ja-JP", "ko-KR", "pt-BR", "es-MX", "de-DE", "fr-FR"]
 
   const filteredLangs = STUDIO_LANGUAGES.filter((l) => {
     const matchSearch = l.name.toLowerCase().includes(langSearch.toLowerCase()) ||
@@ -180,7 +218,7 @@ export function TranslationWizard({ providers, hasCard }: Props) {
       reader.onload = (e) => {
         const content = e.target?.result as string
         try {
-          if (f.name.endsWith(".xliff")) {
+          if (f.name.endsWith(".xliff") || f.name.endsWith(".xlf")) {
             const meta = parseXliffMeta(content)
             if (meta.emptyUnitCount === 0) {
               resolve({ key, file: f, preview: [], parseError: "No untranslated units found — all <target> elements are already filled.", xliffMeta: meta })
@@ -609,13 +647,13 @@ export function TranslationWizard({ providers, hasCard }: Props) {
             <input
               id="file-input"
               type="file"
-              accept=".json,.csv,.md,.pdf,.xliff"
+              accept=".json,.csv,.md,.pdf,.xliff,.xlf"
               multiple
               className="hidden"
               onChange={handleInputChange}
             />
             <p className="text-gray-500">
-              Drop <strong>.json</strong>, <strong>.csv</strong>, <strong>.md</strong>, <strong>.pdf</strong>, or <strong>.xliff</strong> files here, or click to browse
+              Drop <strong>.json</strong>, <strong>.csv</strong>, <strong>.md</strong>, <strong>.pdf</strong>, <strong>.xliff</strong>, or <strong>.xlf</strong> files here, or click to browse
             </p>
             <p className="text-xs text-gray-400 mt-1">Multiple files supported — each becomes a separate translation job. XLIFF files must have empty &lt;target&gt; elements.</p>
           </div>
@@ -639,7 +677,7 @@ export function TranslationWizard({ providers, hasCard }: Props) {
                 const isPdf = entry.file.name.endsWith(".pdf")
                 const stringCount = isPdf ? null : entry.preview.length
                 const probe = entry.pdfProbe
-                const isXliff = entry.file.name.endsWith(".xliff")
+                const isXliff = (entry.file.name.endsWith(".xliff") || entry.file.name.endsWith(".xlf"))
                 return (
                   <div
                     key={entry.key}
@@ -756,7 +794,10 @@ export function TranslationWizard({ providers, hasCard }: Props) {
       {step === 2 && (
         <div className="space-y-6">
           <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-            <h2 className="font-medium text-gray-900">Job details</h2>
+            <div>
+              <h2 className="font-medium text-gray-900">Job details</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Give this job a name so you can find it later. Your downloaded files will use this name.</p>
+            </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 Job name{entries.length > 1 && <span className="ml-1 text-gray-400 font-normal">(used as prefix for each file)</span>}
@@ -771,7 +812,10 @@ export function TranslationWizard({ providers, hasCard }: Props) {
           </div>
 
           <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-            <h2 className="font-medium text-gray-900">AI provider</h2>
+            <div>
+              <h2 className="font-medium text-gray-900">AI provider</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Not sure which to pick? <strong className="text-gray-600">Claude Sonnet</strong> gives the best quality for most content. <strong className="text-gray-600">Haiku</strong> or <strong className="text-gray-600">Flash</strong> are faster and cheaper if you have a large volume.</p>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Provider</label>
@@ -816,8 +860,8 @@ export function TranslationWizard({ providers, hasCard }: Props) {
                   )}
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Pick one or more languages. Use presets for common markets, or browse all {STUDIO_LANGUAGES.length} languages below.
-                  Each language becomes a separate translation task billed individually.
+                  Pick the language(s) you want your content translated into. Use the preset buttons for common markets or search below.
+                  Each language is translated separately — you will get one file per language.
                 </p>
               </div>
               <button onClick={clearAll} className="text-xs text-gray-400 hover:underline shrink-0 ml-4">Clear</button>
@@ -828,19 +872,26 @@ export function TranslationWizard({ providers, hasCard }: Props) {
                 const count = preset.codes.filter(c => STUDIO_LANGUAGES.some(l => l.code === c)).length
                 const isActive = activePresetId === preset.id
                 return (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    title={preset.description}
-                    onClick={() => setSelectedLangs(new Set(preset.codes.filter(c => STUDIO_LANGUAGES.some(l => l.code === c))))}
-                    className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
-                      isActive
-                        ? "bg-indigo-600 text-white border-indigo-600"
-                        : "border-gray-200 bg-gray-50 hover:border-indigo-300 hover:bg-indigo-50 text-gray-700"
-                    }`}
-                  >
-                    {preset.label} <span className={isActive ? "opacity-75" : "text-gray-400"}>({count})</span>
-                  </button>
+                  <div key={preset.id} className="relative group/preset">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedLangs(new Set(preset.codes.filter(c => STUDIO_LANGUAGES.some(l => l.code === c))))}
+                      className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                        isActive
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "border-gray-200 bg-gray-50 hover:border-indigo-300 hover:bg-indigo-50 text-gray-700"
+                      }`}
+                    >
+                      {preset.label} <span className={isActive ? "opacity-75" : "text-gray-400"}>({count})</span>
+                    </button>
+                    {/* Tooltip */}
+                    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-10 hidden group-hover/preset:block">
+                      <div className="bg-gray-900 text-white text-xs rounded-lg px-2.5 py-1.5 whitespace-nowrap shadow-lg">
+                        {preset.description}
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+                      </div>
+                    </div>
+                  </div>
                 )
               })}
               <button
@@ -873,12 +924,7 @@ export function TranslationWizard({ providers, hasCard }: Props) {
               </div>
             )}
 
-            <details className="group">
-              <summary className="text-xs text-indigo-600 cursor-pointer hover:underline list-none flex items-center gap-1">
-                <span className="group-open:hidden">▸ Browse all languages</span>
-                <span className="hidden group-open:inline">▾ Hide browser</span>
-              </summary>
-              <div className="mt-2 space-y-2">
+            <div className="mt-2 space-y-2">
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -914,7 +960,7 @@ export function TranslationWizard({ providers, hasCard }: Props) {
                             className={`text-xs px-2.5 py-1.5 rounded-lg border text-left transition-colors ${
                               selectedLangs.has(lang.code)
                                 ? "bg-indigo-600 text-white border-indigo-600"
-                                : "bg-indigo-50 text-gray-700 border-indigo-100 hover:border-indigo-400"
+                                : "bg-white text-gray-700 border-gray-200 hover:border-indigo-400"
                             }`}
                           >
                             <span className="block font-medium truncate">{lang.name}</span>
@@ -951,8 +997,7 @@ export function TranslationWizard({ providers, hasCard }: Props) {
                     </div>
                   )}
                 </div>
-              </div>
-            </details>
+            </div>
           </div>
 
           {entries.some((e) => e.probePending) && (
@@ -961,7 +1006,7 @@ export function TranslationWizard({ providers, hasCard }: Props) {
             </p>
           )}
           <div className="flex justify-between">
-            <button onClick={() => setStep(1)} className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+            <button onClick={() => { setStep(1); setJobName("") }} className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
               ← Back
             </button>
             <button
@@ -981,6 +1026,12 @@ export function TranslationWizard({ providers, hasCard }: Props) {
         const selectedModel = currentProvider.models.find((m) => m.id === model)!
         const batchSize = 50
 
+        // Pricing constants (mirrors src/lib/stripe.ts — client-safe copy)
+        const PAYG_MARKUP = 5
+        const PLATFORM_FEE_PER_WORD = 0.007
+        const MIN_JOB_FEE = 5.00
+        const CHARS_PER_WORD = 5
+
         function fmt(n: number) {
           if (n < 0.001) return "< $0.001"
           return `$${n.toFixed(n < 0.01 ? 4 : n < 1 ? 3 : 2)}`
@@ -989,7 +1040,7 @@ export function TranslationWizard({ providers, hasCard }: Props) {
         // Per-file cost rows
         const fileRows = entries.map((entry) => {
           const isPdf = entry.file.name.endsWith(".pdf")
-          const isXliff = entry.file.name.endsWith(".xliff")
+          const isXliff = (entry.file.name.endsWith(".xliff") || entry.file.name.endsWith(".xlf"))
           const probe = entry.pdfProbe
 
           let strings: number
@@ -1022,18 +1073,27 @@ export function TranslationWizard({ providers, hasCard }: Props) {
             strings = entry.preview.length
           }
 
-          const totalChars = isPdf ? strings * 80 : entry.preview.reduce((s, u) => s + u.sourceText.length, 0)
+          const totalChars = isPdf
+            ? strings * 80
+            : isXliff && entry.xliffMeta?.sourceCharCount
+              ? entry.xliffMeta.sourceCharCount
+              : entry.preview.reduce((s, u) => s + u.sourceText.length, 0)
           const batches = Math.max(1, Math.ceil(strings / batchSize))
           const inputTok = Math.ceil(totalChars / 4) + batches * 150
           const outputTok = Math.ceil(totalChars / 4 * 1.1)
-          const costPerLang = (inputTok * selectedModel.inputPricePer1M + outputTok * selectedModel.outputPricePer1M) / 1_000_000
-          const totalFileCost = extractCostOneTime + costPerLang * selectedLangs.size
-          return { entry, isPdf, strings, batches, inputTok, outputTok, costPerLang, totalFileCost, extractCostOneTime, pdfLabel }
+          const rawApiCostPerLang = (inputTok * selectedModel.inputPricePer1M + outputTok * selectedModel.outputPricePer1M) / 1_000_000
+          const estimatedWords = Math.ceil(totalChars / CHARS_PER_WORD)
+          // Per-language charge = raw API cost × markup + platform fee per word
+          // Platform fee minimum ($5/job) applied across all languages at the end
+          const chargePerLang = rawApiCostPerLang * PAYG_MARKUP + estimatedWords * PLATFORM_FEE_PER_WORD
+          const totalFileCost = extractCostOneTime * PAYG_MARKUP + chargePerLang * selectedLangs.size
+          return { entry, isPdf, strings, batches, inputTok, outputTok, rawApiCostPerLang, chargePerLang, totalFileCost, extractCostOneTime, pdfLabel }
         })
 
-        const grandTotalCost = fileRows.reduce((s, r) => s + r.totalFileCost, 0)
+        const grandTotalRaw = fileRows.reduce((s, r) => s + r.totalFileCost, 0)
+        // Apply minimum job fee: total must be at least $5
+        const grandTotalCharge = Math.max(MIN_JOB_FEE, grandTotalRaw)
         const totalStrings = fileRows.reduce((s, r) => s + r.strings, 0)
-        const totalApiCalls = fileRows.reduce((s, r) => s + r.batches * selectedLangs.size, 0)
 
         return (
           <div className="space-y-4">
@@ -1045,7 +1105,6 @@ export function TranslationWizard({ providers, hasCard }: Props) {
                 <Row label="Files" value={`${entries.length} file${entries.length !== 1 ? "s" : ""} · ${totalStrings.toLocaleString()} strings`} />
                 <Row label="AI model" value={`${currentProvider.label} — ${selectedModel.label}`} />
                 <Row label="Target languages" value={`${selectedLangs.size} languages`} />
-                <Row label="Total API calls" value={`~${totalApiCalls.toLocaleString()}`} />
               </dl>
             </div>
 
@@ -1054,12 +1113,10 @@ export function TranslationWizard({ providers, hasCard }: Props) {
               <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <div>
                   <h2 className="font-medium text-gray-900">Estimated cost</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {selectedModel.label} · ${selectedModel.inputPricePer1M}/M in · ${selectedModel.outputPricePer1M}/M out
-                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">{selectedModel.label}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-gray-900">{fmt(grandTotalCost)}</p>
+                  <p className="text-2xl font-bold text-gray-900">{fmt(grandTotalCharge)}</p>
                   <p className="text-xs text-gray-400">total estimate</p>
                 </div>
               </div>
@@ -1069,14 +1126,13 @@ export function TranslationWizard({ providers, hasCard }: Props) {
                   <tr className="text-left text-xs text-gray-500">
                     <th className="px-5 py-2 font-medium">File</th>
                     <th className="px-5 py-2 font-medium text-right">Strings</th>
-                    <th className="px-5 py-2 font-medium text-right">Per language</th>
                     <th className="px-5 py-2 font-medium text-right">
                       Total ({selectedLangs.size} lang{selectedLangs.size !== 1 ? "s" : ""})
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {fileRows.map(({ entry, isPdf, strings, pdfLabel, costPerLang, totalFileCost }) => (
+                  {fileRows.map(({ entry, isPdf, strings, pdfLabel, totalFileCost }) => (
                     <tr key={entry.key} className="hover:bg-gray-50">
                       <td className="px-5 py-2.5">
                         <span className="font-medium text-gray-900 truncate block max-w-xs">{entry.file.name}</span>
@@ -1087,7 +1143,6 @@ export function TranslationWizard({ providers, hasCard }: Props) {
                       <td className="px-5 py-2.5 text-right text-gray-500">
                         {isPdf ? `~${strings}` : strings}
                       </td>
-                      <td className="px-5 py-2.5 text-right text-gray-500">{fmt(costPerLang)}</td>
                       <td className="px-5 py-2.5 text-right font-medium text-gray-900">{fmt(totalFileCost)}</td>
                     </tr>
                   ))}
@@ -1096,8 +1151,7 @@ export function TranslationWizard({ providers, hasCard }: Props) {
                   <tr>
                     <td className="px-5 py-2.5 font-semibold text-gray-900">Total</td>
                     <td className="px-5 py-2.5 text-right font-semibold text-gray-900">~{totalStrings.toLocaleString()}</td>
-                    <td className="px-5 py-2.5" />
-                    <td className="px-5 py-2.5 text-right font-bold text-indigo-700">{fmt(grandTotalCost)}</td>
+                    <td className="px-5 py-2.5 text-right font-bold text-indigo-700">{fmt(grandTotalCharge)}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -1118,38 +1172,63 @@ export function TranslationWizard({ providers, hasCard }: Props) {
               <pre className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2 whitespace-pre-wrap">{submitError}</pre>
             )}
 
-            {!hasCard && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold text-amber-900">Payment method required</p>
-                  <p className="text-xs text-amber-700 mt-0.5">
-                    Add a credit card to start AI translations. Billed at 5× the raw AI cost plus a $0.007/word platform fee, invoiced monthly.
-                  </p>
+            {!hasCard ? (
+              /* ── No payment method: payment is the only CTA ── */
+              <div className="bg-white rounded-xl border-2 border-indigo-200 p-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">💳</span>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">Add a payment method to continue</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Your card is charged only after translation completes — nothing is billed now.
+                      You will receive an invoice at the end of each month.
+                    </p>
+                  </div>
                 </div>
-                <button
-                  onClick={addCard}
-                  disabled={addingCard}
-                  className="shrink-0 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg"
-                >
-                  {addingCard ? "Redirecting…" : "Add card →"}
-                </button>
+                {cardError && (
+                  <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    {cardError}
+                  </div>
+                )}
+                <div className="flex items-center justify-between gap-4">
+                  <button onClick={() => setStep(2)} className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                    ← Back
+                  </button>
+                  <button
+                    onClick={addCard}
+                    disabled={addingCard}
+                    className="flex-1 max-w-xs bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
+                  >
+                    {addingCard ? "Redirecting to payment…" : "Add payment method →"}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 text-center">
+                  Secured by Stripe · We never store your card details
+                </p>
+              </div>
+            ) : (
+              /* ── Card on file: show confirmation and start button ── */
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                  <span>✓</span>
+                  <span>Payment method on file — you will be billed after translation completes, invoiced monthly.</span>
+                </div>
+                <div className="flex justify-between">
+                  <button onClick={() => setStep(2)} className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                    ← Back
+                  </button>
+                  <button
+                    onClick={submit}
+                    disabled={submitting}
+                    className="px-6 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                  >
+                    {submitting
+                      ? `Starting${entries.length > 1 ? "…" : "…"}`
+                      : `Start Translation${entries.length > 1 ? ` (${entries.length} jobs)` : ""}`}
+                  </button>
+                </div>
               </div>
             )}
-
-            <div className="flex justify-between">
-              <button onClick={() => setStep(2)} className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
-                ← Back
-              </button>
-              <button
-                onClick={submit}
-                disabled={submitting || !hasCard}
-                className="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-              >
-                {submitting
-                  ? `Creating job${entries.length > 1 ? "s" : ""}…`
-                  : `Start Translation${entries.length > 1 ? ` (${entries.length} jobs)` : ""}`}
-              </button>
-            </div>
           </div>
         )
       })()}

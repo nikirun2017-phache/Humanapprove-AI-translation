@@ -175,11 +175,18 @@ export default function NewProjectPage() {
           {file && fileStats && (() => {
             const LIGHT_RATE = 0.035
             const LQA_RATE = 0.090
-            const WORDS_PER_HOUR = 1200
-            const hours = fileStats.wordCount / WORDS_PER_HOUR
+            const PLATFORM_REVIEW_RATE = 0.055
+            const LIGHT_WPH = 1200
+            const LQA_WPH = 800
+            const lightHours = fileStats.wordCount / LIGHT_WPH
+            const lqaHours = fileStats.wordCount / LQA_WPH
             const lightCost = fileStats.wordCount * LIGHT_RATE
             const lqaCost = fileStats.wordCount * LQA_RATE
+            const platformCost = fileStats.wordCount * PLATFORM_REVIEW_RATE
 
+            function fmtHours(h: number) {
+              return h < 1 ? `~${Math.round(h * 60)} min` : `~${h.toFixed(1)} hrs`
+            }
             function fmtCost(n: number) {
               return `$${n.toFixed(2)}`
             }
@@ -207,19 +214,10 @@ export default function NewProjectPage() {
                     <span className="font-medium text-gray-900">{fileStats.unitCount.toLocaleString()} units</span>
                   </div>
                   {fileStats.isBilingual ? (
-                    <>
-                      <div className="flex justify-between text-gray-600">
-                        <span>Word count (target)</span>
-                        <span className="font-medium text-gray-900">{fileStats.wordCount.toLocaleString()} words</span>
-                      </div>
-                      <div className="flex justify-between text-gray-600">
-                        <span>Est. review time</span>
-                        <span className="font-medium text-gray-900">
-                          ~{hours < 1 ? `${Math.round(hours * 60)} min` : `${hours.toFixed(1)} hrs`}
-                          <span className="text-xs text-gray-400 ml-1">@ {WORDS_PER_HOUR.toLocaleString()} words/hr</span>
-                        </span>
-                      </div>
-                    </>
+                    <div className="flex justify-between text-gray-600">
+                      <span>Word count (target)</span>
+                      <span className="font-medium text-gray-900">{fileStats.wordCount.toLocaleString()} words</span>
+                    </div>
                   ) : (
                     <div className="flex justify-between text-gray-600">
                       <span>Target content</span>
@@ -230,23 +228,33 @@ export default function NewProjectPage() {
 
                 {fileStats.isBilingual ? (
                   <>
-                    <div className="grid grid-cols-3 px-4 py-2 bg-gray-50 text-xs text-gray-500 border-b border-gray-100">
+                    <div className="grid grid-cols-4 px-4 py-2 bg-gray-50 text-xs text-gray-500 border-b border-gray-100">
                       <span></span>
                       <span className="text-center font-medium">Light review</span>
                       <span className="text-center font-medium">Full LQA</span>
+                      <span className="text-center font-medium">Jendee AI</span>
                     </div>
-                    <div className="grid grid-cols-3 px-4 py-2 text-gray-600 border-b border-gray-100">
-                      <span>Rate</span>
-                      <span className="text-center">${LIGHT_RATE.toFixed(2)}/word</span>
-                      <span className="text-center">${LQA_RATE.toFixed(2)}/word</span>
+                    <div className="grid grid-cols-4 px-4 py-2 text-gray-600 border-b border-gray-100 text-xs">
+                      <span className="text-sm">Rate</span>
+                      <span className="text-center">${LIGHT_RATE.toFixed(3)}/word</span>
+                      <span className="text-center">${LQA_RATE.toFixed(3)}/word</span>
+                      <span className="text-center">${PLATFORM_REVIEW_RATE.toFixed(3)}/word</span>
                     </div>
-                    <div className="grid grid-cols-3 px-4 py-2.5 text-gray-900 font-semibold border-b border-gray-100">
+                    <div className="grid grid-cols-4 px-4 py-2 text-gray-600 border-b border-gray-100 text-xs">
+                      <span className="text-sm">Est. time</span>
+                      <span className="text-center">{fmtHours(lightHours)}</span>
+                      <span className="text-center">{fmtHours(lqaHours)}</span>
+                      <span className="text-center text-indigo-600">Managed</span>
+                    </div>
+                    <div className="grid grid-cols-4 px-4 py-2.5 text-gray-900 font-semibold border-b border-gray-100">
                       <span>Est. cost</span>
                       <span className="text-center text-indigo-700">{fmtCost(lightCost)}</span>
                       <span className="text-center text-indigo-700">{fmtCost(lqaCost)}</span>
+                      <span className="text-center text-indigo-700">{fmtCost(platformCost)}</span>
                     </div>
                     <div className="px-4 py-2.5 bg-amber-50 text-xs text-amber-700">
                       ⚠ Estimate only. Actual cost varies by content complexity and reviewer speed.
+                      Light review ~1,200 words/hr · Full LQA ~800 words/hr.
                     </div>
                   </>
                 ) : (

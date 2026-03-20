@@ -110,13 +110,14 @@ export default function NewProjectPage() {
           <div>
             <p className="text-sm font-medium text-gray-800">Not sure which to pick?</p>
             <p className="text-sm text-gray-500 mt-0.5">
-              Start with <strong>AI Translation</strong> if you have a raw source file. If a translator already
-              produced a draft, use <strong>Pair source + target</strong> or <strong>Upload XLIFF</strong>.
-              See{" "}
+              Pick <strong>AI Translation</strong> if you only have the original source file — the AI handles the draft.
+              If you or a translator already produced a translation, use <strong>Pair source + target</strong> to align the files for review.
+              If your CAT tool or AI app exported a bilingual file, go straight to <strong>Upload XLIFF</strong>.
+              Not sure what it will cost?{" "}
               <Link href="/pricing" className="text-indigo-600 hover:underline">
-                pricing
+                See pricing
               </Link>{" "}
-              for cost estimates before you begin.
+              before you start.
             </p>
           </div>
         </div>
