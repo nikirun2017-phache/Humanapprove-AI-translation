@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { getStudioLanguageName } from "@/lib/languages"
 import { cn } from "@/lib/utils"
+import { PLATFORM_REVIEW_RATE, OWN_REVIEWER_PLATFORM_FEE, AVG_WORDS_PER_UNIT } from "@/lib/pricing"
 
 interface Task {
   id: string
@@ -497,10 +498,6 @@ export function JobProgress({ initialJob }: Props) {
 
       {/* ── Review pricing modal ── */}
       {reviewModal.open && (() => {
-        const PLATFORM_REVIEW_RATE = 0.055
-        const OWN_REVIEWER_PLATFORM_FEE = 0.01
-        const AVG_WORDS_PER_UNIT = 15
-
         // Estimate word count from tasks being imported
         const targetTasks = reviewModal.taskId
           ? job.tasks.filter((t: Task) => t.id === reviewModal.taskId)

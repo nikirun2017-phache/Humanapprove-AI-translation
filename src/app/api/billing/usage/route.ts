@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { stripe, PAYG_MARKUP, PLATFORM_FEE_PER_WORD, PLATFORM_REVIEW_RATE, AVG_WORDS_PER_UNIT, MIN_JOB_FEE } from "@/lib/stripe"
+import { stripe, PAYG_MARKUP, PLATFORM_FEE_PER_WORD, PLATFORM_REVIEW_RATE, OWN_REVIEWER_PLATFORM_FEE, AVG_WORDS_PER_UNIT, MIN_JOB_FEE } from "@/lib/stripe"
 import { PROVIDER_INFO } from "@/lib/ai-providers/registry"
 
 const ALL_MODELS = PROVIDER_INFO.flatMap((p: (typeof PROVIDER_INFO)[number]) => p.models)
@@ -111,7 +111,7 @@ export async function GET() {
   }
 
   // ── REQUESTER / REVIEWER: personal usage view ─────────────────────────────────
-  const [jobsThisMonth, jobsLastMonth, tasksThisMonth, projectsThisMonth, totalProjects, user, platformProjects] =
+  const [jobsThisMonth, jobsLastMonth, tasksThisMonth, projectsThisMonth, totalProjects, user, platformProjects, ownReviewerProjects] =
     await Promise.all([
       db.translationJob.count({ where: { createdById: userId, createdAt: { gte: startOfMonth } } }),
       db.translationJob.count({
@@ -131,9 +131,14 @@ export async function GET() {
         where: { id: userId },
         select: { subscriptionId: true, subscriptionStatus: true, stripeCustomerId: true },
       }),
-      // Platform reviewer projects this month — billed at $0.03/word
+      // Platform reviewer projects this month — billed at PLATFORM_REVIEW_RATE/word
       db.project.findMany({
         where: { createdById: userId, reviewerType: "platform", createdAt: { gte: startOfMonth } },
+        include: { _count: { select: { units: true } } },
+      }),
+      // Own reviewer projects this month — billed at OWN_REVIEWER_PLATFORM_FEE/word
+      db.project.findMany({
+        where: { createdById: userId, reviewerType: "own", createdAt: { gte: startOfMonth } },
         include: { _count: { select: { units: true } } },
       }),
     ])
@@ -143,7 +148,11 @@ export async function GET() {
     (sum: number, p: { _count: { units: number } }) => sum + p._count.units * AVG_WORDS_PER_UNIT * PLATFORM_REVIEW_RATE,
     0
   )
-  const estimatedCharge = estimateCharge(tasksThisMonth) + platformReviewerFee
+  const ownReviewerFee = ownReviewerProjects.reduce(
+    (sum: number, p: { _count: { units: number } }) => sum + p._count.units * AVG_WORDS_PER_UNIT * OWN_REVIEWER_PLATFORM_FEE,
+    0
+  )
+  const estimatedCharge = estimateCharge(tasksThisMonth) + platformReviewerFee + ownReviewerFee
 
   // Fetch card details from Stripe if a payment method is saved
   let cardLast4: string | null = null
@@ -166,7 +175,9 @@ export async function GET() {
     estimatedApiCost: Math.round(estimatedApiCost * 10000) / 10000,
     estimatedCharge: Math.round(estimatedCharge * 100) / 100,
     platformReviewerFee: Math.round(platformReviewerFee * 100) / 100,
+    ownReviewerFee: Math.round(ownReviewerFee * 100) / 100,
     platformReviewProjects: platformProjects.length,
+    ownReviewerProjects: ownReviewerProjects.length,
     projectsThisMonth,
     totalProjects,
     markup: PAYG_MARKUP,
