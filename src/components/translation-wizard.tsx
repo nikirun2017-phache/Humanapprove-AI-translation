@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { STUDIO_LANGUAGES, STUDIO_LANGUAGE_REGIONS, LANGUAGE_PRESETS } from "@/lib/languages"
-import type { ProviderInfo, ProviderName } from "@/lib/ai-providers/types"
+import type { ProviderInfo } from "@/lib/ai-providers/types"
 
 interface Props {
   providers: ProviderInfo[]
@@ -138,8 +138,9 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
 
   // Step 2 state
   const [jobName, setJobName] = useState("")
-  const [provider, setProvider] = useState(providers[0].name)
-  const [model, setModel] = useState(providers[0].models[0].id)
+  // MVP: locked to Claude Sonnet 4.6
+  const provider = "anthropic"
+  const model = "claude-sonnet-4-6"
   const [selectedLangs, setSelectedLangs] = useState<Set<string>>(new Set())
   const [langSearch, setLangSearch] = useState("")
   const [regionFilter, setRegionFilter] = useState("")
@@ -158,8 +159,6 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
       const saved = JSON.parse(raw) as { jobName: string; provider: string; model: string; selectedLangs: string[] }
       sessionStorage.removeItem(WIZARD_STORAGE_KEY)
       setJobName(saved.jobName)
-      if (providers.some((p: (typeof providers)[number]) => p.name === saved.provider)) setProvider(saved.provider as ProviderName)
-      setModel(saved.model)
       setSelectedLangs(new Set(saved.selectedLangs))
     } catch { /* ignore */ }
   }, [restoringFromCardSetup])
@@ -811,39 +810,15 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+          <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
             <div>
               <h2 className="font-medium text-gray-900">AI provider</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Not sure which to pick? <strong className="text-gray-600">Claude Sonnet</strong> gives the best quality for most content. <strong className="text-gray-600">Haiku</strong> or <strong className="text-gray-600">Flash</strong> are faster and cheaper if you have a large volume.</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-indigo-200 bg-indigo-50">
+              <span className="text-indigo-600 text-lg">✦</span>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Provider</label>
-                <select
-                  value={provider}
-                  onChange={(e) => {
-                    const p = providers.find((x: (typeof providers)[number]) => x.name === e.target.value)!
-                    setProvider(p.name)
-                    setModel(p.models[0].id)
-                  }}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  {providers.map((p: (typeof providers)[number]) => (
-                    <option key={p.name} value={p.name}>{p.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Model</label>
-                <select
-                  value={model}
-                  onChange={(e) => setModel(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  {currentProvider.models.map((m: (typeof currentProvider.models)[number]) => (
-                    <option key={m.id} value={m.id}>{m.label}</option>
-                  ))}
-                </select>
+                <p className="text-sm font-semibold text-indigo-900">Claude Sonnet 4.6 by Anthropic</p>
+                <p className="text-xs text-indigo-600 mt-0.5">Best quality for translation — fixed for this release</p>
               </div>
             </div>
           </div>

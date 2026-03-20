@@ -14,46 +14,37 @@ export function Navbar() {
 
   const { role } = session.user
 
-  const links = [
-    { href: "/dashboard", label: "Dashboard" },
-    ...(role !== "reviewer" ? [{ href: "/new", label: "New project" }] : []),
-    // { href: "/pricing", label: "Pricing" }, // MVP: hidden
-    ...(role === "admin" ? [{ href: "/admin/users", label: "Users" }] : []),
-    ...(role === "admin" ? [{ href: "/admin/settings", label: "Settings" }] : []),
-    { href: "/billing", label: "Billing" },
-  ]
-
   return (
     <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-6">
-        <Link href="/dashboard" className="flex items-center gap-2">
+        <Link href="/translation-studio" className="flex items-center gap-2">
           <Image src="/logo.png" alt="Jendee AI" width={32} height={32} className="rounded-full" />
           <span className="font-semibold text-indigo-600 text-lg tracking-tight">Jendee AI</span>
         </Link>
         <div className="flex items-center gap-4">
-          {links.map((link: (typeof links)[number]) =>
-            link.href === "/new" ? (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm font-medium bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                + New project
-              </Link>
-            ) : (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "text-sm font-medium transition-colors",
-                  pathname === link.href
-                    ? "text-indigo-600"
-                    : "text-gray-600 hover:text-gray-900"
-                )}
-              >
-                {link.label}
-              </Link>
-            )
+          <Link
+            href="/translation-studio"
+            className={cn(
+              "text-sm font-medium transition-colors",
+              pathname.startsWith("/translation-studio")
+                ? "text-indigo-600"
+                : "text-gray-600 hover:text-gray-900"
+            )}
+          >
+            Translation Studio
+          </Link>
+          {role === "admin" && (
+            <Link
+              href="/admin/settings"
+              className={cn(
+                "text-sm font-medium transition-colors",
+                pathname === "/admin/settings"
+                  ? "text-indigo-600"
+                  : "text-gray-600 hover:text-gray-900"
+              )}
+            >
+              Settings
+            </Link>
           )}
         </div>
       </div>

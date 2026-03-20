@@ -26,7 +26,7 @@ export default async function JobProgressPage({
   })
 
   if (!job) redirect("/translation-studio")
-  if (role !== "admin" && job.createdById !== userId) redirect("/dashboard")
+  if (role !== "admin" && job.createdById !== userId) redirect("/translation-studio")
 
   return (
     <div className="min-h-screen bg-gray-50">
