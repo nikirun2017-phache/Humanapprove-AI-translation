@@ -26,7 +26,7 @@ function fileExt(path: string): string {
 }
 
 function countWords(units: { sourceText: string }[]): number {
-  return units.reduce((acc: number, u) => acc + u.sourceText.split(/\s+/).filter(Boolean).length, 0)
+  return units.reduce((acc: number, u: { sourceText: string }) => acc + u.sourceText.split(/\s+/).filter(Boolean).length, 0)
 }
 
 /**
@@ -105,12 +105,12 @@ export async function POST(req: NextRequest) {
   }>
 
   const eligibleFiles = prFiles.filter(
-    (f) => f.status !== "removed" && SUPPORTED_EXTS.has(fileExt(f.filename))
+    (f: (typeof prFiles)[number]) => f.status !== "removed" && SUPPORTED_EXTS.has(fileExt(f.filename))
   )
 
   const skippedFiles: { path: string; reason: string }[] = prFiles
-    .filter((f) => f.status === "removed" || !SUPPORTED_EXTS.has(fileExt(f.filename)))
-    .map((f) => ({
+    .filter((f: (typeof prFiles)[number]) => f.status === "removed" || !SUPPORTED_EXTS.has(fileExt(f.filename)))
+    .map((f: (typeof prFiles)[number]) => ({
       path: f.filename,
       reason: f.status === "removed"
         ? "File was deleted in this PR"
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
   }[] = []
 
   await Promise.all(
-    eligibleFiles.map(async (f) => {
+    eligibleFiles.map(async (f: (typeof eligibleFiles)[number]) => {
       try {
         const rawRes = await fetch(f.raw_url, { headers })
         if (!rawRes.ok) {
@@ -188,8 +188,8 @@ export async function POST(req: NextRequest) {
     })
   )
 
-  const totalUnits = files.reduce((s: number, f) => s + f.unitCount, 0)
-  const totalWordCount = files.reduce((s: number, f) => s + f.wordCount, 0)
+  const totalUnits = files.reduce((s: number, f: (typeof files)[number]) => s + f.unitCount, 0)
+  const totalWordCount = files.reduce((s: number, f: (typeof files)[number]) => s + f.wordCount, 0)
 
   return NextResponse.json({ owner, repo, prNumber, branch, files, skippedFiles, totalUnits, totalWordCount })
 }

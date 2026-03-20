@@ -21,7 +21,7 @@ const MODELS = [
 ]
 
 function estimate(words: number, languages: number, modelId: string): number {
-  const model = MODELS.find((m) => m.id === modelId) ?? MODELS[0]
+  const model = MODELS.find((m: (typeof MODELS)[number]) => m.id === modelId) ?? MODELS[0]
   const chars = words * CHARS_PER_WORD
   const strings = Math.max(1, Math.ceil(chars / CHARS_PER_STRING))
   const batches = Math.max(1, Math.ceil(strings / BATCH_SIZE))
@@ -49,7 +49,7 @@ export function CostEstimator() {
   const totalWords = mode === "pages" ? pages * WORDS_PER_PAGE : words
   const cost = useMemo(() => estimate(totalWords, languages, modelId), [totalWords, languages, modelId])
 
-  const model = MODELS.find((m) => m.id === modelId)!
+  const model = MODELS.find((m: (typeof MODELS)[number]) => m.id === modelId)!
 
   return (
     <div className="bg-white border border-indigo-200 rounded-2xl overflow-hidden shadow-sm">
@@ -144,7 +144,7 @@ export function CostEstimator() {
             onChange={(e) => setModelId(e.target.value)}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700"
           >
-            {MODELS.map((m) => (
+            {MODELS.map((m: (typeof MODELS)[number]) => (
               <option key={m.id} value={m.id}>{m.label}</option>
             ))}
           </select>

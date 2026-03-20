@@ -27,7 +27,7 @@ export function parseXliffSource(content: string): {
   // Detect units that already have a non-empty <target> via raw regex.
   // This handles the same namespaced-XML edge-cases that fxp misses.
   const translatedIdSet = new Set<string>(
-    parsed.units.filter((u) => u.targetText?.trim()).map((u) => u.id)
+    parsed.units.filter((u: (typeof parsed.units)[number]) => u.targetText?.trim()).map((u: (typeof parsed.units)[number]) => u.id)
   )
   const tuRegex = /<trans-unit\b([^>]*)>([\s\S]*?)<\/trans-unit>/g
   let tuMatch: RegExpExecArray | null
@@ -318,7 +318,7 @@ function segmentPdfText(rawText: string): SourceUnit[] {
   // Split on double+ newlines to get paragraph blocks
   const blocks = normalised
     .split(/\n{2,}/)
-    .map((b) => b.replace(/\n/g, " ").replace(/\s{2,}/g, " ").trim())
+    .map((b: string) => b.replace(/\n/g, " ").replace(/\s{2,}/g, " ").trim())
     .filter(Boolean)
 
   for (const block of blocks) {
@@ -465,13 +465,13 @@ Rules:
   }
 
   const data = await response.json() as { content: { type: string; text: string }[] }
-  const text = data.content.find((c) => c.type === "text")?.text ?? ""
+  const text = data.content.find((c: { type: string; text: string }) => c.type === "text")?.text ?? ""
 
   const jsonMatch = text.match(/\[[\s\S]*\]/)
   if (!jsonMatch) throw new Error(`Could not extract text from PDF pages ${startPage}–${endPage} — no JSON returned by Claude`)
 
   const units = JSON.parse(jsonMatch[0]) as { id: string; sourceText: string }[]
-  return units.filter((u) => u.id && u.sourceText?.trim())
+  return units.filter((u: { id: string; sourceText: string }) => u.id && u.sourceText?.trim())
 }
 
 /**
@@ -510,16 +510,16 @@ export function parseJsonSource(content: string): SourceUnit[] {
 }
 
 export function parseCsvSource(content: string): SourceUnit[] {
-  const lines = content.split(/\r?\n/).filter((l) => l.trim())
+  const lines = content.split(/\r?\n/).filter((l: string) => l.trim())
   if (lines.length === 0) return []
 
   // Detect if first line is a header (contains "id" or "key" as first field)
-  const firstCols = lines[0].split(",").map((c) => c.trim().toLowerCase().replace(/"/g, ""))
+  const firstCols = lines[0].split(",").map((c: string) => c.trim().toLowerCase().replace(/"/g, ""))
   const hasHeader = firstCols[0] === "id" || firstCols[0] === "key" || firstCols[0] === "name"
   const dataLines = hasHeader ? lines.slice(1) : lines
 
   return dataLines
-    .map((line) => {
+    .map((line: string) => {
       // Basic CSV split — handles quoted fields with embedded commas
       const cols = parseCsvLine(line)
       const id = cols[0]?.trim().replace(/^"|"$/g, "")

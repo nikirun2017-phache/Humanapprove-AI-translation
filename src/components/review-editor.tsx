@@ -107,7 +107,7 @@ export function ReviewEditor({
     fetchUnits()
   }, [fetchUnits])
 
-  const selectedUnit = units.find((u) => u.id === selectedId) ?? null
+  const selectedUnit = units.find((u: Unit) => u.id === selectedId) ?? null
 
   // Initialise draft whenever the selected unit changes
   useEffect(() => {
@@ -144,7 +144,7 @@ export function ReviewEditor({
     })
     if (res.ok) {
       const updated = await res.json()
-      setUnits((prev) => prev.map((u) => (u.id === unitId ? { ...u, ...updated } : u)))
+      setUnits((prev) => prev.map((u: Unit) => (u.id === unitId ? { ...u, ...updated } : u)))
     }
     setIsDirty(false)
     setSaving(null)
@@ -162,11 +162,11 @@ export function ReviewEditor({
       const res = await fetch(`/api/units/${unitId}/approve`, { method: "POST" })
       if (res.ok) {
         setUnits((prev) =>
-          prev.map((u) => (u.id === unitId ? { ...u, status: "approved" } : u))
+          prev.map((u: Unit) => (u.id === unitId ? { ...u, status: "approved" } : u))
         )
         setApprovedCount((c) => c + 1)
-        const idx = units.findIndex((u) => u.id === unitId)
-        const next = units.slice(idx + 1).find((u) => u.status !== "approved")
+        const idx = units.findIndex((u: Unit) => u.id === unitId)
+        const next = units.slice(idx + 1).find((u: Unit) => u.status !== "approved")
         if (next) setSelectedId(next.id)
       }
     } finally {
@@ -184,7 +184,7 @@ export function ReviewEditor({
     })
     if (res.ok) {
       setUnits((prev) =>
-        prev.map((u) => (u.id === unitId ? { ...u, status: "rejected" } : u))
+        prev.map((u: Unit) => (u.id === unitId ? { ...u, status: "rejected" } : u))
       )
       setRejectingId(null)
       setRejectReason("")
@@ -224,7 +224,7 @@ export function ReviewEditor({
 
   async function handleCommentAdded(unitId: string, comment: Comment) {
     setUnits((prev) =>
-      prev.map((u) =>
+      prev.map((u: Unit) =>
         u.id === unitId
           ? {
               ...u,
@@ -238,9 +238,9 @@ export function ReviewEditor({
 
   async function handleCommentResolved(commentId: string) {
     setUnits((prev) =>
-      prev.map((u) => ({
+      prev.map((u: Unit) => ({
         ...u,
-        comments: u.comments.map((c) =>
+        comments: u.comments.map((c: Comment) =>
           c.id === commentId ? { ...c, resolved: true } : c
         ),
       }))
@@ -295,7 +295,7 @@ export function ReviewEditor({
           {loading ? (
             <div className="p-4 text-xs text-gray-400 text-center">Loading…</div>
           ) : (
-            displayedUnits.map((unit) => (
+            displayedUnits.map((unit: Unit) => (
               <button
                 key={unit.id}
                 onClick={() => navigateTo(unit.id)}
@@ -644,7 +644,7 @@ export function ReviewEditor({
               <div className="p-4 text-xs text-gray-400 text-center">No activity yet.</div>
             ) : (
               <div className="divide-y divide-gray-50">
-                {auditLog.map((entry) => {
+                {auditLog.map((entry: AuditEntry) => {
                   const meta = ACTION_LABEL[entry.action] ?? { label: entry.action, color: "text-gray-600" }
                   return (
                     <div key={entry.id} className="px-4 py-3">

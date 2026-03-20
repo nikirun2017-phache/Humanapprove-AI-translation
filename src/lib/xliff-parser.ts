@@ -144,7 +144,7 @@ export function parseXliff(xmlContent: string): ParsedXliff {
         metadata,
       }
     })
-    .filter((u) => u.sourceText.length > 0)
+    .filter((u: ParsedUnit) => u.sourceText.length > 0)
 
   return {
     sourceLanguage,

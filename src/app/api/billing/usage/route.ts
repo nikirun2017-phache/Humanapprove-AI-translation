@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 import { stripe, PAYG_MARKUP, PLATFORM_FEE_PER_WORD, PLATFORM_REVIEW_RATE, AVG_WORDS_PER_UNIT, MIN_JOB_FEE } from "@/lib/stripe"
 import { PROVIDER_INFO } from "@/lib/ai-providers/registry"
 
-const ALL_MODELS = PROVIDER_INFO.flatMap((p) => p.models)
+const ALL_MODELS = PROVIDER_INFO.flatMap((p: (typeof PROVIDER_INFO)[number]) => p.models)
 const COST_PER_CHAR = 3 / 1_000_000 / 4  // rough: $3/M tokens, 4 chars/token
 const CHARS_PER_UNIT = 300
 const WORDS_PER_CHAR = 1 / 5 // ~5 chars per word
@@ -13,7 +13,7 @@ const WORDS_PER_CHAR = 1 / 5 // ~5 chars per word
 function estimateApiCost(tasks: Array<{ totalUnits: number; job: { model: string } }>): number {
   let total = 0
   for (const task of tasks) {
-    const model = ALL_MODELS.find((m) => m.id === task.job.model)
+    const model = ALL_MODELS.find((m: (typeof ALL_MODELS)[number]) => m.id === task.job.model)
     const units = task.totalUnits || 0
     const inputTokens = Math.ceil((units * CHARS_PER_UNIT) / 4)
     const outputTokens = Math.ceil(inputTokens * 1.1)
@@ -26,7 +26,7 @@ function estimateApiCost(tasks: Array<{ totalUnits: number; job: { model: string
 
 /** Platform service fee based on total words translated */
 function estimatePlatformFee(tasks: Array<{ totalUnits: number }>): number {
-  const totalWords = tasks.reduce((s: number, t) => s + t.totalUnits * CHARS_PER_UNIT * WORDS_PER_CHAR, 0)
+  const totalWords = tasks.reduce((s: number, t: { totalUnits: number }) => s + t.totalUnits * CHARS_PER_UNIT * WORDS_PER_CHAR, 0)
   return Math.max(MIN_JOB_FEE * tasks.length, totalWords * PLATFORM_FEE_PER_WORD)
 }
 

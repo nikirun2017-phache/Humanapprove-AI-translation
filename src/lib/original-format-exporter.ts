@@ -55,7 +55,7 @@ export function exportAsCsv(units: ExportUnit[], targetLanguage: string): string
   }
 
   const header = `id,${targetLanguage}`
-  const rows = units.map((u) => `${quote(u.id)},${quote(u.translatedText)}`)
+  const rows = units.map((u: ExportUnit) => `${quote(u.id)},${quote(u.translatedText)}`)
   return [header, ...rows].join("\n")
 }
 
@@ -101,7 +101,7 @@ export function exportAsMd(units: ExportUnit[]): string {
  * that the user can paste into their document tool.
  */
 export function exportAsTxt(units: ExportUnit[]): string {
-  return units.map((u) => u.translatedText).join("\n\n")
+  return units.map((u: ExportUnit) => u.translatedText).join("\n\n")
 }
 
 // ── Label helpers ─────────────────────────────────────────────────────────────

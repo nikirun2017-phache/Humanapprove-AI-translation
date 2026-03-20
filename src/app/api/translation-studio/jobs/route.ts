@@ -22,13 +22,13 @@ export async function GET() {
 
   // Attach task status counts
   const withStats = await Promise.all(
-    jobs.map(async (job) => {
+    jobs.map(async (job: (typeof jobs)[number]) => {
       const tasks = await db.translationTask.findMany({
         where: { jobId: job.id },
         select: { status: true },
       })
-      const completed = tasks.filter((t) => t.status === "completed" || t.status === "imported").length
-      const failed = tasks.filter((t) => t.status === "failed").length
+      const completed = tasks.filter((t: (typeof tasks)[number]) => t.status === "completed" || t.status === "imported").length
+      const failed = tasks.filter((t: (typeof tasks)[number]) => t.status === "failed").length
       return { ...job, completedTasks: completed, failedTasks: failed }
     })
   )
@@ -144,7 +144,7 @@ export async function POST(req: NextRequest) {
     })
 
     await tx.translationTask.createMany({
-      data: targetLanguages.map((lang) => ({
+      data: targetLanguages.map((lang: string) => ({
         jobId: j.id,
         targetLanguage: lang,
         totalUnits: units.length,

@@ -30,16 +30,16 @@ export async function GET(
   })
 
   // Attach xliffUnitId for unit-level events
-  const unitIds = logs.map((l) => l.unitId).filter(Boolean) as string[]
+  const unitIds = logs.map((l: (typeof logs)[number]) => l.unitId).filter(Boolean) as string[]
   const units = unitIds.length
     ? await db.translationUnit.findMany({
         where: { id: { in: unitIds } },
         select: { id: true, xliffUnitId: true, sourceText: true },
       })
     : []
-  const unitMap = Object.fromEntries(units.map((u) => [u.id, u]))
+  const unitMap = Object.fromEntries(units.map((u: (typeof units)[number]) => [u.id, u]))
 
-  const result = logs.map((l) => ({
+  const result = logs.map((l: (typeof logs)[number]) => ({
     id: l.id,
     action: l.action,
     detail: l.detail,

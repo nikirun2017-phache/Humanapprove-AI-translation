@@ -53,8 +53,8 @@ export async function GET(
   const parsed = parseXliff(xliffContent)
   const translations = new Map<string, string>(
     parsed.units
-      .filter((u) => u.targetText?.trim())
-      .map((u) => [u.id, u.targetText])
+      .filter((u: (typeof parsed.units)[number]) => u.targetText?.trim())
+      .map((u: (typeof parsed.units)[number]) => [u.id, u.targetText])
   )
 
   if (fmt === "json") {
@@ -119,7 +119,7 @@ function applyTranslationsToJson(
     return translations.get(prefix) ?? node
   }
   if (Array.isArray(node)) {
-    return node.map((item) => {
+    return node.map((item: unknown) => {
       if (typeof item === "object" && item !== null) {
         const entry = item as Record<string, unknown>
         const id = String(entry.id ?? entry.key ?? entry.name ?? "")

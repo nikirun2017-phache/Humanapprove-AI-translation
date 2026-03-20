@@ -1,4 +1,4 @@
-import type { AIProvider, TranslationBatch, TranslationResult, TranslatedUnit } from "./types"
+import type { AIProvider, TranslationBatch, TranslationResult, TranslatedUnit, SourceUnit } from "./types"
 
 const SYSTEM_PROMPT = `You are a professional translator. Translate the provided JSON array of strings from {SOURCE} to {TARGET}.
 Rules:
@@ -18,7 +18,7 @@ function buildProvider(baseUrl: string, providerName: "openai" | "deepseek"): AI
         .replace("{TARGET}", batch.targetLanguage)
 
       const userContent = JSON.stringify(
-        batch.units.map((u) => ({ id: u.id, text: u.sourceText }))
+        batch.units.map((u: SourceUnit) => ({ id: u.id, text: u.sourceText }))
       )
 
       const response = await fetch(`${baseUrl}/chat/completions`, {
@@ -65,11 +65,11 @@ function parseResponse(text: string, original: TranslationBatch["units"]): Trans
   if (arr.length === 0) {
     throw new Error(`Translation response contained no items. Model output: ${text.slice(0, 300)}`)
   }
-  const result = (arr as { id: string; translatedText: string }[]).map((item) => ({
+  const result = (arr as { id: string; translatedText: string }[]).map((item: { id: string; translatedText: string }) => ({
     id: String(item.id),
     translatedText: String(item.translatedText ?? ""),
   }))
-  const allEmpty = result.every((r) => !r.translatedText.trim())
+  const allEmpty = result.every((r: TranslatedUnit) => !r.translatedText.trim())
   if (allEmpty) throw new Error("Translation response returned empty translations for all units")
   return result
 }

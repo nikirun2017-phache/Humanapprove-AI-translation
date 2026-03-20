@@ -31,7 +31,7 @@ export function Navbar() {
           <span className="font-semibold text-indigo-600 text-lg tracking-tight">Jendee AI</span>
         </Link>
         <div className="flex items-center gap-4">
-          {links.map((link) =>
+          {links.map((link: (typeof links)[number]) =>
             link.href === "/new" ? (
               <Link
                 key={link.href}

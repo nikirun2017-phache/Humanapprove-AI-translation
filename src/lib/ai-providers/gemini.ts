@@ -1,4 +1,4 @@
-import type { AIProvider, TranslationBatch, TranslationResult, TranslatedUnit } from "./types"
+import type { AIProvider, TranslationBatch, TranslationResult, TranslatedUnit, SourceUnit } from "./types"
 
 const SYSTEM_PROMPT = `You are a professional translator. Translate the provided JSON array of strings from {SOURCE} to {TARGET}.
 Rules:
@@ -17,7 +17,7 @@ export const geminiProvider: AIProvider = {
       .replace("{TARGET}", batch.targetLanguage)
 
     const userContent = JSON.stringify(
-      batch.units.map((u) => ({ id: u.id, text: u.sourceText }))
+      batch.units.map((u: SourceUnit) => ({ id: u.id, text: u.sourceText }))
     )
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
@@ -78,11 +78,11 @@ function parseResponse(text: string, original: TranslationBatch["units"]): Trans
     throw new Error(`Translation response did not contain a JSON array. Model output: ${text.slice(0, 300)}`)
   }
   const parsed = JSON.parse(jsonArray) as { id: string; translatedText: string }[]
-  const result = parsed.map((item) => ({
+  const result = parsed.map((item: { id: string; translatedText: string }) => ({
     id: String(item.id),
     translatedText: String(item.translatedText ?? ""),
   }))
-  const allEmpty = result.every((r) => !r.translatedText.trim())
+  const allEmpty = result.every((r: TranslatedUnit) => !r.translatedText.trim())
   if (allEmpty) throw new Error("Translation response returned empty translations for all units")
   return result
 }

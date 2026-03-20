@@ -12,7 +12,7 @@ interface User {
   createdAt: Date | string
 }
 
-const LANG_LABEL = Object.fromEntries(STUDIO_LANGUAGES.map((l) => [l.code, l.name]))
+const LANG_LABEL = Object.fromEntries(STUDIO_LANGUAGES.map((l: (typeof STUDIO_LANGUAGES)[number]) => [l.code, l.name]))
 
 function langName(code: string) {
   return LANG_LABEL[code] ?? code
@@ -41,7 +41,7 @@ export function UserManager({ initialUsers, currentUserId }: { initialUsers: Use
 
   const [langSearch, setLangSearch] = useState("")
   const filteredLangs = STUDIO_LANGUAGES.filter(
-    (l) =>
+    (l: (typeof STUDIO_LANGUAGES)[number]) =>
       l.name.toLowerCase().includes(langSearch.toLowerCase()) ||
       l.code.toLowerCase().includes(langSearch.toLowerCase())
   )
@@ -50,7 +50,7 @@ export function UserManager({ initialUsers, currentUserId }: { initialUsers: Use
     setForm((f) => ({
       ...f,
       languages: f.languages.includes(code)
-        ? f.languages.filter((l) => l !== code)
+        ? f.languages.filter((l: string) => l !== code)
         : [...f.languages, code],
     }))
   }
@@ -82,7 +82,7 @@ export function UserManager({ initialUsers, currentUserId }: { initialUsers: Use
     setDeletingId(null)
     setConfirmDeleteId(null)
     if (res.ok) {
-      setUsers((u) => u.filter((x) => x.id !== userId))
+      setUsers((u: User[]) => u.filter((x: User) => x.id !== userId))
     } else {
       const data = await res.json() as { error?: string }
       setError(data.error ?? "Failed to delete user")
@@ -170,7 +170,7 @@ export function UserManager({ initialUsers, currentUserId }: { initialUsers: Use
               {/* Selected chips */}
               {form.languages.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mb-2">
-                  {form.languages.map((code) => (
+                  {form.languages.map((code: string) => (
                     <span
                       key={code}
                       className="inline-flex items-center gap-1 text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full"
@@ -190,7 +190,7 @@ export function UserManager({ initialUsers, currentUserId }: { initialUsers: Use
                 className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm mb-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
               <div className="grid grid-cols-3 gap-1.5 max-h-48 overflow-y-auto pr-1">
-                {filteredLangs.map((lang) => (
+                {filteredLangs.map((lang: (typeof filteredLangs)[number]) => (
                   <button
                     key={lang.code}
                     type="button"
@@ -241,7 +241,7 @@ export function UserManager({ initialUsers, currentUserId }: { initialUsers: Use
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {users.map((user) => {
+            {users.map((user: User) => {
               let langs: string[] = []
               try { langs = JSON.parse(user.languages) } catch {}
               const isSelf = user.id === currentUserId
@@ -261,7 +261,7 @@ export function UserManager({ initialUsers, currentUserId }: { initialUsers: Use
                   <td className="px-4 py-3">
                     {langs.length > 0 ? (
                       <div className="flex flex-wrap gap-1">
-                        {langs.map((code) => (
+                        {langs.map((code: string) => (
                           <span
                             key={code}
                             title={code}

@@ -51,7 +51,7 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
   const [exportingCleaned, setExportingCleaned] = useState(false)
 
   const reviewers = useMemo(() => {
-    const names = new Set(projects.map((p) => p.assignedReviewer?.name).filter(Boolean) as string[])
+    const names = new Set(projects.map((p: Project) => p.assignedReviewer?.name).filter(Boolean) as string[])
     return Array.from(names).sort()
   }, [projects])
 
@@ -59,31 +59,31 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
     let list = projects
     if (nameFilter.trim()) {
       const q = nameFilter.trim().toLowerCase()
-      list = list.filter((p) => p.name.toLowerCase().includes(q))
+      list = list.filter((p: Project) => p.name.toLowerCase().includes(q))
     }
     if (reviewerFilter) {
-      list = list.filter((p) => p.assignedReviewer?.name === reviewerFilter)
+      list = list.filter((p: Project) => p.assignedReviewer?.name === reviewerFilter)
     }
-    list = [...list].sort((a, b) => {
+    list = [...list].sort((a: Project, b: Project) => {
       const diff = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       return dateSort === "desc" ? -diff : diff
     })
     return list
   }, [projects, nameFilter, reviewerFilter, dateSort])
 
-  const allSelected = filtered.length > 0 && filtered.every((p) => selected.has(p.id))
+  const allSelected = filtered.length > 0 && filtered.every((p: Project) => selected.has(p.id))
 
   function toggleAll() {
     if (allSelected) {
       setSelected((s) => {
         const next = new Set(s)
-        filtered.forEach((p) => next.delete(p.id))
+        filtered.forEach((p: Project) => next.delete(p.id))
         return next
       })
     } else {
       setSelected((s) => {
         const next = new Set(s)
-        filtered.forEach((p) => next.add(p.id))
+        filtered.forEach((p: Project) => next.add(p.id))
         return next
       })
     }
@@ -100,7 +100,7 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
   async function deleteProject(id: string) {
     const res = await fetch(`/api/projects/${id}`, { method: "DELETE" })
     if (res.ok) {
-      setProjects((ps) => ps.filter((p) => p.id !== id))
+      setProjects((ps) => ps.filter((p: Project) => p.id !== id))
       setSelected((s) => { const next = new Set(s); next.delete(id); return next })
     }
   }
@@ -124,7 +124,7 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
     URL.revokeObjectURL(url)
     // Reflect status change to exported in local state
     setProjects((ps) =>
-      ps.map((p) => (p.id === id ? { ...p, status: "exported" } : p))
+      ps.map((p: Project) => (p.id === id ? { ...p, status: "exported" } : p))
     )
   }
 
@@ -142,7 +142,7 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
   }
 
   async function assignReviewer(projectId: string, reviewerId: string | null) {
-    const reviewer = reviewerUsers.find((r) => r.id === reviewerId) ?? null
+    const reviewer = reviewerUsers.find((r: ReviewerUser) => r.id === reviewerId) ?? null
     const reviewerType = reviewer?.isPlatformReviewer ? "platform" : "own"
     const res = await fetch(`/api/projects/${projectId}`, {
       method: "PATCH",
@@ -154,7 +154,7 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
     })
     if (res.ok) {
       setProjects((ps) =>
-        ps.map((p) =>
+        ps.map((p: Project) =>
           p.id === projectId
             ? { ...p, assignedReviewer: reviewer, reviewerType: reviewerId ? reviewerType : "own" }
             : p
@@ -166,7 +166,7 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
   async function exportSelected() {
     setExporting(true)
     for (const id of Array.from(selected)) {
-      const project = projects.find((p) => p.id === id)
+      const project = projects.find((p: Project) => p.id === id)
       if (project) await exportProject(id, project.name)
     }
     setExporting(false)
@@ -175,14 +175,14 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
   async function exportSelectedCleaned() {
     setExportingCleaned(true)
     for (const id of Array.from(selected)) {
-      const project = projects.find((p) => p.id === id)
+      const project = projects.find((p: Project) => p.id === id)
       if (project?.sourceFormat) await exportOriginal(id, project.name, project.sourceFormat)
     }
     setExportingCleaned(false)
   }
 
-  const selectedWithCleanedCount = Array.from(selected).filter((id) => {
-    const p = projects.find((p) => p.id === id)
+  const selectedWithCleanedCount = Array.from(selected).filter((id: string) => {
+    const p = projects.find((p: Project) => p.id === id)
     return p?.sourceFormat
   }).length
 
@@ -205,7 +205,7 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           <option value="">All reviewers</option>
-          {reviewers.map((r) => (
+          {reviewers.map((r: string) => (
             <option key={r} value={r}>{r}</option>
           ))}
         </select>
@@ -279,7 +279,7 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filtered.map((project) => {
+              {filtered.map((project: Project) => {
                 const total = project._count.units
                 const pct = total > 0 ? Math.round((project.approvedCount / total) * 100) : 0
                 const isSelected = selected.has(project.id)
@@ -339,16 +339,16 @@ export function ProjectsTable({ initialProjects, role, reviewerUsers = [] }: Pro
                             className="text-xs border border-gray-200 rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 text-gray-700 max-w-[160px]"
                           >
                             <option value="">— unassigned —</option>
-                            {reviewerUsers.filter((r) => !r.isPlatformReviewer).length > 0 && (
+                            {reviewerUsers.filter((r: ReviewerUser) => !r.isPlatformReviewer).length > 0 && (
                               <optgroup label="Your reviewers">
-                                {reviewerUsers.filter((r) => !r.isPlatformReviewer).map((r) => (
+                                {reviewerUsers.filter((r: ReviewerUser) => !r.isPlatformReviewer).map((r: ReviewerUser) => (
                                   <option key={r.id} value={r.id}>{r.name}</option>
                                 ))}
                               </optgroup>
                             )}
-                            {reviewerUsers.filter((r) => r.isPlatformReviewer).length > 0 && (
+                            {reviewerUsers.filter((r: ReviewerUser) => r.isPlatformReviewer).length > 0 && (
                               <optgroup label="Platform reviewers (+150% fee)">
-                                {reviewerUsers.filter((r) => r.isPlatformReviewer).map((r) => (
+                                {reviewerUsers.filter((r: ReviewerUser) => r.isPlatformReviewer).map((r: ReviewerUser) => (
                                   <option key={r.id} value={r.id}>{r.name}</option>
                                 ))}
                               </optgroup>

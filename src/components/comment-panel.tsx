@@ -34,8 +34,8 @@ export function CommentPanel({
   const [newComment, setNewComment] = useState("")
   const [submitting, setSubmitting] = useState(false)
 
-  const active = unit.comments.filter((c) => !c.resolved)
-  const resolved = unit.comments.filter((c) => c.resolved)
+  const active = unit.comments.filter((c: Comment) => !c.resolved)
+  const resolved = unit.comments.filter((c: Comment) => c.resolved)
 
   async function submitComment() {
     if (!newComment.trim()) return
@@ -76,7 +76,7 @@ export function CommentPanel({
           <p className="text-xs text-gray-400 text-center py-4">No comments yet</p>
         )}
 
-        {active.map((comment) => (
+        {active.map((comment: Comment) => (
           <CommentCard
             key={comment.id}
             comment={comment}
@@ -88,7 +88,7 @@ export function CommentPanel({
         {resolved.length > 0 && (
           <>
             <p className="text-xs text-gray-400 pt-2">Resolved</p>
-            {resolved.map((comment) => (
+            {resolved.map((comment: Comment) => (
               <CommentCard
                 key={comment.id}
                 comment={comment}

@@ -32,11 +32,11 @@ export async function GET(req: NextRequest) {
 
   // Filter by language capability if requested
   const filtered = language
-    ? users.filter((u) => {
+    ? users.filter((u: (typeof users)[number]) => {
         try {
           const langs: string[] = JSON.parse(u.languages)
           return langs.some(
-            (l) => l === language || l.startsWith(language.split("-")[0])
+            (l: string) => l === language || l.startsWith(language.split("-")[0])
           )
         } catch {
           return false

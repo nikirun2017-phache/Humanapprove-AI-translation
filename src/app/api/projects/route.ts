@@ -33,7 +33,7 @@ export async function GET() {
 
   // Attach approved unit counts
   const withProgress = await Promise.all(
-    projects.map(async (p) => {
+    projects.map(async (p: (typeof projects)[number]) => {
       const approvedCount = await db.translationUnit.count({
         where: { projectId: p.id, status: "approved" },
       })
@@ -99,11 +99,11 @@ export async function POST(req: NextRequest) {
   let resolvedReviewerType = reviewerType
   if (!reviewerId) {
     const candidates = await db.user.findMany({ where: { role: "reviewer" } })
-    const matches = candidates.filter((u) => {
+    const matches = candidates.filter((u: (typeof candidates)[number]) => {
       try {
         const langs: string[] = JSON.parse(u.languages)
         return langs.some(
-          (l) =>
+          (l: string) =>
             l === parsed.targetLanguage ||
             l.startsWith(parsed.targetLanguage.split("-")[0])
         )
@@ -111,8 +111,8 @@ export async function POST(req: NextRequest) {
         return false
       }
     })
-    const ownMatch = matches.find((u) => !u.isPlatformReviewer)
-    const platformMatch = matches.find((u) => u.isPlatformReviewer)
+    const ownMatch = matches.find((u: (typeof matches)[number]) => !u.isPlatformReviewer)
+    const platformMatch = matches.find((u: (typeof matches)[number]) => u.isPlatformReviewer)
     if (ownMatch) {
       reviewerId = ownMatch.id
       resolvedReviewerType = "own"
@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
     })
 
     await tx.translationUnit.createMany({
-      data: parsed.units.map((u) => ({
+      data: parsed.units.map((u: (typeof parsed.units)[number]) => ({
         projectId: proj.id,
         xliffUnitId: u.id,
         sourceText: u.sourceText,

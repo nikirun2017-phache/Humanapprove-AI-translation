@@ -47,7 +47,7 @@ export function AiSettingsForm({ providers, keyStatus }: Props) {
 
   return (
     <div className="space-y-4">
-      {providers.map((provider) => {
+      {providers.map((provider: ProviderInfo) => {
         const hasKey = currentStatus[provider.name]
         const st = status[provider.name]
         return (
@@ -56,7 +56,7 @@ export function AiSettingsForm({ providers, keyStatus }: Props) {
               <div>
                 <h2 className="font-medium text-gray-900">{provider.label}</h2>
                 <p className="text-xs text-gray-400">
-                  Models: {provider.models.map((m) => m.label).join(", ")}
+                  Models: {provider.models.map((m: (typeof provider.models)[number]) => m.label).join(", ")}
                 </p>
               </div>
               {hasKey ? (

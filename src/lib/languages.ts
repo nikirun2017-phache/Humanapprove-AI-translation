@@ -164,7 +164,7 @@ export const STUDIO_LANGUAGES: Language[] = [
 ]
 
 export const STUDIO_LANGUAGE_REGIONS = Array.from(
-  new Set(STUDIO_LANGUAGES.map((l) => l.region))
+  new Set(STUDIO_LANGUAGES.map((l: (typeof STUDIO_LANGUAGES)[number]) => l.region))
 )
 
 export interface LanguagePreset {
@@ -279,5 +279,5 @@ export const LANGUAGE_PRESETS: LanguagePreset[] = [
 ]
 
 export function getStudioLanguageName(code: string): string {
-  return STUDIO_LANGUAGES.find((l) => l.code === code)?.name ?? code
+  return STUDIO_LANGUAGES.find((l: (typeof STUDIO_LANGUAGES)[number]) => l.code === code)?.name ?? code
 }

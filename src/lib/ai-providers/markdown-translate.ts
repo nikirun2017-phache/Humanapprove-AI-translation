@@ -91,7 +91,7 @@ async function callAnthropic(
     throw new Error("Markdown batch too large (max_tokens reached). This batch will be split automatically on retry.")
   }
 
-  return data.content.find((c) => c.type === "text")?.text ?? ""
+  return data.content.find((c: { type: string; text: string }) => c.type === "text")?.text ?? ""
 }
 
 async function callOpenAICompat(

@@ -17,7 +17,7 @@ export function buildXliffFromTranslations(
   targetLanguage: string,
   originalName = "source"
 ): string {
-  const translationMap = new Map(translatedUnits.map((u) => [u.id, u.translatedText]))
+  const translationMap = new Map(translatedUnits.map((u: TranslatedUnit) => [u.id, u.translatedText]))
 
   const transUnits = sourceUnits
     .map((unit, i) => {

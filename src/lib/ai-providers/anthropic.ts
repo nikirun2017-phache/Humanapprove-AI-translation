@@ -1,4 +1,4 @@
-import type { AIProvider, TranslationBatch, TranslationResult, TranslatedUnit } from "./types"
+import type { AIProvider, TranslationBatch, TranslationResult, TranslatedUnit, SourceUnit } from "./types"
 
 const SYSTEM_PROMPT = `You are a professional translator. Translate the provided JSON array of strings from {SOURCE} to {TARGET}.
 Rules:
@@ -17,7 +17,7 @@ export const anthropicProvider: AIProvider = {
       .replace("{TARGET}", batch.targetLanguage)
 
     const userContent = JSON.stringify(
-      batch.units.map((u) => ({ id: u.id, text: u.sourceText }))
+      batch.units.map((u: SourceUnit) => ({ id: u.id, text: u.sourceText }))
     )
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -49,7 +49,7 @@ export const anthropicProvider: AIProvider = {
       content: { type: string; text: string }[]
       stop_reason?: string
     }
-    const text = data.content.find((c) => c.type === "text")?.text ?? ""
+    const text = data.content.find((c: { type: string; text: string }) => c.type === "text")?.text ?? ""
 
     if (data.stop_reason === "max_tokens") {
       throw new Error(`Translation response was truncated (max_tokens reached). Try a smaller batch or simpler content.`)
@@ -103,12 +103,12 @@ function parseTranslationResponse(
   }
 
   // Accept both "translatedText" (expected) and "text" (AI sometimes mirrors input key)
-  const result = rawParsed.map((item) => ({
+  const result = rawParsed.map((item: { id: string; translatedText?: string; text?: string }) => ({
     id: String(item.id),
     translatedText: String(item.translatedText ?? item.text ?? ""),
   }))
 
-  const allEmpty = result.every((r) => !r.translatedText.trim())
+  const allEmpty = result.every((r: TranslatedUnit) => !r.translatedText.trim())
   if (allEmpty) {
     throw new Error("Translation response returned empty translations for all units")
   }

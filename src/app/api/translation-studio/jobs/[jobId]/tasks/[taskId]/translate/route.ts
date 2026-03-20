@@ -119,7 +119,7 @@ export async function POST(
       // ── Gap-fill pass ────────────────────────────────────────────────────────
       // The AI occasionally skips units it deems "untranslatable" (dates, codes,
       // captions, etc.). Detect any missed units and send them in a second pass.
-      const missingUnits = units.filter((u) => !translationMap.has(u.id))
+      const missingUnits = units.filter((u: (typeof units)[number]) => !translationMap.has(u.id))
       if (missingUnits.length > 0) {
         const gapBatches = buildMarkdownBatches(missingUnits)
         for (const { markdown: gapMarkdown, indexToId: gapIndexToId } of gapBatches) {
@@ -222,7 +222,7 @@ export async function POST(
       }
 
       // Gap-fill: re-send any units the AI skipped
-      const pdfMissingUnits = units.filter((u) => !pdfTranslationMap.has(u.id))
+      const pdfMissingUnits = units.filter((u: (typeof units)[number]) => !pdfTranslationMap.has(u.id))
       if (pdfMissingUnits.length > 0) {
         const gapBatches = buildMarkdownBatches(pdfMissingUnits)
         for (const { markdown: gapMd, indexToId: gapIdx } of gapBatches) {
@@ -243,7 +243,7 @@ export async function POST(
         })
       }
 
-      const allTranslatedPdf = units.map((u) => ({
+      const allTranslatedPdf = units.map((u: (typeof units)[number]) => ({
         id: u.id,
         translatedText: pdfTranslationMap.get(u.id) ?? "",
       }))

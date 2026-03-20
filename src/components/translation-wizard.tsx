@@ -82,7 +82,7 @@ function parseXliffMeta(content: string): XliffMeta {
 
   // Sum up char length of all <source> text (strip inline XML tags)
   const sourceCharCount = (content.match(/<source[^>]*>([\s\S]*?)<\/source>/g) ?? [])
-    .reduce((sum, s) => {
+    .reduce((sum: number, s: string) => {
       const inner = s.replace(/^<source[^>]*>/, "").replace(/<\/source>$/, "")
       return sum + inner.replace(/<[^>]+>/g, " ").trim().length
     }, 0)
@@ -196,19 +196,19 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
   // Languages pinned to the top of the browser
   const PINNED_CODES = ["en-US", "zh-CN", "zh-TW", "ja-JP", "ko-KR", "pt-BR", "es-MX", "de-DE", "fr-FR"]
 
-  const filteredLangs = STUDIO_LANGUAGES.filter((l) => {
+  const filteredLangs = STUDIO_LANGUAGES.filter((l: (typeof STUDIO_LANGUAGES)[number]) => {
     const matchSearch = l.name.toLowerCase().includes(langSearch.toLowerCase()) ||
       l.code.toLowerCase().includes(langSearch.toLowerCase())
     const matchRegion = !regionFilter || l.region === regionFilter
     return matchSearch && matchRegion
   })
 
-  const pinnedLangs = filteredLangs.filter((l) => PINNED_CODES.includes(l.code))
-  const unpinnedLangs = filteredLangs.filter((l) => !PINNED_CODES.includes(l.code))
+  const pinnedLangs = filteredLangs.filter((l: (typeof filteredLangs)[number]) => PINNED_CODES.includes(l.code))
+  const unpinnedLangs = filteredLangs.filter((l: (typeof filteredLangs)[number]) => !PINNED_CODES.includes(l.code))
 
-  const activePresetId = LANGUAGE_PRESETS.find((p) => {
-    const validCodes = p.codes.filter((c) => STUDIO_LANGUAGES.some((l) => l.code === c))
-    return validCodes.length === selectedLangs.size && validCodes.every((c) => selectedLangs.has(c))
+  const activePresetId = LANGUAGE_PRESETS.find((p: (typeof LANGUAGE_PRESETS)[number]) => {
+    const validCodes = p.codes.filter((c: string) => STUDIO_LANGUAGES.some((l: (typeof STUDIO_LANGUAGES)[number]) => l.code === c))
+    return validCodes.length === selectedLangs.size && validCodes.every((c: string) => selectedLangs.has(c))
   })?.id ?? null
 
   function parseNonPdfFile(f: File): Promise<FileEntry> {
@@ -258,20 +258,20 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     try {
       const res = await fetch("/api/translation-studio/probe-pdf", { method: "POST", body: fd })
       const probe = await res.json() as PdfProbe
-      setEntries((prev) => prev.map((e) => e.key === key ? { ...e, pdfProbe: probe, probePending: false } : e))
+      setEntries((prev) => prev.map((e: FileEntry) => e.key === key ? { ...e, pdfProbe: probe, probePending: false } : e))
     } catch {
-      setEntries((prev) => prev.map((e) => e.key === key ? { ...e, probePending: false } : e))
+      setEntries((prev) => prev.map((e: FileEntry) => e.key === key ? { ...e, probePending: false } : e))
     }
   }
 
   async function addFiles(newFiles: File[]) {
-    const existingKeys = new Set(entries.map((e) => e.key))
-    const fresh = newFiles.filter((f) => !existingKeys.has(fileKey(f)))
+    const existingKeys = new Set(entries.map((e: FileEntry) => e.key))
+    const fresh = newFiles.filter((f: File) => !existingKeys.has(fileKey(f)))
     if (fresh.length === 0) return
 
     // Parse non-PDF files client-side; PDFs get a probe stub immediately
     const parsed = await Promise.all(
-      fresh.map((f) =>
+      fresh.map((f: File) =>
         f.name.endsWith(".pdf")
           ? Promise.resolve<FileEntry>({ key: fileKey(f), file: f, preview: [], parseError: "", probePending: true })
           : parseNonPdfFile(f)
@@ -305,7 +305,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
   }
 
   function removeEntry(key: string) {
-    setEntries((prev) => prev.filter((e) => e.key !== key))
+    setEntries((prev) => prev.filter((e: FileEntry) => e.key !== key))
   }
 
   const handleInputChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -317,7 +317,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
 
   const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault()
-    const files = Array.from(e.dataTransfer.files).filter((f) =>
+    const files = Array.from(e.dataTransfer.files).filter((f: File) =>
       /\.(json|csv|md|pdf|xliff)$/i.test(f.name)
     )
     await addFiles(files)
@@ -374,7 +374,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     })
   }
 
-  function selectAll() { setSelectedLangs(new Set(filteredLangs.map((l) => l.code))) }
+  function selectAll() { setSelectedLangs(new Set(filteredLangs.map((l: (typeof filteredLangs)[number]) => l.code))) }
   function clearAll() { setSelectedLangs(new Set()) }
 
   async function submit() {
@@ -429,10 +429,10 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
       })
     }
     if (Array.isArray(obj)) {
-      return (obj as Record<string, unknown>[]).map((item) => ({
+      return (obj as Record<string, unknown>[]).map((item: Record<string, unknown>) => ({
         id: String(item.id ?? item.key ?? ""),
         sourceText: String(item.value ?? item.text ?? item.source ?? ""),
-      })).filter((u) => u.id && u.sourceText)
+      })).filter((u: { id: string; sourceText: string }) => u.id && u.sourceText)
     }
     return []
   }
@@ -463,17 +463,17 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
 
   function parseCsvPreview(content: string): SourceUnit[] {
     return content.split(/\r?\n/).slice(1, 11)
-      .map((line) => {
+      .map((line: string) => {
         const [id, ...rest] = line.split(",")
         return { id: id?.trim().replace(/"/g, ""), sourceText: rest.join(",").trim().replace(/^"|"$/g, "") }
       })
-      .filter((u) => u.id && u.sourceText)
+      .filter((u: { id: string | undefined; sourceText: string }) => u.id && u.sourceText)
   }
 
   // ── derived ────────────────────────────────────────────────────────────────
 
   const hasFiles = entries.length > 0
-  const hasErrors = entries.some((e) => e.parseError)
+  const hasErrors = entries.some((e: FileEntry) => e.parseError)
   const canProceed = hasFiles && !hasErrors
 
   // ── render ─────────────────────────────────────────────────────────────────
@@ -583,7 +583,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                          {prAnalysis.files.map((f) => (
+                          {prAnalysis.files.map((f: GithubPrFile) => (
                             <tr key={f.path}>
                               <td className="px-4 py-2 font-mono text-xs text-gray-700 truncate max-w-xs">
                                 <span className="text-gray-400 mr-1.5 bg-gray-100 px-1 rounded">.{f.ext}</span>
@@ -612,7 +612,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                         </p>
                       </div>
                       <div className="divide-y divide-amber-100">
-                        {prAnalysis.skippedFiles.map((f) => (
+                        {prAnalysis.skippedFiles.map((f: { path: string; reason: string }) => (
                           <div key={f.path} className="px-4 py-2 flex items-start gap-3 text-xs">
                             <code className="text-gray-500 truncate flex-1">{f.path}</code>
                             <span className="text-amber-700 shrink-0">{f.reason}</span>
@@ -673,7 +673,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                 </button>
               </div>
 
-              {entries.map((entry) => {
+              {entries.map((entry: FileEntry) => {
                 const isPdf = entry.file.name.endsWith(".pdf")
                 const stringCount = isPdf ? null : entry.preview.length
                 const probe = entry.pdfProbe
@@ -766,7 +766,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
               </div>
               <table className="w-full text-sm">
                 <tbody className="divide-y divide-gray-50">
-                  {entries[0].preview.slice(0, 10).map((u) => (
+                  {entries[0].preview.slice(0, 10).map((u: SourceUnit) => (
                     <tr key={u.id}>
                       <td className="px-4 py-2 text-xs text-gray-400 w-1/3 truncate">{u.id}</td>
                       <td className="px-4 py-2 text-gray-700 truncate">{u.sourceText}</td>
@@ -822,13 +822,13 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                 <select
                   value={provider}
                   onChange={(e) => {
-                    const p = providers.find((x) => x.name === e.target.value)!
+                    const p = providers.find((x: (typeof providers)[number]) => x.name === e.target.value)!
                     setProvider(p.name)
                     setModel(p.models[0].id)
                   }}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
-                  {providers.map((p) => (
+                  {providers.map((p: (typeof providers)[number]) => (
                     <option key={p.name} value={p.name}>{p.label}</option>
                   ))}
                 </select>
@@ -840,7 +840,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                   onChange={(e) => setModel(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
-                  {currentProvider.models.map((m) => (
+                  {currentProvider.models.map((m: (typeof currentProvider.models)[number]) => (
                     <option key={m.id} value={m.id}>{m.label}</option>
                   ))}
                 </select>
@@ -868,14 +868,14 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {LANGUAGE_PRESETS.map((preset) => {
-                const count = preset.codes.filter(c => STUDIO_LANGUAGES.some(l => l.code === c)).length
+              {LANGUAGE_PRESETS.map((preset: (typeof LANGUAGE_PRESETS)[number]) => {
+                const count = preset.codes.filter((c: string) => STUDIO_LANGUAGES.some((l: (typeof STUDIO_LANGUAGES)[number]) => l.code === c)).length
                 const isActive = activePresetId === preset.id
                 return (
                   <div key={preset.id} className="relative group/preset">
                     <button
                       type="button"
-                      onClick={() => setSelectedLangs(new Set(preset.codes.filter(c => STUDIO_LANGUAGES.some(l => l.code === c))))}
+                      onClick={() => setSelectedLangs(new Set(preset.codes.filter((c: string) => STUDIO_LANGUAGES.some((l: (typeof STUDIO_LANGUAGES)[number]) => l.code === c))))}
                       className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
                         isActive
                           ? "bg-indigo-600 text-white border-indigo-600"
@@ -911,7 +911,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
               <div className="border border-indigo-100 bg-indigo-50 rounded-lg p-3">
                 <p className="text-xs font-medium text-indigo-700 mb-2">{selectedLangs.size} selected</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {STUDIO_LANGUAGES.filter(l => selectedLangs.has(l.code)).map((lang) => (
+                  {STUDIO_LANGUAGES.filter((l: (typeof STUDIO_LANGUAGES)[number]) => selectedLangs.has(l.code)).map((lang: (typeof STUDIO_LANGUAGES)[number]) => (
                     <span
                       key={lang.code}
                       className="inline-flex items-center gap-1 text-xs bg-white border border-indigo-200 text-indigo-800 px-2 py-0.5 rounded-full"
@@ -939,7 +939,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                     className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     <option value="">All regions</option>
-                    {STUDIO_LANGUAGE_REGIONS.map((r) => (
+                    {STUDIO_LANGUAGE_REGIONS.map((r: (typeof STUDIO_LANGUAGE_REGIONS)[number]) => (
                       <option key={r} value={r}>{r}</option>
                     ))}
                   </select>
@@ -952,7 +952,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                         Popular
                       </p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                        {pinnedLangs.map((lang) => (
+                        {pinnedLangs.map((lang: (typeof pinnedLangs)[number]) => (
                           <button
                             key={lang.code}
                             type="button"
@@ -979,7 +979,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                   {/* Rest */}
                   {unpinnedLangs.length > 0 && (
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                      {unpinnedLangs.map((lang) => (
+                      {unpinnedLangs.map((lang: (typeof unpinnedLangs)[number]) => (
                         <button
                           key={lang.code}
                           type="button"
@@ -1000,7 +1000,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             </div>
           </div>
 
-          {entries.some((e) => e.probePending) && (
+          {entries.some((e: FileEntry) => e.probePending) && (
             <p className="text-xs text-amber-600 text-right">
               Analysing PDF… please wait before proceeding.
             </p>
@@ -1011,9 +1011,9 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             </button>
             <button
               onClick={() => setStep(3)}
-              disabled={!jobName.trim() || selectedLangs.size === 0 || entries.some((e) => e.probePending)}
+              disabled={!jobName.trim() || selectedLangs.size === 0 || entries.some((e: FileEntry) => e.probePending)}
               className="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-40"
-              title={entries.some((e) => e.probePending) ? "Wait for PDF analysis to complete" : undefined}
+              title={entries.some((e: FileEntry) => e.probePending) ? "Wait for PDF analysis to complete" : undefined}
             >
               Next: Confirm →
             </button>
@@ -1023,7 +1023,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
 
       {/* ── Step 3 — Confirm + Cost estimate ── */}
       {step === 3 && (() => {
-        const selectedModel = currentProvider.models.find((m) => m.id === model)!
+        const selectedModel = currentProvider.models.find((m: (typeof currentProvider.models)[number]) => m.id === model)!
         const batchSize = 50
 
         // Pricing constants (mirrors src/lib/stripe.ts — client-safe copy)
@@ -1038,7 +1038,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
         }
 
         // Per-file cost rows
-        const fileRows = entries.map((entry) => {
+        const fileRows = entries.map((entry: FileEntry) => {
           const isPdf = entry.file.name.endsWith(".pdf")
           const isXliff = (entry.file.name.endsWith(".xliff") || entry.file.name.endsWith(".xlf"))
           const probe = entry.pdfProbe
@@ -1077,7 +1077,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             ? (probe?.wordCount ? probe.wordCount * CHARS_PER_WORD : strings * 80)
             : isXliff && entry.xliffMeta?.sourceCharCount
               ? entry.xliffMeta.sourceCharCount
-              : entry.preview.reduce((s, u) => s + u.sourceText.length, 0)
+              : entry.preview.reduce((s: number, u: SourceUnit) => s + u.sourceText.length, 0)
           const batches = Math.max(1, Math.ceil(strings / batchSize))
           const inputTok = Math.ceil(totalChars / 4) + batches * 150
           const outputTok = Math.ceil(totalChars / 4 * 1.1)
@@ -1090,12 +1090,12 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
           return { entry, isPdf, strings, estimatedWords, batches, inputTok, outputTok, rawApiCostPerLang, chargePerLang, totalFileCost, extractCostOneTime, pdfLabel }
         })
 
-        const grandTotalRaw = fileRows.reduce((s, r) => s + r.totalFileCost, 0)
+        const grandTotalRaw = fileRows.reduce((s: number, r: (typeof fileRows)[number]) => s + r.totalFileCost, 0)
         // Apply minimum job fee: total must be at least $5
         const grandTotalCharge = Math.max(MIN_JOB_FEE, grandTotalRaw)
-        const totalWords = fileRows.reduce((s, r) => s + r.estimatedWords, 0)
+        const totalWords = fileRows.reduce((s: number, r: (typeof fileRows)[number]) => s + r.estimatedWords, 0)
         // Split into fixed (platform fee) and variable (AI markup) components for transparency
-        const totalPlatformFee = fileRows.reduce((s, r) => s + r.estimatedWords * PLATFORM_FEE_PER_WORD * selectedLangs.size, 0)
+        const totalPlatformFee = fileRows.reduce((s: number, r: (typeof fileRows)[number]) => s + r.estimatedWords * PLATFORM_FEE_PER_WORD * selectedLangs.size, 0)
         const totalAiMarkup = Math.max(0, grandTotalRaw - totalPlatformFee)
         const minFeeApplied = grandTotalCharge > grandTotalRaw
 
@@ -1180,7 +1180,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                 <p className="text-xs text-gray-400 pt-1 border-t border-gray-200 mt-1">
                   The platform fee is calculated from the extracted word count and will not change. The AI portion varies slightly based on actual token usage.
                 </p>
-                {fileRows.some((r) => r.isPdf) && (
+                {fileRows.some((r: (typeof fileRows)[number]) => r.isPdf) && (
                   <p className="text-xs text-gray-400">
                     PDF output: delivered as .xliff (for human review) and .txt (ready to use). Original PDF layout is not reconstructed.
                   </p>

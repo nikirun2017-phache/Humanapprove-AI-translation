@@ -42,7 +42,7 @@ export async function resolveApiKey(
 export async function getProviderKeyStatus(): Promise<Record<string, boolean>> {
   const keys = Object.values(PROVIDER_SETTING_KEYS)
   const settings = await db.systemSetting.findMany({ where: { key: { in: keys } } })
-  const set = new Set(settings.filter((s) => s.value).map((s) => s.key))
+  const set = new Set(settings.filter((s: (typeof settings)[number]) => s.value).map((s: (typeof settings)[number]) => s.key))
   return Object.fromEntries(
     Object.entries(PROVIDER_SETTING_KEYS).map(([provider, key]) => [provider, set.has(key)])
   )

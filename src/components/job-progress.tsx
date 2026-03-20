@@ -66,14 +66,14 @@ export function JobProgress({ initialJob }: Props) {
 
   const tasks = job.tasks
   const totalTasks = tasks.length
-  const doneTasks = tasks.filter((t) => t.status === "completed" || t.status === "imported" || t.status === "failed").length
+  const doneTasks = tasks.filter((t: Task) => t.status === "completed" || t.status === "imported" || t.status === "failed").length
   const overallPct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0
   const allDone = doneTasks === totalTasks
-  const completedCount = tasks.filter((t) => t.status === "completed").length
-  const failedCount = tasks.filter((t) => t.status === "failed").length
-  const importedCount = tasks.filter((t) => t.status === "imported").length
-  const readyCount = tasks.filter((t) => t.status === "completed" || t.status === "imported").length
-  const runningTask = tasks.find((t) => t.status === "running")
+  const completedCount = tasks.filter((t: Task) => t.status === "completed").length
+  const failedCount = tasks.filter((t: Task) => t.status === "failed").length
+  const importedCount = tasks.filter((t: Task) => t.status === "imported").length
+  const readyCount = tasks.filter((t: Task) => t.status === "completed" || t.status === "imported").length
+  const runningTask = tasks.find((t: Task) => t.status === "running")
 
   // Auto-download all completed files as soon as translation finishes
   useEffect(() => {
@@ -98,7 +98,7 @@ export function JobProgress({ initialJob }: Props) {
   async function translateTask(task: Task) {
     setJob((j) => ({
       ...j,
-      tasks: j.tasks.map((t) => t.id === task.id ? { ...t, status: "running" } : t),
+      tasks: j.tasks.map((t: Task) => t.id === task.id ? { ...t, status: "running" } : t),
     }))
 
     const pollInterval = setInterval(async () => {
@@ -128,7 +128,7 @@ export function JobProgress({ initialJob }: Props) {
     const latest = await fetchJob()
     if (!latest) { runningRef.current = false; return }
 
-    const pending = latest.tasks.filter((t) => t.status === "pending")
+    const pending = latest.tasks.filter((t: Task) => t.status === "pending")
 
     for (const task of pending) {
       if (pausedRef.current) break
@@ -139,7 +139,7 @@ export function JobProgress({ initialJob }: Props) {
   }
 
   useEffect(() => {
-    const hasPending = initialJob.tasks.some((t) => t.status === "pending")
+    const hasPending = initialJob.tasks.some((t: Task) => t.status === "pending")
     if (hasPending) runTranslation()
   }, [])
 
@@ -166,7 +166,7 @@ export function JobProgress({ initialJob }: Props) {
   }
 
   async function retryAllFailed() {
-    const failed = job.tasks.filter((t) => t.status === "failed")
+    const failed = job.tasks.filter((t: Task) => t.status === "failed")
     for (const task of failed) {
       if (pausedRef.current) break
       await handleRetry(task)
@@ -176,7 +176,7 @@ export function JobProgress({ initialJob }: Props) {
   async function handleImportAll(type: "platform" | "own" = reviewerType) {
     setReviewModal({ open: false })
     setImportingAll(true)
-    const completed = job.tasks.filter((t) => t.status === "completed")
+    const completed = job.tasks.filter((t: Task) => t.status === "completed")
     for (const task of completed) {
       await handleImport(task, type)
     }
@@ -220,7 +220,7 @@ export function JobProgress({ initialJob }: Props) {
         text: `Translating into ${langName} — ${pct}% complete. Your files will download automatically when done. Please keep this tab open — large files may take a few minutes.`,
       }
     }
-    const pendingCount = tasks.filter((t) => t.status === "pending").length
+    const pendingCount = tasks.filter((t: Task) => t.status === "pending").length
     if (pendingCount > 0) {
       return { icon: "⏳", color: "bg-gray-50 border-gray-200 text-gray-600", text: `${pendingCount} language${pendingCount !== 1 ? "s" : ""} queued and will start automatically.` }
     }
@@ -408,7 +408,7 @@ export function JobProgress({ initialJob }: Props) {
         </div>
         <table className="w-full text-sm">
           <tbody className="divide-y divide-gray-50">
-            {tasks.map((task) => {
+            {tasks.map((task: Task) => {
               const pct = task.totalUnits > 0
                 ? Math.round((task.completedUnits / task.totalUnits) * 100)
                 : 0
@@ -503,9 +503,9 @@ export function JobProgress({ initialJob }: Props) {
 
         // Estimate word count from tasks being imported
         const targetTasks = reviewModal.taskId
-          ? job.tasks.filter((t) => t.id === reviewModal.taskId)
-          : job.tasks.filter((t) => t.status === "completed")
-        const totalUnits = targetTasks.reduce((s, t) => s + t.totalUnits, 0)
+          ? job.tasks.filter((t: Task) => t.id === reviewModal.taskId)
+          : job.tasks.filter((t: Task) => t.status === "completed")
+        const totalUnits = targetTasks.reduce((s: number, t: Task) => s + t.totalUnits, 0)
         const estWords = totalUnits * AVG_WORDS_PER_UNIT
 
         const fmt = (n: number) => n < 0.01 ? "< $0.01" : `$${n.toFixed(2)}`
@@ -514,7 +514,7 @@ export function JobProgress({ initialJob }: Props) {
 
         const confirmReview = () => {
           if (reviewModal.taskId) {
-            const task = job.tasks.find((t) => t.id === reviewModal.taskId)
+            const task = job.tasks.find((t: Task) => t.id === reviewModal.taskId)
             if (task) {
               setReviewModal({ open: false })
               handleImport(task, reviewerType)

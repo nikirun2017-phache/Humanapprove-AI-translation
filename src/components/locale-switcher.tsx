@@ -51,7 +51,7 @@ export function LocaleSwitcher() {
         className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white text-gray-600 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:opacity-50"
         aria-label={t("label")}
       >
-        {routing.locales.map((l) => (
+        {routing.locales.map((l: (typeof routing.locales)[number]) => (
           <option key={l} value={l}>
             {LOCALE_LABELS[l] ?? l}
           </option>

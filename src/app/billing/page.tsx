@@ -215,7 +215,7 @@ function AdminView({ usage, monthLabel }: { usage: AdminUsage | null; monthLabel
       {/* KPI cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {kpis.length > 0
-          ? kpis.map((k) => (
+          ? kpis.map((k: (typeof kpis)[number]) => (
               <div key={k.label} className={cn("rounded-xl border border-gray-200 p-5", k.bg)}>
                 <div className="flex items-center gap-2 mb-3">
                   <span className={cn("w-2 h-2 rounded-full", k.dot)} />
@@ -270,7 +270,7 @@ function AdminView({ usage, monthLabel }: { usage: AdminUsage | null; monthLabel
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {usage.users.map((u) => (
+              {usage.users.map((u: AdminUser) => (
                 <tr key={u.id} className="hover:bg-gray-50">
                   <td className="px-5 py-3">
                     <p className="font-medium text-gray-900">{u.name}</p>
@@ -419,7 +419,7 @@ function RequesterView({
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-3">
-              {[0, 1, 2].map((i) => (
+              {[0, 1, 2].map((i: number) => (
                 <div key={i} className="animate-pulse">
                   <div className="h-7 w-12 bg-gray-100 rounded mb-1" />
                   <div className="h-3 w-16 bg-gray-100 rounded" />

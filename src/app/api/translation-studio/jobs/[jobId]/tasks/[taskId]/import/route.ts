@@ -56,11 +56,11 @@ export async function POST(
   // Auto-assign reviewer by language capability
   let reviewerId: string | null = null
   const candidates = await db.user.findMany({ where: { role: "reviewer" } })
-  const match = candidates.find((u) => {
+  const match = candidates.find((u: (typeof candidates)[number]) => {
     try {
       const langs: string[] = JSON.parse(u.languages)
       return langs.some(
-        (l) =>
+        (l: string) =>
           l === task.targetLanguage ||
           l.startsWith(task.targetLanguage.split("-")[0])
       )
@@ -98,7 +98,7 @@ export async function POST(
 
       // Deduplicate by xliffUnitId (Rise 360 XLIFFs can repeat IDs across <file> elements)
       const seen = new Set<string>()
-      const uniqueUnits = parsed.units.filter((u) => {
+      const uniqueUnits = parsed.units.filter((u: (typeof parsed.units)[number]) => {
         if (seen.has(u.id)) return false
         seen.add(u.id)
         return true
@@ -108,7 +108,7 @@ export async function POST(
       const CHUNK = 100
       for (let i = 0; i < uniqueUnits.length; i += CHUNK) {
         await tx.translationUnit.createMany({
-          data: uniqueUnits.slice(i, i + CHUNK).map((u) => ({
+          data: uniqueUnits.slice(i, i + CHUNK).map((u: (typeof uniqueUnits)[number]) => ({
             projectId: proj.id,
             xliffUnitId: u.id,
             sourceText: u.sourceText,

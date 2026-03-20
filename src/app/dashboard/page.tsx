@@ -51,17 +51,17 @@ export default async function DashboardPage() {
   ])
 
   // Point 4: fetch latest reviewer audit activity per project
-  const projectIds = projects.map((p) => p.id)
+  const projectIds = projects.map((p: (typeof projects)[number]) => p.id)
   const latestAuditLogs = await db.auditLog.findMany({
     where: { projectId: { in: projectIds } },
     orderBy: { createdAt: "desc" },
     distinct: ["projectId"],
     select: { projectId: true, createdAt: true, action: true, user: { select: { name: true } } },
   })
-  const auditByProject = new Map(latestAuditLogs.map((l) => [l.projectId, l]))
+  const auditByProject = new Map(latestAuditLogs.map((l: (typeof latestAuditLogs)[number]) => [l.projectId, l]))
 
   const projectsWithProgress = await Promise.all(
-    projects.map(async (p) => {
+    projects.map(async (p: (typeof projects)[number]) => {
       const approvedCount = await db.translationUnit.count({
         where: { projectId: p.id, status: "approved" },
       })
@@ -81,7 +81,7 @@ export default async function DashboardPage() {
 
   const avgReviewHours =
     recentSessions.length > 0
-      ? recentSessions.reduce((sum, s) => {
+      ? recentSessions.reduce((sum: number, s: (typeof recentSessions)[number]) => {
           const ms = new Date(s.submittedAt!).getTime() - new Date(s.startedAt).getTime()
           return sum + ms / 3_600_000
         }, 0) / recentSessions.length
@@ -208,7 +208,7 @@ export default async function DashboardPage() {
         {/* KPI Cards — hidden on first-time empty state to avoid noise */}
         {!isFirstTime && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {kpis.map((kpi) => (
+            {kpis.map((kpi: (typeof kpis)[number]) => (
               <div key={kpi.label} className="bg-white rounded-xl border border-gray-200 p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <span className={`w-2 h-2 rounded-full ${kpi.dot}`} />
