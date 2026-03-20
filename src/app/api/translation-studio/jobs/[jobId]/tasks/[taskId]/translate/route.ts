@@ -75,7 +75,8 @@ export async function POST(
   try {
     const apiKey = await resolveApiKey(job.provider, jobId)
 
-    const unitsRaw = await readFile(job.unitsFileUrl, "utf-8")
+    // Prefer DB-stored units (works in serverless); fall back to file (local dev)
+    const unitsRaw = job.unitsData ?? await readFile(job.unitsFileUrl, "utf-8")
     const units: SourceUnit[] = JSON.parse(unitsRaw)
 
     let xliff: string
@@ -149,7 +150,7 @@ export async function POST(
         })
       }
 
-      const sourceXliff = await readFile(job.sourceFileUrl, "utf-8")
+      const sourceXliff = job.sourceData ?? await readFile(job.sourceFileUrl, "utf-8")
 
       // ── Structural gap-fill pass ─────────────────────────────────────────────
       // fast-xml-parser may have silently dropped units with deeply-nested or
@@ -282,7 +283,7 @@ export async function POST(
       )
     }
 
-    // Save XLIFF file
+    // Save XLIFF file (local dev only; on Vercel /tmp is ephemeral so we store content in DB)
     const xliffDir = path.join(process.env.NODE_ENV === "production" ? "/tmp" : process.cwd(), "uploads", "studio")
     await mkdir(xliffDir, { recursive: true })
     const xliffFileName = `${jobId}-${task.targetLanguage.replace(/[^a-zA-Z0-9-]/g, "_")}.xliff`
@@ -295,6 +296,7 @@ export async function POST(
         status: "completed",
         completedUnits: units.length,
         xliffFileUrl: xliffPath,
+        xliffData: xliff, // stored in DB for serverless environments where /tmp is ephemeral
       },
     })
 

@@ -118,9 +118,7 @@ export async function POST(req: NextRequest) {
   const sourceFilePath = path.join(uploadDir, sourceFileName)
   const unitsFilePath = path.join(uploadDir, unitsFileName)
 
-  const sourceFileContent = ext === "pdf"
-    ? Buffer.from(await file.arrayBuffer())
-    : Buffer.from(await file.arrayBuffer())
+  const sourceFileContent = Buffer.from(await file.arrayBuffer())
 
   await Promise.all([
     writeFile(sourceFilePath, sourceFileContent),
@@ -135,6 +133,9 @@ export async function POST(req: NextRequest) {
         createdById: session.user.id,
         sourceFileUrl: sourceFilePath,
         unitsFileUrl: unitsFilePath,
+        unitsData: JSON.stringify(units),
+        // Store text-based source content in DB for serverless access (XLIFF, markdown, etc.)
+        sourceData: ext !== "pdf" ? sourceFileContent.toString("utf-8") : null,
         sourceFormat: ext,
         sourceLanguage,
         provider,

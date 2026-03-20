@@ -35,13 +35,14 @@ export async function POST(
   if (task.projectId) {
     return NextResponse.json({ projectId: task.projectId })
   }
-  if (!task.xliffFileUrl) {
+  if (!task.xliffData && !task.xliffFileUrl) {
     return NextResponse.json({ error: "XLIFF file not found" }, { status: 404 })
   }
 
   let xliffContent: string
   try {
-    xliffContent = await readFile(task.xliffFileUrl, "utf-8")
+    // Prefer DB-stored content (works in serverless); fall back to file path (local dev)
+    xliffContent = task.xliffData ?? await readFile(task.xliffFileUrl!, "utf-8")
   } catch (err) {
     return NextResponse.json({ error: `Could not read XLIFF file: ${(err as Error).message}` }, { status: 500 })
   }

@@ -154,7 +154,8 @@ model TranslationJob {
   name           String
   createdById    String
   sourceFileUrl  String   // path to uploaded JSON/CSV
-  unitsFileUrl   String   // path to parsed units JSON cache
+  unitsFileUrl   String   // path to parsed units JSON cache (local dev only)
+  unitsData      String?  // JSON-serialized units array (used in production/serverless)
   sourceFormat   String   // "json" | "csv"
   sourceLanguage String   @default("en-US")
   provider       String   // "anthropic" | "openai" | "deepseek" | "gemini"
@@ -164,6 +165,7 @@ model TranslationJob {
   githubPrUrl      String?  // original PR URL, e.g. https://github.com/owner/repo/pull/42
   githubBranch     String?  // PR head branch, for write-back
   githubSourcePath String?  // original file path in the repo, for write-back
+  sourceData       String?  // raw source file content (XLIFF/text) stored for serverless access
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -198,6 +200,7 @@ model TranslationTask {
   completedUnits Int      @default(0)
   errorMessage   String?
   xliffFileUrl   String?
+  xliffData      String?  // translated XLIFF content stored in DB for serverless access
   projectId      String?  @unique
 
   createdAt DateTime @default(now())

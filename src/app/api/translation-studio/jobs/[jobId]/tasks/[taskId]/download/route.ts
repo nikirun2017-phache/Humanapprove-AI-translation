@@ -25,7 +25,7 @@ export async function GET(
   if (role !== "admin" && job.createdById !== userId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
-  if (!task.xliffFileUrl) {
+  if (!task.xliffData && !task.xliffFileUrl) {
     return NextResponse.json({ error: "Translation not yet complete" }, { status: 409 })
   }
 
@@ -34,7 +34,8 @@ export async function GET(
 
   // PDF and XLIFF: serve the bilingual XLIFF as-is
   if (fmt === "pdf" || fmt === "xliff") {
-    const xliff = await readFile(task.xliffFileUrl, "utf-8")
+    // Prefer DB-stored content (works in serverless); fall back to file (local dev)
+    const xliff = task.xliffData ?? await readFile(task.xliffFileUrl!, "utf-8")
     return new NextResponse(xliff, {
       headers: {
         "Content-Type": "application/xliff+xml",
@@ -44,9 +45,10 @@ export async function GET(
   }
 
   // JSON / CSV / Markdown: reconstruct the original format with translated values
+  // Prefer DB-stored content; fall back to file (local dev)
   const [xliffContent, sourceContent] = await Promise.all([
-    readFile(task.xliffFileUrl, "utf-8"),
-    readFile(job.sourceFileUrl, "utf-8"),
+    task.xliffData ? Promise.resolve(task.xliffData) : readFile(task.xliffFileUrl!, "utf-8"),
+    job.sourceData ? Promise.resolve(job.sourceData) : readFile(job.sourceFileUrl, "utf-8"),
   ])
 
   // Build id → targetText map from the translated XLIFF
@@ -69,7 +71,7 @@ export async function GET(
   }
 
   if (fmt === "csv") {
-    const unitsContent = await readFile(job.unitsFileUrl, "utf-8")
+    const unitsContent = job.unitsData ?? await readFile(job.unitsFileUrl, "utf-8")
     const units = JSON.parse(unitsContent) as Array<{ id: string; sourceText: string }>
     const lines = ["id,value"]
     for (const unit of units) {
@@ -97,7 +99,7 @@ export async function GET(
   }
 
   // Fallback: raw XLIFF
-  const xliff = await readFile(task.xliffFileUrl, "utf-8")
+  const xliff = task.xliffData ?? await readFile(task.xliffFileUrl!, "utf-8")
   return new NextResponse(xliff, {
     headers: {
       "Content-Type": "application/xliff+xml",
