@@ -113,11 +113,7 @@ export default function NewProjectPage() {
               Pick <strong>AI Translation</strong> if you only have the original source file — the AI handles the draft.
               If you or a translator already produced a translation, use <strong>Pair source + target</strong> to align the files for review.
               If your CAT tool or AI app exported a bilingual file, go straight to <strong>Upload XLIFF</strong>.
-              Not sure what it will cost?{" "}
-              <Link href="/pricing" className="text-indigo-600 hover:underline">
-                See pricing
-              </Link>{" "}
-              before you start.
+              Not sure what it will cost? Contact us for a quote before you start.
             </p>
           </div>
         </div>

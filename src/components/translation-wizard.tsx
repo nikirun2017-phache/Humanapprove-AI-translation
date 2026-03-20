@@ -1074,7 +1074,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
           }
 
           const totalChars = isPdf
-            ? strings * 80
+            ? (probe?.wordCount ? probe.wordCount * CHARS_PER_WORD : strings * 80)
             : isXliff && entry.xliffMeta?.sourceCharCount
               ? entry.xliffMeta.sourceCharCount
               : entry.preview.reduce((s, u) => s + u.sourceText.length, 0)
@@ -1087,13 +1087,17 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
           // Platform fee minimum ($5/job) applied across all languages at the end
           const chargePerLang = rawApiCostPerLang * PAYG_MARKUP + estimatedWords * PLATFORM_FEE_PER_WORD
           const totalFileCost = extractCostOneTime * PAYG_MARKUP + chargePerLang * selectedLangs.size
-          return { entry, isPdf, strings, batches, inputTok, outputTok, rawApiCostPerLang, chargePerLang, totalFileCost, extractCostOneTime, pdfLabel }
+          return { entry, isPdf, strings, estimatedWords, batches, inputTok, outputTok, rawApiCostPerLang, chargePerLang, totalFileCost, extractCostOneTime, pdfLabel }
         })
 
         const grandTotalRaw = fileRows.reduce((s, r) => s + r.totalFileCost, 0)
         // Apply minimum job fee: total must be at least $5
         const grandTotalCharge = Math.max(MIN_JOB_FEE, grandTotalRaw)
-        const totalStrings = fileRows.reduce((s, r) => s + r.strings, 0)
+        const totalWords = fileRows.reduce((s, r) => s + r.estimatedWords, 0)
+        // Split into fixed (platform fee) and variable (AI markup) components for transparency
+        const totalPlatformFee = fileRows.reduce((s, r) => s + r.estimatedWords * PLATFORM_FEE_PER_WORD * selectedLangs.size, 0)
+        const totalAiMarkup = Math.max(0, grandTotalRaw - totalPlatformFee)
+        const minFeeApplied = grandTotalCharge > grandTotalRaw
 
         return (
           <div className="space-y-4">
@@ -1102,7 +1106,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
               <h2 className="font-medium text-gray-900">Review and start</h2>
               <dl className="text-sm space-y-2">
                 <Row label="Job name" value={jobName} />
-                <Row label="Files" value={`${entries.length} file${entries.length !== 1 ? "s" : ""} · ${totalStrings.toLocaleString()} strings`} />
+                <Row label="Files" value={`${entries.length} file${entries.length !== 1 ? "s" : ""} · ${totalWords.toLocaleString()} words`} />
                 <Row label="AI model" value={`${currentProvider.label} — ${selectedModel.label}`} />
                 <Row label="Target languages" value={`${selectedLangs.size} languages`} />
               </dl>
@@ -1125,14 +1129,14 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                 <thead className="bg-gray-50 border-b border-gray-100">
                   <tr className="text-left text-xs text-gray-500">
                     <th className="px-5 py-2 font-medium">File</th>
-                    <th className="px-5 py-2 font-medium text-right">Strings</th>
+                    <th className="px-5 py-2 font-medium text-right">Words</th>
                     <th className="px-5 py-2 font-medium text-right">
                       Total ({selectedLangs.size} lang{selectedLangs.size !== 1 ? "s" : ""})
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {fileRows.map(({ entry, isPdf, strings, pdfLabel, totalFileCost }) => (
+                  {fileRows.map(({ entry, isPdf, estimatedWords, pdfLabel, totalFileCost }) => (
                     <tr key={entry.key} className="hover:bg-gray-50">
                       <td className="px-5 py-2.5">
                         <span className="font-medium text-gray-900 truncate block max-w-xs">{entry.file.name}</span>
@@ -1141,7 +1145,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                         )}
                       </td>
                       <td className="px-5 py-2.5 text-right text-gray-500">
-                        {isPdf ? `~${strings}` : strings}
+                        {isPdf ? `~${estimatedWords.toLocaleString()}` : estimatedWords.toLocaleString()}
                       </td>
                       <td className="px-5 py-2.5 text-right font-medium text-gray-900">{fmt(totalFileCost)}</td>
                     </tr>
@@ -1150,19 +1154,35 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                 <tfoot className="border-t-2 border-gray-200 bg-gray-50">
                   <tr>
                     <td className="px-5 py-2.5 font-semibold text-gray-900">Total</td>
-                    <td className="px-5 py-2.5 text-right font-semibold text-gray-900">~{totalStrings.toLocaleString()}</td>
+                    <td className="px-5 py-2.5 text-right font-semibold text-gray-900">~{totalWords.toLocaleString()}</td>
                     <td className="px-5 py-2.5 text-right font-bold text-indigo-700">{fmt(grandTotalCharge)}</td>
                   </tr>
                 </tfoot>
               </table>
 
-              <div className="px-5 py-3 bg-amber-50 border-t border-amber-100 space-y-1">
-                <p className="text-xs text-amber-700">
-                  ⚠ Rough estimate. Actual cost varies by content verbosity and retries. PDFs use file-size estimation only.
+              {/* Cost breakdown — shows what's fixed vs variable */}
+              <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 space-y-1.5">
+                <p className="text-xs font-medium text-gray-600 mb-2">What makes up this charge:</p>
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>Platform fee <span className="text-gray-400">($0.007 × {totalWords.toLocaleString()} words)</span></span>
+                  <span className="font-medium text-gray-700">{fmt(totalPlatformFee)} <span className="text-green-600 font-normal">fixed</span></span>
+                </div>
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>AI translation <span className="text-gray-400">(raw API cost × {PAYG_MARKUP})</span></span>
+                  <span className="font-medium text-gray-700">~{fmt(totalAiMarkup)} <span className="text-amber-600 font-normal">±20%</span></span>
+                </div>
+                {minFeeApplied && (
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>Minimum job fee applied</span>
+                    <span className="font-medium text-gray-700">{fmt(MIN_JOB_FEE)}</span>
+                  </div>
+                )}
+                <p className="text-xs text-gray-400 pt-1 border-t border-gray-200 mt-1">
+                  The platform fee is calculated from the extracted word count and will not change. The AI portion varies slightly based on actual token usage.
                 </p>
                 {fileRows.some((r) => r.isPdf) && (
-                  <p className="text-xs text-amber-700">
-                    PDF output: translated text is delivered as plain text (.xliff) — original PDF layout and formatting are not reconstructed.
+                  <p className="text-xs text-gray-400">
+                    PDF output: delivered as .xliff (for human review) and .txt (ready to use). Original PDF layout is not reconstructed.
                   </p>
                 )}
               </div>

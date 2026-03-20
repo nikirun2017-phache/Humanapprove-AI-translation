@@ -190,8 +190,67 @@ export async function POST(
 
       xliff = mergeTranslationsIntoXliff(sourceXliff, task.targetLanguage, translationMap)
 
+    } else if (job.sourceFormat === "pdf") {
+      // ── PDF path: markdown-based translation ─────────────────────────────────
+      // PDF units contain long paragraphs that may include newlines, bullet chars,
+      // dollar signs and other characters that break JSON string escaping.
+      // Markdown batches handle these safely — same approach as XLIFF, but the
+      // output is built fresh via buildXliffFromTranslations (no source XLIFF to merge into).
+      const pdfMarkdownBatches = buildMarkdownBatches(units)
+      const pdfTranslationMap = new Map<string, string>()
+
+      for (const { markdown, indexToId } of pdfMarkdownBatches) {
+        const translated = await withRetry(() =>
+          translateMarkdownBatch(
+            markdown,
+            job.sourceLanguage,
+            task.targetLanguage,
+            job.provider as ProviderName,
+            apiKey,
+            job.model
+          )
+        )
+        const indexedMap = parseMarkdownTranslation(translated)
+        for (const [idx, text] of indexedMap) {
+          const unitId = indexToId.get(idx)
+          if (unitId) pdfTranslationMap.set(unitId, text)
+        }
+        await db.translationTask.update({
+          where: { id: taskId },
+          data: { completedUnits: pdfTranslationMap.size },
+        })
+      }
+
+      // Gap-fill: re-send any units the AI skipped
+      const pdfMissingUnits = units.filter((u) => !pdfTranslationMap.has(u.id))
+      if (pdfMissingUnits.length > 0) {
+        const gapBatches = buildMarkdownBatches(pdfMissingUnits)
+        for (const { markdown: gapMd, indexToId: gapIdx } of gapBatches) {
+          try {
+            const translated = await withRetry(() =>
+              translateMarkdownBatch(gapMd, job.sourceLanguage, task.targetLanguage, job.provider as ProviderName, apiKey, job.model)
+            )
+            const indexedMap = parseMarkdownTranslation(translated)
+            for (const [idx, text] of indexedMap) {
+              const unitId = gapIdx.get(idx)
+              if (unitId) pdfTranslationMap.set(unitId, text)
+            }
+          } catch { /* gap-fill is best-effort */ }
+        }
+        await db.translationTask.update({
+          where: { id: taskId },
+          data: { completedUnits: pdfTranslationMap.size },
+        })
+      }
+
+      const allTranslatedPdf = units.map((u) => ({
+        id: u.id,
+        translatedText: pdfTranslationMap.get(u.id) ?? "",
+      }))
+      xliff = buildXliffFromTranslations(units, allTranslatedPdf, job.sourceLanguage, task.targetLanguage, job.name)
+
     } else {
-      // ── Non-XLIFF path: JSON-array batching (JSON, CSV, Markdown, PDF) ──────
+      // ── Non-XLIFF path: JSON-array batching (JSON, CSV, Markdown) ────────────
       const provider = getProvider(job.provider as Parameters<typeof getProvider>[0])
       const batches = chunkUnits(units)
       const allTranslated: { id: string; translatedText: string }[] = []

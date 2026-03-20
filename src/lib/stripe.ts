@@ -61,3 +61,9 @@ export const FULL_LQA_RATE = 0.090
 
 /** Average words per translation unit — used for review fee estimation */
 export const AVG_WORDS_PER_UNIT = 15
+
+/**
+ * Platform fee charged when the customer brings their own reviewer.
+ * Covers review editor infrastructure (sessions, audit trail, export).
+ */
+export const OWN_REVIEWER_PLATFORM_FEE = 0.01

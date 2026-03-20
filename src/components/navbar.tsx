@@ -17,7 +17,7 @@ export function Navbar() {
   const links = [
     { href: "/dashboard", label: "Dashboard" },
     ...(role !== "reviewer" ? [{ href: "/new", label: "New project" }] : []),
-    { href: "/pricing", label: "Pricing" },
+    // { href: "/pricing", label: "Pricing" }, // MVP: hidden
     ...(role === "admin" ? [{ href: "/admin/users", label: "Users" }] : []),
     ...(role === "admin" ? [{ href: "/admin/settings", label: "Settings" }] : []),
     { href: "/billing", label: "Billing" },

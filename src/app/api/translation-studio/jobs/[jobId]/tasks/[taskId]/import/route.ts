@@ -5,7 +5,7 @@ import { readFile } from "fs/promises"
 import { parseXliff } from "@/lib/xliff-parser"
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ jobId: string; taskId: string }> }
 ) {
   const session = await auth()
@@ -13,6 +13,10 @@ export async function POST(
 
   const { jobId, taskId } = await params
   const { id: userId, role } = session.user
+
+  // reviewerType: "platform" = Jendee AI sources reviewer; "own" = customer brings their own
+  const body = await req.json().catch(() => ({})) as { reviewerType?: string }
+  const reviewerType: "platform" | "own" = body.reviewerType === "platform" ? "platform" : "own"
 
   const [job, task] = await Promise.all([
     db.translationJob.findUnique({ where: { id: jobId } }),
@@ -87,7 +91,8 @@ export async function POST(
           originalFormat: job.sourceFormat,
           status: reviewerId ? "in_review" : "pending_assignment",
           createdById: userId,
-          assignedReviewerId: reviewerId,
+          assignedReviewerId: reviewerType === "platform" ? reviewerId : null,
+          reviewerType,
         },
       })
 

@@ -57,10 +57,21 @@ export function parseXliffSource(content: string): {
   }
 }
 
-// Minimum average words per page to consider a PDF "text-based" (not scanned)
+// Minimum average words per page to consider a PDF "text-based" (not scanned).
+// Word-splitting is unreliable for CJK languages (no spaces), so we also check
+// character density: MIN_CHARS_PER_PAGE ≈ MIN_WORDS_PER_PAGE × 5 chars/word.
 const MIN_WORDS_PER_PAGE = 15
+const MIN_CHARS_PER_PAGE = 75 // ~15 words × 5 chars — language-agnostic fallback
 
-/** Count PDF pages from raw bytes — see probe-pdf/route.ts for rationale. */
+/** Returns true if extracted text is dense enough to be a real text-based PDF. */
+function isTextDense(text: string, numPages: number): boolean {
+  const wordCount = text.trim().split(/\s+/).filter(Boolean).length
+  const charCount = text.replace(/\s+/g, "").length
+  const pages = Math.max(1, numPages)
+  return wordCount / pages >= MIN_WORDS_PER_PAGE || charCount / pages >= MIN_CHARS_PER_PAGE
+}
+
+/** Count PDF pages from raw bytes by scanning /Count entries in the page tree. */
 function countPagesFromRaw(buffer: Buffer): number {
   try {
     const raw = buffer.toString("latin1")
@@ -75,80 +86,227 @@ function countPagesFromRaw(buffer: Buffer): number {
 }
 
 /**
- * Extract translatable text from a PDF using a multi-strategy approach:
- *
- * Strategy 1 — pdf-parse (fast, free, no API cost):
- *   Tries to extract embedded text directly. Works for text-based PDFs,
- *   complex layouts from PPT exports, and PDFs with tables (text is preserved
- *   even if table formatting is lost — acceptable for translation).
- *   If the extracted text is dense enough (≥ MIN_WORDS_PER_PAGE words/page),
- *   we segment it into translation units and return immediately.
- *
- * Strategy 2 — Claude Vision (fallback for scanned / image PDFs):
- *   Used only when Strategy 1 yields too little text, indicating the PDF is
- *   a scanned image or has no embedded text layer. Claude's vision model reads
- *   each page like a human, handling handwriting, stamps, and complex layouts.
- *   Requires an Anthropic API key.
+ * Write buffer to a temp file and return its path.
+ * Caller is responsible for cleanup via cleanupFiles().
  */
-export async function parsePdfSource(buffer: Buffer, anthropicApiKey?: string): Promise<SourceUnit[]> {
-  // ── Strategy 1: Fast embedded text extraction ─────────────────────────────
-  const extracted = await tryExtractPdfText(buffer)
+function writeTempFile(data: Buffer | string, suffix: string): string {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { join } = require("path") as typeof import("path")
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { tmpdir } = require("os") as typeof import("os")
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { randomBytes } = require("crypto") as typeof import("crypto")
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { writeFileSync } = require("fs") as typeof import("fs")
+  const id = randomBytes(8).toString("hex")
+  const p = join(tmpdir(), `jendee_${id}${suffix}`)
+  writeFileSync(p, data)
+  return p
+}
 
-  if (extracted) {
-    const wordDensity = extracted.wordCount / Math.max(1, extracted.numPages)
-    if (wordDensity >= MIN_WORDS_PER_PAGE) {
-      const units = segmentPdfText(extracted.text)
-      if (units.length > 0) return units
-    }
+function cleanupFiles(...paths: string[]): void {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { unlinkSync, existsSync } = require("fs") as typeof import("fs")
+  for (const p of paths) {
+    try { if (existsSync(p)) unlinkSync(p) } catch { /* ignore */ }
   }
-
-  // ── Strategy 2: Claude Vision for scanned / image PDFs ────────────────────
-  if (!anthropicApiKey) {
-    throw new Error(
-      "This PDF appears to be scanned (no embedded text). An Anthropic API key is required to extract text via Vision."
-    )
-  }
-  return parsePdfWithClaude(buffer, anthropicApiKey)
 }
 
 /**
- * Attempt to extract raw text from a PDF without any API call.
- * Uses pdf-parse (based on PDF.js) which handles embedded fonts, encoding
- * variants, and CID fonts. Returns null if extraction fails entirely.
+ * Extract translatable text from a PDF using a 4-strategy cascade:
+ *
+ * Strategy 1 — pdftotext CLI (poppler-utils, fastest):
+ *   Runs `pdftotext -layout` on the file. Preserves column layout better than
+ *   pdf-parse for multi-column documents. Output is written to a temp file
+ *   (never stdout) to avoid token consumption.
+ *
+ * Strategy 2 — pdfplumber (Python, layout + table aware):
+ *   Calls a Python subprocess using pdfplumber, which uses pdfminer under the
+ *   hood. Handles complex layouts, tables, and CJK fonts that pdftotext misses.
+ *
+ * Strategy 3 — pypdf (Python, lightweight fallback):
+ *   Calls a Python subprocess using pypdf. Simpler than pdfplumber but handles
+ *   a wider range of encoding variants when pdfplumber fails.
+ *
+ * Strategy 4 — Claude Vision (OCR, last resort):
+ *   Used only when all text-extraction strategies fail or yield fewer than
+ *   MIN_WORDS_PER_PAGE words per page (indicating a scanned / image PDF).
+ *   Requires an Anthropic API key.
  */
-async function tryExtractPdfText(
-  buffer: Buffer
-): Promise<{ text: string; numPages: number; wordCount: number } | null> {
-  try {
-    // Import via the lib path to bypass pdf-parse's test-file auto-loader
-    // (avoids a Next.js/webpack warning about missing test fixtures)
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pdfParse = require("pdf-parse/lib/pdf-parse.js") as (
-      buf: Buffer,
-      opts?: object
-    ) => Promise<{ text: string; numpages: number }>
+export async function parsePdfSource(buffer: Buffer, anthropicApiKey?: string): Promise<SourceUnit[]> {
+  const tmpPdf = writeTempFile(buffer, ".pdf")
+  const tmpTxt = tmpPdf.replace(".pdf", ".txt")
+  const tmpPy  = tmpPdf.replace(".pdf", ".py")
+  const tmpOut = tmpPdf.replace(".pdf", ".json")
 
-    const data = await pdfParse(buffer, { max: 0 }) // max:0 = all pages
-    const wordCount = data.text.trim().split(/\s+/).filter(Boolean).length
-    // Cross-check with raw-byte /Count scan — pdf-parse under-reports on some PDFs
-    const rawPages = countPagesFromRaw(buffer)
-    const numPages = Math.max(data.numpages, rawPages)
-    return { text: data.text, numPages, wordCount }
+  try {
+    // ── Strategy 1: pdftotext CLI ────────────────────────────────────────────
+    const s1 = tryPdftotext(tmpPdf, tmpTxt, buffer)
+    if (s1) {
+      const units = segmentPdfText(s1.text)
+      if (isTextDense(s1.text, s1.numPages) && units.length > 0) {
+        return units
+      }
+    }
+
+    // ── Strategy 2: pdfplumber (Python) ──────────────────────────────────────
+    const s2 = tryPdfplumber(tmpPdf, tmpPy, tmpOut)
+    if (s2) {
+      const units = segmentPdfText(s2.text)
+      if (isTextDense(s2.text, s2.numPages) && units.length > 0) {
+        return units
+      }
+    }
+
+    // ── Strategy 3: pypdf (Python) ───────────────────────────────────────────
+    const s3 = tryPypdf(tmpPdf, tmpPy, tmpOut)
+    if (s3) {
+      const units = segmentPdfText(s3.text)
+      if (isTextDense(s3.text, s3.numPages) && units.length > 0) {
+        return units
+      }
+    }
+
+    // ── Strategy 4: Claude Vision (OCR) ─────────────────────────────────────
+    if (!anthropicApiKey) {
+      throw new Error(
+        "This PDF appears to be scanned (no embedded text). An Anthropic API key is required to extract text via Vision."
+      )
+    }
+    return parsePdfWithClaude(buffer, anthropicApiKey)
+
+  } finally {
+    cleanupFiles(tmpPdf, tmpTxt, tmpPy, tmpOut)
+  }
+}
+
+/**
+ * Strategy 1: pdftotext -layout (poppler-utils).
+ * Writes output to a temp file; reads it back. Returns null if pdftotext is
+ * not installed or the command fails.
+ */
+function tryPdftotext(
+  pdfPath: string,
+  outPath: string,
+  buffer: Buffer
+): { text: string; numPages: number; wordCount: number } | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { spawnSync } = require("child_process") as typeof import("child_process")
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { readFileSync } = require("fs") as typeof import("fs")
+
+    const result = spawnSync("pdftotext", ["-layout", pdfPath, outPath], {
+      timeout: 30_000,
+      encoding: "utf8",
+    })
+
+    if (result.status !== 0 || result.error) return null
+
+    const text = readFileSync(outPath, "utf8")
+    // Form feeds delimit pages in pdftotext output
+    const numPages = Math.max(1, (text.match(/\f/g) ?? []).length + 1, countPagesFromRaw(buffer))
+    const wordCount = text.trim().split(/\s+/).filter(Boolean).length
+    return { text, numPages, wordCount }
   } catch {
     return null
   }
 }
 
 /**
- * Segment raw PDF text (from pdf-parse) into translation units.
+ * Strategy 2: pdfplumber via Python subprocess.
+ * Writes an inline Python script to a temp file, executes it, reads the JSON
+ * result from a second temp file. Returns null if Python or pdfplumber is not
+ * available.
+ */
+function tryPdfplumber(
+  pdfPath: string,
+  pyPath: string,
+  outPath: string
+): { text: string; numPages: number; wordCount: number } | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { spawnSync } = require("child_process") as typeof import("child_process")
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { writeFileSync, readFileSync } = require("fs") as typeof import("fs")
+
+    const script = `
+import sys, json, pdfplumber
+with pdfplumber.open(${JSON.stringify(pdfPath)}) as pdf:
+    pages = [page.extract_text() or "" for page in pdf.pages]
+    text = "\\f".join(pages)
+    result = {"numPages": len(pdf.pages), "text": text}
+with open(${JSON.stringify(outPath)}, "w", encoding="utf-8") as f:
+    json.dump(result, f)
+`
+    writeFileSync(pyPath, script, "utf8")
+
+    const result = spawnSync("python3", [pyPath], { timeout: 60_000, encoding: "utf8" })
+    if (result.status !== 0 || result.error) return null
+
+    const raw = JSON.parse(readFileSync(outPath, "utf8")) as { text: string; numPages: number }
+    const wordCount = raw.text.trim().split(/\s+/).filter(Boolean).length
+    return { text: raw.text, numPages: raw.numPages, wordCount }
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Strategy 3: pypdf via Python subprocess.
+ * Same pattern as pdfplumber but uses the lighter-weight pypdf library.
+ */
+function tryPypdf(
+  pdfPath: string,
+  pyPath: string,
+  outPath: string
+): { text: string; numPages: number; wordCount: number } | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { spawnSync } = require("child_process") as typeof import("child_process")
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { writeFileSync, readFileSync } = require("fs") as typeof import("fs")
+
+    const script = `
+import sys, json
+from pypdf import PdfReader
+reader = PdfReader(${JSON.stringify(pdfPath)})
+pages = [page.extract_text() or "" for page in reader.pages]
+text = "\\f".join(pages)
+result = {"numPages": len(reader.pages), "text": text}
+with open(${JSON.stringify(outPath)}, "w", encoding="utf-8") as f:
+    json.dump(result, f)
+`
+    writeFileSync(pyPath, script, "utf8")
+
+    const result = spawnSync("python3", [pyPath], { timeout: 60_000, encoding: "utf8" })
+    if (result.status !== 0 || result.error) return null
+
+    const raw = JSON.parse(readFileSync(outPath, "utf8")) as { text: string; numPages: number }
+    const wordCount = raw.text.trim().split(/\s+/).filter(Boolean).length
+    return { text: raw.text, numPages: raw.numPages, wordCount }
+  } catch {
+    return null
+  }
+}
+
+// Paragraphs longer than this word count are split further into sentences.
+const MAX_SEGMENT_WORDS = 40
+
+/**
+ * Segment raw PDF text into reviewer-friendly translation units.
  *
- * PDF text output typically uses:
- *   - Form-feed character (\f) as page break
- *   - Double newline (\n\n) as paragraph break
- *   - Single newline (\n) as line wrap within a paragraph
+ * Two-pass approach:
+ *   1. Split on paragraph breaks (\n\n and \f form feeds).
+ *   2. For blocks that exceed MAX_SEGMENT_WORDS, split further at sentence
+ *      boundaries (. / ? / ! followed by whitespace + uppercase letter).
+ *      This keeps legal paragraphs, long waiver text, and multi-sentence
+ *      blocks at a manageable size for reviewers without breaking mid-sentence.
  *
- * For tables: pdf-parse linearises table cells as whitespace-separated text.
- * We preserve each row block as a single unit — good enough for translation.
+ * Safe from false splits on:
+ *   - Decimal numbers  ($242.50 — digit after dot, not uppercase)
+ *   - Domain names     (cityofirvine.org — lowercase after dot)
+ *   - Abbreviations    (e.g., vs. — lowercase after dot)
  */
 function segmentPdfText(rawText: string): SourceUnit[] {
   const units: SourceUnit[] = []
@@ -168,14 +326,56 @@ function segmentPdfText(rawText: string): SourceUnit[] {
     if (/^\d{1,4}$/.test(block)) continue
     // Skip URLs
     if (/^https?:\/\/\S+$/.test(block)) continue
-    // Skip very short noise fragments (< 3 words)
-    const words = block.split(/\s+/).filter(Boolean)
-    if (words.length < 3) continue
+    // Skip very short noise fragments.
+    // Use character count for CJK text (no spaces) and word count for Latin text.
+    const wordCount = block.split(/\s+/).filter(Boolean).length
+    const charCount = block.replace(/\s+/g, "").length
+    if (wordCount < 3 && charCount < 10) continue
 
-    units.push({ id: `p_${index++}`, sourceText: block })
+    // For long blocks, split further at sentence boundaries.
+    // CJK text: use character count since words aren't space-separated.
+    const isCjk = charCount > wordCount * 1.5 // most chars are non-space → CJK
+    const isLong = isCjk ? charCount > MAX_SEGMENT_WORDS * 5 : wordCount > MAX_SEGMENT_WORDS
+    const segments = isLong ? splitIntoSentences(block) : [block]
+
+    for (const seg of segments) {
+      const sChars = seg.replace(/\s+/g, "").length
+      const sWords = seg.split(/\s+/).filter(Boolean).length
+      if (sWords < 3 && sChars < 10) continue
+      units.push({ id: `p_${index++}`, sourceText: seg })
+    }
   }
 
   return units
+}
+
+/**
+ * Split a long text block into individual sentences.
+ *
+ * Splits at [.!?] followed by whitespace and an uppercase letter (sentence start).
+ * Short fragments caused by abbreviation false-positives (< 4 words) are
+ * merged back into the preceding sentence.
+ */
+function splitIntoSentences(text: string): string[] {
+  // Split on sentence-ending punctuation for both Latin and CJK scripts:
+  //   Latin: [.!?] followed by whitespace + uppercase letter
+  //   CJK:   。！？ always mark a full sentence end (no lookahead needed)
+  // Does NOT split Latin on: "$5.00" (digit), "e.g. the" (lowercase).
+  const parts = text.split(/(?<=[.!?])\s+(?=[A-Z])|(?<=[。！？])/)
+  const sentences: string[] = []
+  for (const part of parts) {
+    const trimmed = part.trim()
+    if (!trimmed) continue
+    const wc = trimmed.split(/\s+/).filter(Boolean).length
+    const cc = trimmed.replace(/\s+/g, "").length
+    // Merge very short Latin fragments (abbreviation artefacts like "U.S.") into previous
+    if (sentences.length > 0 && wc < 4 && cc < 10) {
+      sentences[sentences.length - 1] += " " + trimmed
+    } else {
+      sentences.push(trimmed)
+    }
+  }
+  return sentences.length > 0 ? sentences : [text]
 }
 
 // Pages processed per Claude API call. Keeps output well within max_tokens.
@@ -187,10 +387,8 @@ const PDF_CHUNK_SIZE = 20
  * of PDF_CHUNK_SIZE pages each to avoid hitting output token limits.
  */
 async function parsePdfWithClaude(buffer: Buffer, anthropicApiKey: string): Promise<SourceUnit[]> {
-  // Get total page count via pdf-parse (works even for scanned PDFs since it
-  // reads the PDF cross-reference table, not the text content).
-  const extracted = await tryExtractPdfText(buffer)
-  const totalPages = extracted?.numPages ?? 1
+  // Get total page count from raw bytes (works for scanned PDFs with no text layer).
+  const totalPages = Math.max(1, countPagesFromRaw(buffer))
 
   const base64 = buffer.toString("base64")
   const allUnits: SourceUnit[] = []

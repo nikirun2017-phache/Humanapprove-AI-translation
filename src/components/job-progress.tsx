@@ -54,6 +54,8 @@ export function JobProgress({ initialJob }: Props) {
   const [importing, setImporting] = useState<Record<string, boolean>>({})
   const [importingAll, setImportingAll] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
+  const [reviewModal, setReviewModal] = useState<{ open: boolean; taskId?: string }>({ open: false })
+  const [reviewerType, setReviewerType] = useState<"platform" | "own">("platform")
   const [retrying, setRetrying] = useState<Record<string, boolean>>({})
   const [autoDownloaded, setAutoDownloaded] = useState(false)
   const runningRef = useRef(false)
@@ -141,12 +143,12 @@ export function JobProgress({ initialJob }: Props) {
     if (hasPending) runTranslation()
   }, [])
 
-  async function handleImport(task: Task) {
+  async function handleImport(task: Task, type: "platform" | "own" = reviewerType) {
     setImporting((s) => ({ ...s, [task.id]: true }))
     setImportError(null)
     const res = await fetch(
       `/api/translation-studio/jobs/${job.id}/tasks/${task.id}/import`,
-      { method: "POST" }
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reviewerType: type }) }
     )
     if (res.ok) {
       await fetchJob()
@@ -171,11 +173,12 @@ export function JobProgress({ initialJob }: Props) {
     }
   }
 
-  async function handleImportAll() {
+  async function handleImportAll(type: "platform" | "own" = reviewerType) {
+    setReviewModal({ open: false })
     setImportingAll(true)
     const completed = job.tasks.filter((t) => t.status === "completed")
     for (const task of completed) {
-      await handleImport(task)
+      await handleImport(task, type)
     }
     setImportingAll(false)
     router.push("/dashboard")
@@ -214,7 +217,7 @@ export function JobProgress({ initialJob }: Props) {
       return {
         icon: "✦",
         color: "bg-indigo-50 border-indigo-200 text-indigo-800",
-        text: `AI is translating into ${langName} — ${pct}% done. Please keep this tab open. This usually takes under a minute per language.`,
+        text: `Translating into ${langName} — ${pct}% complete. Your files will download automatically when done. Please keep this tab open — large files may take a few minutes.`,
       }
     }
     const pendingCount = tasks.filter((t) => t.status === "pending").length
@@ -271,20 +274,27 @@ export function JobProgress({ initialJob }: Props) {
         </div>
       </div>
 
-      {/* PDF text-only notice */}
+      {/* PDF output notice */}
       {job.sourceFormat === "pdf" && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-start gap-2">
           <span className="text-blue-500 mt-0.5 shrink-0">ℹ</span>
           <p className="text-sm text-blue-800">
-            <strong>Plain text output only.</strong> Translated content is available as .xliff — the original PDF layout and formatting are not reconstructed.
+            <strong>Your translated PDF will be ready in two formats:</strong> an <strong>.xliff</strong> for side-by-side human review, and a clean <strong>.txt</strong> you can copy, paste, or import directly. Both files download automatically when translation completes — no extra steps needed.
           </p>
         </div>
       )}
 
       {/* Live progress message */}
       {progressMsg && (
-        <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${progressMsg.color}`}>
-          <span className="shrink-0 mt-0.5">{progressMsg.icon}</span>
+        <div className={`rounded-xl border px-4 py-3 flex items-center gap-3 ${progressMsg.color}`}>
+          {progressMsg.icon === "✦" ? (
+            <svg className="shrink-0 w-4 h-4 animate-spin text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
+          ) : (
+            <span className="shrink-0">{progressMsg.icon}</span>
+          )}
           <p className="text-sm">{progressMsg.text}</p>
         </div>
       )}
@@ -311,8 +321,12 @@ export function JobProgress({ initialJob }: Props) {
           />
         </div>
         {!allDone && (
-          <p className="text-xs text-gray-400 mt-2">
-            Step {doneTasks + 1} of {totalTasks} · Do not close this tab
+          <p className="text-xs text-gray-400 mt-2 flex items-center gap-1.5">
+            <svg className="w-3 h-3 animate-spin shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
+            Language {doneTasks + 1} of {totalTasks} in progress · Keep this tab open until complete
           </p>
         )}
       </div>
@@ -343,7 +357,7 @@ export function JobProgress({ initialJob }: Props) {
             </p>
             <div className="flex items-center gap-3 flex-wrap">
               <button
-                onClick={handleImportAll}
+                onClick={() => setReviewModal({ open: true })}
                 disabled={importingAll}
                 className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors whitespace-nowrap"
               >
@@ -456,7 +470,7 @@ export function JobProgress({ initialJob }: Props) {
                       )}
                       {task.status === "completed" && (
                         <button
-                          onClick={() => handleImport(task)}
+                          onClick={() => setReviewModal({ open: true, taskId: task.id })}
                           disabled={importing[task.id]}
                           className="text-xs text-indigo-600 hover:text-indigo-800 font-medium disabled:opacity-50"
                           title={importError ?? undefined}
@@ -480,6 +494,113 @@ export function JobProgress({ initialJob }: Props) {
           </tbody>
         </table>
       </div>
+
+      {/* ── Review pricing modal ── */}
+      {reviewModal.open && (() => {
+        const PLATFORM_REVIEW_RATE = 0.055
+        const OWN_REVIEWER_PLATFORM_FEE = 0.01
+        const AVG_WORDS_PER_UNIT = 15
+
+        // Estimate word count from tasks being imported
+        const targetTasks = reviewModal.taskId
+          ? job.tasks.filter((t) => t.id === reviewModal.taskId)
+          : job.tasks.filter((t) => t.status === "completed")
+        const totalUnits = targetTasks.reduce((s, t) => s + t.totalUnits, 0)
+        const estWords = totalUnits * AVG_WORDS_PER_UNIT
+
+        const fmt = (n: number) => n < 0.01 ? "< $0.01" : `$${n.toFixed(2)}`
+        const platformCost = fmt(estWords * PLATFORM_REVIEW_RATE)
+        const ownCost = fmt(estWords * OWN_REVIEWER_PLATFORM_FEE)
+
+        const confirmReview = () => {
+          if (reviewModal.taskId) {
+            const task = job.tasks.find((t) => t.id === reviewModal.taskId)
+            if (task) {
+              setReviewModal({ open: false })
+              handleImport(task, reviewerType)
+            }
+          } else {
+            handleImportAll(reviewerType)
+          }
+        }
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-5">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Choose your review option</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  ~{estWords.toLocaleString()} words · cost added to your monthly invoice
+                </p>
+              </div>
+
+              {/* Option: Platform reviewer */}
+              <button
+                onClick={() => setReviewerType("platform")}
+                className={`w-full text-left rounded-xl border-2 p-4 transition-all ${
+                  reviewerType === "platform" ? "border-indigo-500 bg-indigo-50" : "border-gray-200 hover:border-indigo-300"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                      Jendee AI reviewer
+                      <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-medium">Recommended</span>
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      We source a native-speaker reviewer. Fast turnaround, no setup needed.
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-lg font-bold text-gray-900">{platformCost}</p>
+                    <p className="text-xs text-gray-400">$0.055/word</p>
+                  </div>
+                </div>
+              </button>
+
+              {/* Option: Own reviewer */}
+              <button
+                onClick={() => setReviewerType("own")}
+                className={`w-full text-left rounded-xl border-2 p-4 transition-all ${
+                  reviewerType === "own" ? "border-teal-500 bg-teal-50" : "border-gray-200 hover:border-teal-300"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-900">Your own reviewer</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Invite a colleague or freelancer. You handle the assignment — we provide the review editor, audit trail, and export.
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-lg font-bold text-gray-900">{ownCost}</p>
+                    <p className="text-xs text-gray-400">$0.01/word platform fee</p>
+                  </div>
+                </div>
+              </button>
+
+              <p className="text-xs text-gray-400">
+                Estimate based on ~{AVG_WORDS_PER_UNIT} words/segment. Actual words counted at invoice time.
+              </p>
+
+              <div className="flex items-center gap-3 pt-1">
+                <button
+                  onClick={confirmReview}
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
+                >
+                  Confirm &amp; create project
+                </button>
+                <button
+                  onClick={() => setReviewModal({ open: false })}
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }

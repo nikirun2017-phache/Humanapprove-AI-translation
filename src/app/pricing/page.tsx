@@ -1,3 +1,5 @@
+// MVP: pricing page hidden — uncomment notFound() below to hide, comment it out to restore
+import { notFound } from "next/navigation"
 import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 
@@ -29,11 +31,11 @@ const AI_PROVIDERS = [
 const EXAMPLES = [
   {
     label: "Mobile app (500 strings, ~2K words, Haiku, 1 language)",
-    ai: "$5.02", review: "$70.00 (platform)", total: "$75.02",
+    ai: "$5.02", review: "$70.00 (light review)", total: "$75.02",
   },
   {
     label: "Marketing site (2,000 words, Sonnet, 1 language)",
-    ai: "$14.25", review: "$70.00 (light)", total: "$84.25",
+    ai: "$14.25", review: "$110.00 (Jendee AI reviewer)", total: "$124.25",
   },
   {
     label: "Legal document (10,000 words, GPT-4o, 1 language)",
@@ -49,6 +51,7 @@ const REVIEW_TIERS = [
 ]
 
 export default function PricingPage() {
+  notFound() // MVP: remove this line to re-enable the pricing page
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -79,7 +82,7 @@ export default function PricingPage() {
               <div className="w-8 h-8 bg-indigo-100 text-indigo-700 rounded-lg flex items-center justify-center font-bold mb-3">2</div>
               <p className="font-medium text-gray-800 mb-1">Human review (optional)</p>
               <p className="text-gray-500">
-                Charged per word of target text reviewed. Bring your own reviewer free, or use a Jendee AI native reviewer at ${PLATFORM_REVIEW_RATE}/word.
+                Charged per word of target text reviewed. Light review from ${LIGHT_REVIEW_RATE}/word, full LQA ${FULL_LQA_RATE}/word, Jendee AI sourced reviewer ${PLATFORM_REVIEW_RATE}/word. Bring your own reviewer free.
               </p>
             </div>
             <div>

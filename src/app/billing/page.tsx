@@ -438,16 +438,18 @@ function RequesterView({
                   <p className="text-3xl font-bold text-indigo-600">{usd(usage.estimatedCharge)}</p>
                   <p className="text-xs text-gray-400 mt-0.5">your invoice estimate</p>
                 </div>
-                <div className="text-right pb-1">
-                  <p className="text-sm font-medium text-gray-500">{usd(usage.estimatedApiCost, 4)}</p>
-                  <p className="text-xs text-gray-400">AI API cost</p>
-                </div>
+                {session?.user?.role === "admin" && (
+                  <div className="text-right pb-1">
+                    <p className="text-sm font-medium text-gray-500">{usd(usage.estimatedApiCost, 4)}</p>
+                    <p className="text-xs text-gray-400">AI API cost</p>
+                  </div>
+                )}
               </div>
-              <div className="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-gray-400">
-                <span>
+              {session?.user?.role === "admin" && (
+                <div className="border-t border-gray-100 pt-3 text-xs text-gray-400">
                   Formula: API cost × {usage.markup} = your charge
-                </span>
-              </div>
+                </div>
+              )}
             </>
           ) : (
             <div className="animate-pulse space-y-2">

@@ -180,9 +180,7 @@ export default async function DashboardPage() {
               >
                 Start your first project →
               </Link>
-              <Link href="/pricing" className="text-sm text-indigo-600 hover:underline">
-                See pricing first
-              </Link>
+              {/* <Link href="/pricing" className="text-sm text-indigo-600 hover:underline">See pricing first</Link> */}
             </div>
           </div>
         ) : (
