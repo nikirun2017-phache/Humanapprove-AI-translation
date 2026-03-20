@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
   )
 
   // Save XLIFF to uploads/
-  const uploadDir = path.join(process.cwd(), "uploads")
+  const uploadDir = path.join(process.env.NODE_ENV === "production" ? "/tmp" : process.cwd(), "uploads")
   await mkdir(uploadDir, { recursive: true })
   const safeBase = name.replace(/[^a-zA-Z0-9._-]/g, "_")
   const xliffFileName = `${Date.now()}-${safeBase}.xliff`

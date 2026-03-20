@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Save files
-  const uploadDir = path.join(process.cwd(), "uploads", "studio")
+  const uploadDir = path.join(process.env.NODE_ENV === "production" ? "/tmp" : process.cwd(), "uploads", "studio")
   await mkdir(uploadDir, { recursive: true })
 
   const safeBase = `${Date.now()}-${name.replace(/[^a-zA-Z0-9._-]/g, "_")}`

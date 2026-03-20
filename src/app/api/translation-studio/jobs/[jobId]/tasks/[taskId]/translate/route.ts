@@ -1,3 +1,5 @@
+export const maxDuration = 300 // 5 min — long-running translation jobs
+
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
@@ -283,7 +285,7 @@ export async function POST(
     }
 
     // Save XLIFF file
-    const xliffDir = path.join(process.cwd(), "uploads", "studio")
+    const xliffDir = path.join(process.env.NODE_ENV === "production" ? "/tmp" : process.cwd(), "uploads", "studio")
     await mkdir(xliffDir, { recursive: true })
     const xliffFileName = `${jobId}-${task.targetLanguage.replace(/[^a-zA-Z0-9-]/g, "_")}.xliff`
     const xliffPath = path.join(xliffDir, xliffFileName)

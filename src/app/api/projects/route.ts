@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Save file to uploads/
-  const uploadDir = path.join(process.cwd(), "uploads")
+  const uploadDir = path.join(process.env.NODE_ENV === "production" ? "/tmp" : process.cwd(), "uploads")
   await mkdir(uploadDir, { recursive: true })
   const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`
   const filePath = path.join(uploadDir, fileName)
