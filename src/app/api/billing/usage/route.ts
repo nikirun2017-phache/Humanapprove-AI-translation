@@ -140,7 +140,7 @@ export async function GET() {
 
   const estimatedApiCost = estimateApiCost(tasksThisMonth)
   const platformReviewerFee = platformProjects.reduce(
-    (sum, p) => sum + p._count.units * AVG_WORDS_PER_UNIT * PLATFORM_REVIEW_RATE,
+    (sum: number, p) => sum + p._count.units * AVG_WORDS_PER_UNIT * PLATFORM_REVIEW_RATE,
     0
   )
   const estimatedCharge = estimateCharge(tasksThisMonth) + platformReviewerFee
