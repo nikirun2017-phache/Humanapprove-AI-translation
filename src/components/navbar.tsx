@@ -35,6 +35,19 @@ export function Navbar() {
           </Link>
           {role === "admin" && (
             <Link
+              href="/billing"
+              className={cn(
+                "text-sm font-medium transition-colors",
+                pathname === "/billing"
+                  ? "text-indigo-600"
+                  : "text-gray-600 hover:text-gray-900"
+              )}
+            >
+              Billing
+            </Link>
+          )}
+          {role === "admin" && (
+            <Link
               href="/admin/settings"
               className={cn(
                 "text-sm font-medium transition-colors",
