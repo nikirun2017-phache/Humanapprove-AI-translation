@@ -158,7 +158,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
       const saved = JSON.parse(raw) as { jobName: string; provider: string; model: string; selectedLangs: string[] }
       sessionStorage.removeItem(WIZARD_STORAGE_KEY)
       setJobName(saved.jobName)
-      if (providers.some((p) => p.name === saved.provider)) setProvider(saved.provider as ProviderName)
+      if (providers.some((p: (typeof providers)[number]) => p.name === saved.provider)) setProvider(saved.provider as ProviderName)
       setModel(saved.model)
       setSelectedLangs(new Set(saved.selectedLangs))
     } catch { /* ignore */ }
@@ -191,7 +191,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     }
   }
 
-  const currentProvider = providers.find((p) => p.name === provider)!
+  const currentProvider = providers.find((p: (typeof providers)[number]) => p.name === provider)!
 
   // Languages pinned to the top of the browser
   const PINNED_CODES = ["en-US", "zh-CN", "zh-TW", "ja-JP", "ko-KR", "pt-BR", "es-MX", "de-DE", "fr-FR"]
@@ -290,7 +290,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     for (const entry of parsed) {
       if (entry.xliffMeta?.targetLanguage) {
         const lang = entry.xliffMeta.targetLanguage
-        if (STUDIO_LANGUAGES.some((l) => l.code === lang)) {
+        if (STUDIO_LANGUAGES.some((l: (typeof STUDIO_LANGUAGES)[number]) => l.code === lang)) {
           setSelectedLangs((s) => new Set([...s, lang]))
         }
       }
@@ -780,7 +780,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
           <div className="flex justify-end">
             <button
               onClick={() => setStep(2)}
-              disabled={!canProceed || entries.some((e) => e.probePending)}
+              disabled={!canProceed || entries.some((e: (typeof entries)[number]) => e.probePending)}
               className="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-40"
             >
               Next: Configure →

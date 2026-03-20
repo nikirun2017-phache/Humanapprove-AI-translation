@@ -55,7 +55,7 @@ export default function NewProjectPage() {
       const unitCount = (text.match(/<trans-unit|<unit\b/g) || []).length
       const targetMatches = [...text.matchAll(/<target[^>]*>([\s\S]*?)<\/target>/g)]
       const targetWords = targetMatches
-        .map((m) => m[1].replace(/<[^>]+>/g, " ").trim())
+        .map((m: RegExpMatchArray) => m[1].replace(/<[^>]+>/g, " ").trim())
         .join(" ")
         .split(/\s+/)
         .filter(Boolean).length
@@ -292,10 +292,10 @@ export default function NewProjectPage() {
             </label>
 
             {/* Your reviewers */}
-            {reviewers.filter((r) => !r.isPlatformReviewer).length > 0 && (
+            {reviewers.filter((r: (typeof reviewers)[number]) => !r.isPlatformReviewer).length > 0 && (
               <div className="mb-2">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-1">Your reviewers</p>
-                {reviewers.filter((r) => !r.isPlatformReviewer).map((r) => {
+                {reviewers.filter((r: (typeof reviewers)[number]) => !r.isPlatformReviewer).map((r) => {
                   let langs = "no languages"
                   try { const l: string[] = JSON.parse(r.languages); if (l.length) langs = l.join(", ") } catch {}
                   return (
@@ -319,13 +319,13 @@ export default function NewProjectPage() {
             )}
 
             {/* Platform reviewers */}
-            {reviewers.filter((r) => r.isPlatformReviewer).length > 0 && (
+            {reviewers.filter((r: (typeof reviewers)[number]) => r.isPlatformReviewer).length > 0 && (
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-1">Platform reviewers</p>
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 mb-2 text-xs text-amber-700">
                   Platform reviewers are certified linguists managed by Jendee AI. A reviewer fee of <strong>$0.055/word</strong> is added to your invoice.
                 </div>
-                {reviewers.filter((r) => r.isPlatformReviewer).map((r) => {
+                {reviewers.filter((r: (typeof reviewers)[number]) => r.isPlatformReviewer).map((r) => {
                   let langs = "no languages"
                   try { const l: string[] = JSON.parse(r.languages); if (l.length) langs = l.join(", ") } catch {}
                   return (

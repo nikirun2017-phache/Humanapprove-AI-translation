@@ -59,16 +59,16 @@ export default function FilePairerPage() {
       const [srcText, tgtText] = await Promise.all([src.text(), tgt.text()])
       const srcUnits = parseFileClient(srcText, fileExt(src.name))
       const tgtUnits = parseFileClient(tgtText, fileExt(tgt.name))
-      const tgtMap = new Map(tgtUnits.map((u) => [u.id, u.text]))
+      const tgtMap = new Map(tgtUnits.map((u: (typeof tgtUnits)[number]) => [u.id, u.text]))
 
-      const rows: AlignmentPreview[] = srcUnits.map((u) => ({
+      const rows: AlignmentPreview[] = srcUnits.map((u: (typeof srcUnits)[number]) => ({
         id: u.id,
         sourceText: u.text,
         targetText: tgtMap.get(u.id) ?? "",
         matched: tgtMap.has(u.id),
       }))
 
-      const matchedCount = rows.filter((r) => r.matched).length
+      const matchedCount = rows.filter((r: (typeof rows)[number]) => r.matched).length
       setPreview(rows.slice(0, 50)) // show first 50 for performance
       setPreviewStats({ matched: matchedCount, total: srcUnits.length })
     } catch {
@@ -124,10 +124,10 @@ export default function FilePairerPage() {
     }
   }
 
-  const ownReviewers = reviewers.filter((r) => !r.isPlatformReviewer)
-  const platformReviewers = reviewers.filter((r) => r.isPlatformReviewer)
+  const ownReviewers = reviewers.filter((r: (typeof reviewers)[number]) => !r.isPlatformReviewer)
+  const platformReviewers = reviewers.filter((r: (typeof reviewers)[number]) => r.isPlatformReviewer)
 
-  const selectedReviewer = reviewers.find((r) => r.id === assignedReviewerId)
+  const selectedReviewer = reviewers.find((r: (typeof reviewers)[number]) => r.id === assignedReviewerId)
   const wordEstimate = previewStats
     ? Math.round((previewStats.matched / Math.max(1, previewStats.total)) * previewStats.total * 15)
     : 0
@@ -168,7 +168,7 @@ export default function FilePairerPage() {
                 onChange={(e) => setSourceLanguage(e.target.value)}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                {STUDIO_LANGUAGES.map((l) => (
+                {STUDIO_LANGUAGES.map((l: (typeof STUDIO_LANGUAGES)[number]) => (
                   <option key={l.code} value={l.code}>
                     {l.name}
                   </option>
@@ -183,7 +183,7 @@ export default function FilePairerPage() {
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">Select a language…</option>
-                {STUDIO_LANGUAGES.map((l) => (
+                {STUDIO_LANGUAGES.map((l: (typeof STUDIO_LANGUAGES)[number]) => (
                   <option key={l.code} value={l.code}>
                     {l.name}
                   </option>
@@ -239,7 +239,7 @@ export default function FilePairerPage() {
                 </span>
               </div>
               <div className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
-                {preview?.map((row) => (
+                {preview?.map((row: (typeof preview)[number]) => (
                   <div
                     key={row.id}
                     className={`grid grid-cols-2 text-xs px-4 py-2 gap-4 ${!row.matched ? "bg-amber-50" : ""}`}
@@ -271,7 +271,7 @@ export default function FilePairerPage() {
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Your reviewers</p>
                   <div className="space-y-1">
-                    {ownReviewers.map((r) => (
+                    {ownReviewers.map((r: (typeof reviewers)[number]) => (
                       <label key={r.id} className="flex items-center gap-3 cursor-pointer group">
                         <input
                           type="radio"
@@ -300,7 +300,7 @@ export default function FilePairerPage() {
                     <span className="text-amber-600 font-medium">+150% fee (${PLATFORM_REVIEW_RATE}/word)</span>
                   </p>
                   <div className="space-y-1">
-                    {platformReviewers.map((r) => {
+                    {platformReviewers.map((r: (typeof reviewers)[number]) => {
                       let langs: string[] = []
                       try {
                         langs = JSON.parse(r.languages)
@@ -400,11 +400,11 @@ function parseFileClient(content: string, ext: string): ParsedUnit[] {
     }
   }
   if (ext === "csv") {
-    const lines = content.split(/\r?\n/).filter((l) => l.trim())
+    const lines = content.split(/\r?\n/).filter((l: string) => l.trim())
     if (lines.length === 0) return []
-    const first = lines[0].split(",").map((c) => c.trim().toLowerCase().replace(/"/g, ""))
+    const first = lines[0].split(",").map((c: string) => c.trim().toLowerCase().replace(/"/g, ""))
     const hasHeader = first[0] === "id" || first[0] === "key" || first[0] === "name"
-    return (hasHeader ? lines.slice(1) : lines).flatMap((line) => {
+    return (hasHeader ? lines.slice(1) : lines).flatMap((line: string) => {
       const cols = line.split(",")
       const id = cols[0]?.trim().replace(/^\"|\"$/g, "")
       const text = cols[1]?.trim().replace(/^\"|\"$/g, "")

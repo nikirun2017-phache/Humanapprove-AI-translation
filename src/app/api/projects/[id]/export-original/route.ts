@@ -64,7 +64,7 @@ export async function GET(
     }
   } else if (sourceFormat !== "xliff") {
     // File Pairer path: reconstruct from DB units (xliffUnitId = original key, orderIndex for order)
-    originalUnits = project.units.map((u) => ({
+    originalUnits = project.units.map((u: (typeof project.units)[number]) => ({
       id: u.xliffUnitId,
       sourceText: u.sourceText,
     }))
@@ -82,7 +82,7 @@ export async function GET(
   }
 
   // Build export units in original file order
-  const exportUnits: ExportUnit[] = originalUnits.map((u) => ({
+  const exportUnits: ExportUnit[] = originalUnits.map((u: (typeof originalUnits)[number]) => ({
     id: u.id,
     sourceText: u.sourceText,
     translatedText: translationMap.get(u.id) ?? u.sourceText, // fallback: keep source if no translation

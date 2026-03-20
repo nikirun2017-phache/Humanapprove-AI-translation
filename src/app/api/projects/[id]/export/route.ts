@@ -39,7 +39,7 @@ export async function GET(
   // Merge revisions
   const revisedXml = exportRevisedXliff(
     originalXml,
-    units.map((u) => ({
+    units.map((u: (typeof units)[number]) => ({
       xliffUnitId: u.xliffUnitId,
       revisedTarget: u.revisedTarget,
       targetText: u.targetText,
