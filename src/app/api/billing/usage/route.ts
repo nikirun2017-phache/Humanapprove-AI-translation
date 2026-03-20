@@ -26,7 +26,7 @@ function estimateApiCost(tasks: Array<{ totalUnits: number; job: { model: string
 
 /** Platform service fee based on total words translated */
 function estimatePlatformFee(tasks: Array<{ totalUnits: number }>): number {
-  const totalWords = tasks.reduce((s, t) => s + t.totalUnits * CHARS_PER_UNIT * WORDS_PER_CHAR, 0)
+  const totalWords = tasks.reduce((s: number, t) => s + t.totalUnits * CHARS_PER_UNIT * WORDS_PER_CHAR, 0)
   return Math.max(MIN_JOB_FEE * tasks.length, totalWords * PLATFORM_FEE_PER_WORD)
 }
 
@@ -140,7 +140,7 @@ export async function GET() {
 
   const estimatedApiCost = estimateApiCost(tasksThisMonth)
   const platformReviewerFee = platformProjects.reduce(
-    (sum: number, p) => sum + p._count.units * AVG_WORDS_PER_UNIT * PLATFORM_REVIEW_RATE,
+    (sum: number, p: { _count: { units: number } }) => sum + p._count.units * AVG_WORDS_PER_UNIT * PLATFORM_REVIEW_RATE,
     0
   )
   const estimatedCharge = estimateCharge(tasksThisMonth) + platformReviewerFee

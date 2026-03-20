@@ -26,7 +26,7 @@ function fileExt(path: string): string {
 }
 
 function countWords(units: { sourceText: string }[]): number {
-  return units.reduce((acc, u) => acc + u.sourceText.split(/\s+/).filter(Boolean).length, 0)
+  return units.reduce((acc: number, u) => acc + u.sourceText.split(/\s+/).filter(Boolean).length, 0)
 }
 
 /**
@@ -188,8 +188,8 @@ export async function POST(req: NextRequest) {
     })
   )
 
-  const totalUnits = files.reduce((s, f) => s + f.unitCount, 0)
-  const totalWordCount = files.reduce((s, f) => s + f.wordCount, 0)
+  const totalUnits = files.reduce((s: number, f) => s + f.unitCount, 0)
+  const totalWordCount = files.reduce((s: number, f) => s + f.wordCount, 0)
 
   return NextResponse.json({ owner, repo, prNumber, branch, files, skippedFiles, totalUnits, totalWordCount })
 }
