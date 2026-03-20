@@ -15,12 +15,40 @@ export function parseXliffSource(content: string): {
 } {
   // Lazy-import to avoid circular dependency issues at module load time
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { parseXliff } = require("@/lib/xliff-parser") as typeof import("@/lib/xliff-parser")
+  const { parseXliff, extractRawSourceUnits } = require("@/lib/xliff-parser") as typeof import("@/lib/xliff-parser")
   const parsed = parseXliff(content)
 
-  const units: SourceUnit[] = parsed.units
-    .filter((u) => !u.targetText || u.targetText.trim() === "")
-    .map((u) => ({ id: u.id, sourceText: u.sourceText }))
+  // extractRawSourceUnits uses regex to pull the verbatim inner XML of every
+  // <source> element. This is authoritative: fast-xml-parser silently drops units
+  // whose <source> contains deeply-nested or namespace-prefixed elements (e.g.
+  // xmlns:xhtml on <g> tags), so we cannot use parsed.units as the unit list.
+  const rawUnits = extractRawSourceUnits(content)
+
+  // Detect units that already have a non-empty <target> via raw regex.
+  // This handles the same namespaced-XML edge-cases that fxp misses.
+  const translatedIdSet = new Set<string>(
+    parsed.units.filter((u) => u.targetText?.trim()).map((u) => u.id)
+  )
+  const tuRegex = /<trans-unit\b([^>]*)>([\s\S]*?)<\/trans-unit>/g
+  let tuMatch: RegExpExecArray | null
+  while ((tuMatch = tuRegex.exec(content)) !== null) {
+    const idM = tuMatch[1].match(/\bid="([^"]*)"/)
+    if (idM && /<target\b[^>]*>[\s\S]*?<\/target>/.test(tuMatch[2])) {
+      translatedIdSet.add(idM[1])
+    }
+  }
+
+  // Build the unit list from rawUnits so every unit — including those with
+  // deeply-nested/namespaced XML that fxp dropped — is included.
+  const units: SourceUnit[] = []
+  for (const [id, rawXml] of rawUnits) {
+    if (translatedIdSet.has(id)) continue
+    const plainText = rawXml
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s{2,}/g, " ")
+      .trim()
+    if (plainText) units.push({ id, sourceText: plainText })
+  }
 
   return {
     units,

@@ -35,8 +35,19 @@ export async function POST(
     return NextResponse.json({ error: "XLIFF file not found" }, { status: 404 })
   }
 
-  const xliffContent = await readFile(task.xliffFileUrl, "utf-8")
-  const parsed = parseXliff(xliffContent)
+  let xliffContent: string
+  try {
+    xliffContent = await readFile(task.xliffFileUrl, "utf-8")
+  } catch (err) {
+    return NextResponse.json({ error: `Could not read XLIFF file: ${(err as Error).message}` }, { status: 500 })
+  }
+
+  let parsed: ReturnType<typeof parseXliff>
+  try {
+    parsed = parseXliff(xliffContent)
+  } catch (err) {
+    return NextResponse.json({ error: `Failed to parse translated XLIFF: ${(err as Error).message}` }, { status: 500 })
+  }
 
   // Auto-assign reviewer by language capability
   let reviewerId: string | null = null
@@ -55,44 +66,70 @@ export async function POST(
   })
   if (match) reviewerId = match.id
 
-  const project = await db.$transaction(async (tx) => {
-    const proj = await tx.project.create({
-      data: {
-        name: `${job.name} — ${task.targetLanguage}`,
-        sourceLanguage: parsed.sourceLanguage,
-        targetLanguage: parsed.targetLanguage,
-        xliffFileUrl: task.xliffFileUrl!,
-        originalFormat: job.sourceFormat, // enables "export as original format" later
-        status: reviewerId ? "in_review" : "pending_assignment",
-        createdById: userId,
-        assignedReviewerId: reviewerId,
-      },
-    })
-
-    await tx.translationUnit.createMany({
-      data: parsed.units.map((u) => ({
-        projectId: proj.id,
-        xliffUnitId: u.id,
-        sourceText: u.sourceText,
-        targetText: u.targetText,
-        orderIndex: u.orderIndex,
-        metadata: JSON.stringify(u.metadata),
-      })),
-    })
-
-    if (reviewerId) {
-      await tx.reviewSession.create({
-        data: { projectId: proj.id, reviewerId },
-      })
-    }
-
-    await tx.translationTask.update({
-      where: { id: taskId },
-      data: { status: "imported", projectId: proj.id },
-    })
-
-    return proj
+  // Clean up any orphaned project from a previous failed import attempt
+  // (transaction may have committed project+units but failed before updating task.projectId)
+  await db.project.deleteMany({
+    where: {
+      name: `${job.name} — ${task.targetLanguage}`,
+      createdById: userId,
+    },
   })
+
+  let project: { id: string }
+  try {
+    project = await db.$transaction(async (tx) => {
+      const proj = await tx.project.create({
+        data: {
+          name: `${job.name} — ${task.targetLanguage}`,
+          sourceLanguage: parsed.sourceLanguage,
+          targetLanguage: parsed.targetLanguage,
+          xliffFileUrl: task.xliffFileUrl!,
+          originalFormat: job.sourceFormat,
+          status: reviewerId ? "in_review" : "pending_assignment",
+          createdById: userId,
+          assignedReviewerId: reviewerId,
+        },
+      })
+
+      // Deduplicate by xliffUnitId (Rise 360 XLIFFs can repeat IDs across <file> elements)
+      const seen = new Set<string>()
+      const uniqueUnits = parsed.units.filter((u) => {
+        if (seen.has(u.id)) return false
+        seen.add(u.id)
+        return true
+      })
+
+      // Insert in chunks to avoid SQLite variable binding limits
+      const CHUNK = 100
+      for (let i = 0; i < uniqueUnits.length; i += CHUNK) {
+        await tx.translationUnit.createMany({
+          data: uniqueUnits.slice(i, i + CHUNK).map((u) => ({
+            projectId: proj.id,
+            xliffUnitId: u.id,
+            sourceText: u.sourceText,
+            targetText: u.targetText,
+            orderIndex: u.orderIndex,
+            metadata: JSON.stringify(u.metadata),
+          })),
+        })
+      }
+
+      if (reviewerId) {
+        await tx.reviewSession.create({
+          data: { projectId: proj.id, reviewerId },
+        })
+      }
+
+      await tx.translationTask.update({
+        where: { id: taskId },
+        data: { status: "imported", projectId: proj.id },
+      })
+
+      return proj
+    })
+  } catch (err) {
+    return NextResponse.json({ error: `Database error: ${(err as Error).message}` }, { status: 500 })
+  }
 
   return NextResponse.json({ projectId: project.id })
 }

@@ -58,46 +58,57 @@ export function parseXliff(xmlContent: string): ParsedXliff {
   const xliff = parsed["xliff"]
   if (!xliff) throw new Error("Not a valid XLIFF file: missing <xliff> root element")
 
-  // Extract language info from <file> element
-  let fileEl = xliff["file"]
-  if (Array.isArray(fileEl)) fileEl = fileEl[0]
-  if (!fileEl) throw new Error("No <file> element found in XLIFF")
+  // Normalise to array — XLIFF files can have multiple <file> elements
+  // (e.g. Articulate Rise 360 exports one <file> per module/lesson)
+  let fileEls = xliff["file"]
+  if (!fileEls) throw new Error("No <file> element found in XLIFF")
+  if (!Array.isArray(fileEls)) fileEls = [fileEls]
 
+  // Language info comes from the first <file> element
+  const firstFile = fileEls[0] as Record<string, unknown>
   const sourceLanguage: string =
-    fileEl["@_source-language"] ||
-    xliff["@_srcLang"] ||
-    xliff["@_source-language"] ||
+    (firstFile["@_source-language"] as string) ||
+    (xliff["@_srcLang"] as string) ||
+    (xliff["@_source-language"] as string) ||
     "en"
   const targetLanguage: string =
-    fileEl["@_target-language"] ||
-    xliff["@_trgLang"] ||
-    xliff["@_target-language"] ||
+    (firstFile["@_target-language"] as string) ||
+    (xliff["@_trgLang"] as string) ||
+    (xliff["@_target-language"] as string) ||
     "und"
 
-  // Navigate to <body> > <trans-unit> (XLIFF 1.x)
-  // or <file> > <unit> (XLIFF 2.0)
+  // Collect trans-units from ALL <file> elements
   let transUnits: unknown[] = []
 
-  // XLIFF 1.x path: xliff > file > body > trans-unit
-  const body = fileEl["body"]
-  if (body) {
-    let tu = body["trans-unit"] || body["group"]
-    if (!tu) tu = []
-    if (!Array.isArray(tu)) tu = [tu]
-    transUnits = flattenGroups(tu)
+  for (const fileEl of fileEls as Record<string, unknown>[]) {
+    // XLIFF 1.x path: file > body > trans-unit / group
+    const body = fileEl["body"]
+    if (body) {
+      let tu = (body as Record<string, unknown>)["trans-unit"] ||
+               (body as Record<string, unknown>)["group"]
+      if (!tu) tu = []
+      if (!Array.isArray(tu)) tu = [tu]
+      transUnits = transUnits.concat(flattenGroups(tu as unknown[]))
+    }
+
+    // XLIFF 2.0 path: file > unit
+    if (!body) {
+      let unit = fileEl["unit"] || []
+      if (!Array.isArray(unit)) unit = [unit]
+      transUnits = transUnits.concat(unit as unknown[])
+    }
   }
 
-  // XLIFF 2.0 path: xliff > file > unit
-  if (transUnits.length === 0) {
-    let unit = fileEl["unit"] || []
-    if (!Array.isArray(unit)) unit = [unit]
-    transUnits = unit
-  }
+  // Track duplicate IDs — Rise 360 reuses short IDs like "title" across <file> elements
+  const seenIds = new Map<string, number>()
 
   const units: ParsedUnit[] = transUnits
     .map((tu, index) => {
       const unit = tu as Record<string, unknown>
-      const id = String(unit["@_id"] || `unit-${index + 1}`)
+      const rawId = String(unit["@_id"] || `unit-${index + 1}`)
+      const count = seenIds.get(rawId) ?? 0
+      seenIds.set(rawId, count + 1)
+      const id = count === 0 ? rawId : `${rawId}__dup${count + 1}`
 
       let sourceText = ""
       let targetText = ""
@@ -141,6 +152,37 @@ export function parseXliff(xmlContent: string): ParsedXliff {
     units,
     rawXml: xmlContent,
   }
+}
+
+/**
+ * Extract the raw inner XML of each <source> element, keyed by trans-unit ID.
+ * Preserves inline XLIFF elements (<g>, <x/>, <ph>, etc.) so they can be sent
+ * to the AI for translation and later injected into <target> intact.
+ * Used for XLIFF source files that must round-trip through authoring tools
+ * like Articulate Rise 360 which require the original tag structure.
+ */
+export function extractRawSourceUnits(xmlContent: string): Map<string, string> {
+  const map = new Map<string, string>()
+  const seenIds = new Map<string, number>()
+  const transUnitRegex = /<trans-unit\b([^>]*)>([\s\S]*?)<\/trans-unit>/g
+  let match
+  while ((match = transUnitRegex.exec(xmlContent)) !== null) {
+    const attrs = match[1]
+    const body = match[2]
+    const idMatch = attrs.match(/\bid="([^"]*)"/)
+    if (!idMatch) continue
+    const rawId = idMatch[1]
+    const count = seenIds.get(rawId) ?? 0
+    seenIds.set(rawId, count + 1)
+    // Suffix duplicate IDs so each unit has a unique key — Rise 360 reuses
+    // short IDs like "title" across multiple <file> elements in one XLIFF.
+    const id = count === 0 ? rawId : `${rawId}__dup${count + 1}`
+    const sourceMatch = body.match(/<source[^>]*>([\s\S]*?)<\/source>/)
+    if (sourceMatch) {
+      map.set(id, sourceMatch[1].trim())
+    }
+  }
+  return map
 }
 
 function flattenGroups(items: unknown[]): unknown[] {

@@ -46,6 +46,93 @@ export function buildXliffFromTranslations(
   ].join("\n")
 }
 
+/**
+ * Merge AI translations back into the original XLIFF structure.
+ *
+ * Unlike buildXliffFromTranslations (which creates a minimal new XLIFF),
+ * this function preserves the full original document — all <file> elements,
+ * namespaces, attributes, and inline <g>/<x>/<ph> tags. It only:
+ *   1. Adds target-language="..." to each <file> element
+ *   2. Injects <target state="needs-review-translation">...</target> after <source>
+ *
+ * Required for XLIFF files from authoring tools like Articulate Rise 360 that
+ * need to re-import the translated file and rely on the original tag structure.
+ */
+export function mergeTranslationsIntoXliff(
+  originalXml: string,
+  targetLanguage: string,
+  translations: Map<string, string>
+): string {
+  // 1. Add target-language to each <file> element (if not already set)
+  let result = originalXml.replace(
+    /(<file\b)([^>]*?)(\/?>)/g,
+    (match, open, attrs, close) => {
+      if (/target-language=/.test(attrs)) return match
+      return `${open}${attrs} target-language="${escapeXmlAttr(targetLanguage)}"${close}`
+    }
+  )
+
+  // 2. Inject <target> after </source> for each translated trans-unit.
+  // Use occurrence-counting to handle Rise 360 XLIFFs that reuse short IDs
+  // like "title" across multiple <file> elements — must match extractRawSourceUnits.
+  const seenIds = new Map<string, number>()
+  result = result.replace(
+    /<trans-unit\b([^>]*)>([\s\S]*?)<\/trans-unit>/g,
+    (match, attrs, body) => {
+      const idMatch = attrs.match(/\bid="([^"]*)"/)
+      if (!idMatch) return match
+      const rawId = idMatch[1]
+      const count = seenIds.get(rawId) ?? 0
+      seenIds.set(rawId, count + 1)
+      const id = count === 0 ? rawId : `${rawId}__dup${count + 1}`
+      const translation = translations.get(id)
+      if (!translation) return match
+      // Skip if <target> already exists
+      if (/<target/.test(body)) return match
+      // Strip any residual XML tags, then properly escape for XML element content.
+      // The AI may echo back HTML entities from the source (e.g. &amp;) or return
+      // bare & < > characters — both must result in valid XML.
+      const targetContent = escapeXmlContent(
+        translation.replace(/<[^>]+>/g, " ").replace(/\s{2,}/g, " ").trim()
+      )
+      // Match the indentation of </source> to align <target> consistently
+      const indentMatch = body.match(/([ \t]*)<\/source>/)
+      const indent = indentMatch ? indentMatch[1] : "        "
+      const newBody = body.replace(
+        /<\/source>/,
+        `</source>\n${indent}<target state="needs-review-translation">${targetContent}</target>`
+      )
+      return `<trans-unit${attrs}>${newBody}</trans-unit>`
+    }
+  )
+
+  return result
+}
+
+function escapeXmlAttr(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/"/g, "&quot;")
+}
+
+/**
+ * Decode any HTML entities the AI may have echoed from the source text,
+ * then re-encode the result as valid XML element content.
+ * Order: numeric entities first, named entities with &amp; last.
+ */
+function escapeXmlContent(str: string): string {
+  const decoded = str
+    .replace(/&#x([0-9A-Fa-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#([0-9]+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&apos;/gi, "'")
+    .replace(/&amp;/gi, "&") // &amp; must be decoded last
+  return decoded
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+}
+
 function escapeXml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
