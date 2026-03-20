@@ -96,7 +96,7 @@ export async function GET() {
         cardStatus: u.subscriptionStatus,
         hasCard: u.subscriptionStatus === "active",
       }
-    }).sort((a, b) => b.platformRevenue - a.platformRevenue)
+    }).sort((a: { platformRevenue: number }, b: { platformRevenue: number }) => b.platformRevenue - a.platformRevenue)
 
     return NextResponse.json({
       mode: "admin",
