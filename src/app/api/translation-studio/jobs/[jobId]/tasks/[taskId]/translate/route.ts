@@ -1,5 +1,3 @@
-export const maxDuration = 300 // 5 min — long-running translation jobs
-
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
