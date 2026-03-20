@@ -87,15 +87,15 @@ export async function POST(req: NextRequest) {
   }
 
   // Build target map: id → translated text
-  const targetMap = new Map(targetUnits.map((u) => [u.id, u.sourceText]))
+  const targetMap = new Map(targetUnits.map((u: (typeof targetUnits)[number]) => [u.id, u.sourceText]))
 
   // Align: only units present in source; mark missing target as empty string
-  const translatedUnits = sourceUnits.map((u) => ({
+  const translatedUnits = sourceUnits.map((u: (typeof sourceUnits)[number]) => ({
     id: u.id,
     translatedText: targetMap.get(u.id) ?? "",
   }))
 
-  const matchedCount = translatedUnits.filter((u) => u.translatedText !== "").length
+  const matchedCount = translatedUnits.filter((u: (typeof translatedUnits)[number]) => u.translatedText !== "").length
 
   // Build bilingual XLIFF
   const xliffContent = buildXliffFromTranslations(
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
   let resolvedReviewerType = reviewerType
   if (!reviewerId) {
     const candidates = await db.user.findMany({ where: { role: "reviewer" } })
-    const matches = candidates.filter((u) => {
+    const matches = candidates.filter((u: (typeof candidates)[number]) => {
       try {
         const langs: string[] = JSON.parse(u.languages)
         return langs.some(
@@ -131,8 +131,8 @@ export async function POST(req: NextRequest) {
         return false
       }
     })
-    const ownMatch = matches.find((u) => !u.isPlatformReviewer)
-    const platformMatch = matches.find((u) => u.isPlatformReviewer)
+    const ownMatch = matches.find((u: (typeof candidates)[number]) => !u.isPlatformReviewer)
+    const platformMatch = matches.find((u: (typeof candidates)[number]) => u.isPlatformReviewer)
     if (ownMatch) {
       reviewerId = ownMatch.id
       resolvedReviewerType = "own"
@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
     })
 
     await tx.translationUnit.createMany({
-      data: sourceUnits.map((u, i) => ({
+      data: sourceUnits.map((u: (typeof sourceUnits)[number], i: number) => ({
         projectId: proj.id,
         xliffUnitId: u.id,
         sourceText: u.sourceText,
