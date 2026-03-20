@@ -161,6 +161,7 @@ function BillingPageInner() {
             onManageCard={openPortal}
             setupLoading={setupLoading}
             portalLoading={portalLoading}
+            isAdmin={role === "admin"}
           />
         )}
 
@@ -324,6 +325,7 @@ function RequesterView({
   onManageCard,
   setupLoading,
   portalLoading,
+  isAdmin,
 }: {
   usage: RequesterUsage | null
   monthLabel: string
@@ -331,6 +333,7 @@ function RequesterView({
   onManageCard: () => void
   setupLoading: boolean
   portalLoading: boolean
+  isAdmin: boolean
 }) {
   const hasCard = usage?.cardStatus === "active"
   const isPastDue = usage?.cardStatus === "past_due"
@@ -438,14 +441,14 @@ function RequesterView({
                   <p className="text-3xl font-bold text-indigo-600">{usd(usage.estimatedCharge)}</p>
                   <p className="text-xs text-gray-400 mt-0.5">your invoice estimate</p>
                 </div>
-                {session?.user?.role === "admin" && (
+                {isAdmin && (
                   <div className="text-right pb-1">
                     <p className="text-sm font-medium text-gray-500">{usd(usage.estimatedApiCost, 4)}</p>
                     <p className="text-xs text-gray-400">AI API cost</p>
                   </div>
                 )}
               </div>
-              {session?.user?.role === "admin" && (
+              {isAdmin && (
                 <div className="border-t border-gray-100 pt-3 text-xs text-gray-400">
                   Formula: API cost × {usage.markup} = your charge
                 </div>
