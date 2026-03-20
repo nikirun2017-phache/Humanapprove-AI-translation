@@ -77,9 +77,10 @@ export async function GET() {
 
     let totalApiCost = 0
     let totalRevenue = 0
-    const activeCustomers = allRequesters.filter((u) => u.subscriptionStatus === "active").length
+    type Requester = (typeof allRequesters)[number]
+    const activeCustomers = allRequesters.filter((u: Requester) => u.subscriptionStatus === "active").length
 
-    const users = allRequesters.map((u) => {
+    const users = allRequesters.map((u: Requester) => {
       const tasks = tasksByUser.get(u.id) ?? []
       const apiCost = estimateApiCost(tasks)
       const charge = estimateCharge(tasks)
