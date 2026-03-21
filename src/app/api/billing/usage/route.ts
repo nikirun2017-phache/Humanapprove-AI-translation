@@ -5,33 +5,40 @@ import { stripe, PAYG_MARKUP, PLATFORM_FEE_PER_WORD, PLATFORM_REVIEW_RATE, OWN_R
 import { PROVIDER_INFO } from "@/lib/ai-providers/registry"
 
 const ALL_MODELS = PROVIDER_INFO.flatMap((p: (typeof PROVIDER_INFO)[number]) => p.models)
-const COST_PER_CHAR = 3 / 1_000_000 / 4  // rough: $3/M tokens, 4 chars/token
-const CHARS_PER_UNIT = 300
-const WORDS_PER_CHAR = 1 / 5 // ~5 chars per word
+const CHARS_PER_WORD = 5  // 5 chars per word
+const COST_PER_WORD_FALLBACK = 3 / 1_000_000 / 4 * 5  // rough fallback: $3/M tokens, 4 chars/token, 5 chars/word
+
+type BillingTask = { totalUnits: number; wordCount: number; jobId: string; job: { model: string } }
+
+/** Words in a task: use stored wordCount if populated, else fall back to units × avg words/unit */
+function taskWords(task: { totalUnits: number; wordCount: number }): number {
+  return task.wordCount > 0 ? task.wordCount : task.totalUnits * AVG_WORDS_PER_UNIT
+}
 
 /** Raw AI API cost — what we pay the model provider */
-function estimateApiCost(tasks: Array<{ totalUnits: number; job: { model: string } }>): number {
+function estimateApiCost(tasks: BillingTask[]): number {
   let total = 0
   for (const task of tasks) {
     const model = ALL_MODELS.find((m: (typeof ALL_MODELS)[number]) => m.id === task.job.model)
-    const units = task.totalUnits || 0
-    const inputTokens = Math.ceil((units * CHARS_PER_UNIT) / 4)
+    const words = taskWords(task)
+    const inputTokens = Math.ceil(words * CHARS_PER_WORD / 4)
     const outputTokens = Math.ceil(inputTokens * 1.1)
     total += model
       ? (inputTokens * model.inputPricePer1M + outputTokens * model.outputPricePer1M) / 1_000_000
-      : units * CHARS_PER_UNIT * 2.1 * COST_PER_CHAR
+      : words * COST_PER_WORD_FALLBACK
   }
   return total
 }
 
-/** Platform service fee based on total words translated */
-function estimatePlatformFee(tasks: Array<{ totalUnits: number }>): number {
-  const totalWords = tasks.reduce((s: number, t: { totalUnits: number }) => s + t.totalUnits * CHARS_PER_UNIT * WORDS_PER_CHAR, 0)
-  return Math.max(MIN_JOB_FEE * tasks.length, totalWords * PLATFORM_FEE_PER_WORD)
+/** Platform service fee based on total words translated — minimum applied per unique job */
+function estimatePlatformFee(tasks: BillingTask[]): number {
+  const totalWords = tasks.reduce((s, t) => s + taskWords(t), 0)
+  const uniqueJobs = new Set(tasks.map(t => t.jobId)).size
+  return Math.max(MIN_JOB_FEE * uniqueJobs, totalWords * PLATFORM_FEE_PER_WORD)
 }
 
 /** Total charge to customer = (API cost × markup) + platform fee */
-function estimateCharge(tasks: Array<{ totalUnits: number; job: { model: string } }>): number {
+function estimateCharge(tasks: BillingTask[]): number {
   return estimateApiCost(tasks) * PAYG_MARKUP + estimatePlatformFee(tasks)
 }
 

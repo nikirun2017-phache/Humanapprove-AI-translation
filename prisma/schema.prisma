@@ -197,6 +197,7 @@ model TranslationTask {
   status         String   @default("pending")
   // pending | running | completed | failed | imported
   totalUnits     Int      @default(0)
+  wordCount      Int      @default(0)  // actual source word count, populated at task creation
   completedUnits Int      @default(0)
   errorMessage   String?
   xliffFileUrl   String?

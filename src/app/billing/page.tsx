@@ -123,8 +123,8 @@ function BillingPageInner() {
           </h1>
           <p className="text-sm text-gray-500 mt-1">
             {role === "admin"
-              ? "Platform-wide AI spend vs revenue at 30× markup."
-              : "Pay as you go — you are billed 30× the AI translation cost. No monthly subscription."}
+              ? `Platform-wide AI spend vs revenue at ${5}× markup + $0.007/word platform fee.`
+              : "Pay as you go — charged at 5× the AI translation cost plus $0.007/word. No monthly subscription."}
           </p>
         </div>
 
@@ -248,7 +248,7 @@ function AdminView({ usage, monthLabel }: { usage: AdminUsage | null; monthLabel
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
           <p className="text-sm font-semibold text-gray-900">{monthLabel} — per customer</p>
-          <p className="text-xs text-gray-400">API cost → 30× revenue</p>
+          <p className="text-xs text-gray-400">API cost → {usage?.markup ?? 5}× + platform fee</p>
         </div>
         {!usage ? (
           <div className="p-6 space-y-3">

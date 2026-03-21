@@ -144,11 +144,16 @@ export async function POST(req: NextRequest) {
       },
     })
 
+    const wordCount = (units as Array<{ source?: string }>).reduce(
+      (sum, u) => sum + (u.source?.split(/\s+/).filter(Boolean).length ?? 0), 0
+    )
+
     await tx.translationTask.createMany({
       data: targetLanguages.map((lang: string) => ({
         jobId: j.id,
         targetLanguage: lang,
         totalUnits: units.length,
+        wordCount,
         status: "pending",
       })),
     })

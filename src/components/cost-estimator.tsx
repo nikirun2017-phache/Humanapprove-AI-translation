@@ -4,7 +4,9 @@ import { useState, useMemo } from "react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 
-const MARKUP = 30
+const PAYG_MARKUP = 5           // matches src/lib/pricing.ts
+const PLATFORM_FEE_PER_WORD = 0.007
+const MIN_JOB_FEE = 5.00
 const WORDS_PER_PAGE = 800      // average marketing/doc page
 const CHARS_PER_WORD = 5
 const CHARS_PER_STRING = 200    // average segment length
@@ -28,7 +30,8 @@ function estimate(words: number, languages: number, modelId: string): number {
   const inputTok = Math.ceil(chars / 4) + batches * BATCH_OVERHEAD_TOKENS
   const outputTok = Math.ceil(inputTok * 1.1)
   const aiCost = (inputTok * model.inputPricePer1M + outputTok * model.outputPricePer1M) / 1_000_000
-  return aiCost * MARKUP * languages
+  const raw = aiCost * PAYG_MARKUP * languages + words * PLATFORM_FEE_PER_WORD * languages
+  return Math.max(MIN_JOB_FEE, raw)
 }
 
 function fmt(n: number): string {
