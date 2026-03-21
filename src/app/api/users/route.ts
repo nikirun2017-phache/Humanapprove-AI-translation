@@ -90,3 +90,25 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(user, { status: 201 })
 }
+
+// DELETE /api/users — bulk delete (admin only), body: { ids: string[] }
+export async function DELETE(req: NextRequest) {
+  const session = await auth()
+  if (!session?.user || session.user.role !== "admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
+
+  const { ids } = await req.json() as { ids?: string[] }
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return NextResponse.json({ error: "ids must be a non-empty array" }, { status: 400 })
+  }
+
+  // Prevent admin from deleting themselves
+  const safeIds = ids.filter((id: string) => id !== session.user.id)
+  if (safeIds.length === 0) {
+    return NextResponse.json({ error: "You cannot delete your own account" }, { status: 400 })
+  }
+
+  const { count } = await db.user.deleteMany({ where: { id: { in: safeIds } } })
+  return NextResponse.json({ deleted: count })
+}

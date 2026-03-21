@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic"
 export default async function AdminUsersPage() {
   const session = await auth()
   if (!session?.user) redirect("/login")
-  if (session.user.role !== "admin") redirect("/dashboard")
+  if (session.user.role !== "admin") redirect("/translation-studio")
 
   const users = await db.user.findMany({
     select: {
