@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
   const router = useRouter()
+  const [mode, setMode] = useState<"signin" | "signup">("signin")
+  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -14,13 +16,27 @@ export default function LoginPage() {
 
   async function handleSocialSignIn(provider: "google" | "apple") {
     setSocialLoading(provider)
-    await signIn(provider, { callbackUrl: "/dashboard" })
+    await signIn(provider, { callbackUrl: "/translation-studio" })
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError("")
+
+    if (mode === "signup") {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      })
+      const data = await res.json() as { error?: string }
+      if (!res.ok) {
+        setError(data.error ?? "Registration failed")
+        setLoading(false)
+        return
+      }
+    }
 
     const result = await signIn("credentials", {
       email,
@@ -31,10 +47,15 @@ export default function LoginPage() {
     setLoading(false)
 
     if (result?.error) {
-      setError("Invalid email or password")
+      setError(mode === "signup" ? "Account created but sign-in failed. Try signing in." : "Wrong email or password — please try again.")
     } else {
-      router.push("/dashboard")
+      router.push("/translation-studio")
     }
+  }
+
+  function switchMode(next: "signin" | "signup") {
+    setMode(next)
+    setError("")
   }
 
   return (
@@ -42,7 +63,9 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-indigo-600 tracking-tight">Jendee AI</h1>
-          <p className="text-sm text-gray-500 mt-1">Sign in to your account</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {mode === "signin" ? "Sign in to your account" : "Create your account"}
+          </p>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4">
@@ -51,6 +74,24 @@ export default function LoginPage() {
               {error}
             </div>
           )}
+
+          {/* Mode toggle */}
+          <div className="flex rounded-lg border border-gray-200 p-1 gap-1">
+            <button
+              type="button"
+              onClick={() => switchMode("signin")}
+              className={"flex-1 text-sm font-medium py-1.5 rounded-md transition-colors " + (mode === "signin" ? "bg-indigo-600 text-white" : "text-gray-500 hover:text-gray-700")}
+            >
+              Sign in
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMode("signup")}
+              className={"flex-1 text-sm font-medium py-1.5 rounded-md transition-colors " + (mode === "signup" ? "bg-indigo-600 text-white" : "text-gray-500 hover:text-gray-700")}
+            >
+              Sign up
+            </button>
+          </div>
 
           {/* Social login buttons */}
           <div className="space-y-2">
@@ -92,11 +133,28 @@ export default function LoginPage() {
 
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400">or sign in with email</span>
+            <span className="text-xs text-gray-400">or with email</span>
             <div className="flex-1 h-px bg-gray-200" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === "signup" && (
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Full name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="Jane Smith"
+                />
+              </div>
+            )}
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email
@@ -122,9 +180,13 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={8}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 placeholder="••••••••"
               />
+              {mode === "signup" && (
+                <p className="text-xs text-gray-400 mt-1">Minimum 8 characters</p>
+              )}
             </div>
 
             <button
@@ -132,13 +194,15 @@ export default function LoginPage() {
               disabled={loading || !!socialLoading}
               className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-medium py-2 rounded-lg text-sm transition-colors"
             >
-              {loading ? "Signing in…" : "Sign in"}
+              {loading
+                ? mode === "signup" ? "Creating account…" : "Signing in…"
+                : mode === "signup" ? "Create account" : "Sign in"}
             </button>
           </form>
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-4">
-          New users signing in with Google or Apple are created automatically.
+          New Google or Apple users are created automatically.
         </p>
       </div>
     </div>
