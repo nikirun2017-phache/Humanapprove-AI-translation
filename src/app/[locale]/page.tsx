@@ -30,6 +30,12 @@ export default async function Home() {
           >
             {t("nav.signIn")}
           </Link>
+          <Link
+            href="/login?mode=signup"
+            className="text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg transition-colors"
+          >
+            Sign up
+          </Link>
         </div>
       </header>
 
