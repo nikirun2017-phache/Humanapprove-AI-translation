@@ -3,6 +3,7 @@
     "brand": "Jendee AI",
     "vision": "Our vision",
     "signIn": "Sign in →",
+    "signUp": "Sign up",
     "home": "Home",
     "getStarted": "Start for free →"
   },
@@ -93,12 +94,24 @@
   },
   "login": {
     "subtitle": "Sign in to your account",
+    "signupSubtitle": "Create your account",
+    "signinTab": "Sign in",
+    "signupTab": "Sign up",
+    "nameLabel": "Full name",
     "emailLabel": "Email",
     "passwordLabel": "Password",
+    "passwordHint": "Minimum 8 characters",
     "submit": "Sign in",
     "submitting": "Signing in…",
-    "contact": "New users can sign in with Google or Apple above",
-    "error": "Wrong email or password — please try again"
+    "createAccount": "Create account",
+    "creatingAccount": "Creating account…",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithApple": "Continue with Apple",
+    "orWithEmail": "or with email",
+    "contact": "New Google or Apple users are created automatically.",
+    "error": "Wrong email or password — please try again",
+    "registerFailed": "Registration failed — please try again",
+    "signupSignInFailed": "Account created but sign-in failed. Try signing in."
   },
   "vision": {
     "badge": "Five ideas that make translation actually work",

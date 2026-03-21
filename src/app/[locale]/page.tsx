@@ -7,7 +7,7 @@ import { getTranslations } from "next-intl/server"
 
 export default async function Home() {
   const session = await auth()
-  if (session?.user) redirect("/dashboard")
+  if (session?.user) redirect("/translation-studio")
 
   const t = await getTranslations()
 
@@ -34,7 +34,7 @@ export default async function Home() {
             href="/login?mode=signup"
             className="text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg transition-colors"
           >
-            Sign up
+            {t("nav.signUp")}
           </Link>
         </div>
       </header>
