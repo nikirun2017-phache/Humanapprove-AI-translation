@@ -45,6 +45,27 @@ interface AdminUsage {
   users: AdminUser[]
 }
 
+interface JobEntry {
+  id: string
+  name: string
+  createdAt: string
+  model: string
+  sourceLanguage: string
+  languages: string[]
+  languageCount: number
+  totalWords: number
+  apiCost: number
+  platformFee: number
+  totalCharge: number
+  status: "completed" | "in_progress"
+}
+
+interface JobsData {
+  jobs: JobEntry[]
+  monthTotal: number
+  month: string
+}
+
 type UsageData = RequesterUsage | AdminUsage
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -59,12 +80,136 @@ function cardLabel(brand: string | null, last4: string | null): string {
   return `${b} ···· ${last4}`
 }
 
+function shortModel(model: string) {
+  // e.g. "claude-sonnet-4-6" → "Claude Sonnet 4.6"
+  return model.replace(/^claude-/, "Claude ").replace(/-(\d)/g, " $1").replace(/-/g, " ")
+    .replace(/\b\w/g, c => c.toUpperCase())
+}
+
+// ── PDF Invoice Generator ──────────────────────────────────────────────────────
+
+function generateInvoiceHtml(
+  jobs: JobEntry[],
+  monthTotal: number,
+  monthLabel: string,
+  userName: string,
+  userEmail: string
+): string {
+  const now = new Date()
+  const invoiceNumber = `INV-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`
+  const rows = jobs.map(j => `
+    <tr>
+      <td>${j.name.replace(/</g, "&lt;")}</td>
+      <td>${new Date(j.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</td>
+      <td>${j.languageCount} lang${j.languageCount !== 1 ? "s" : ""}</td>
+      <td>${j.totalWords.toLocaleString()} words</td>
+      <td class="num">$${j.apiCost.toFixed(5)}</td>
+      <td class="num">$${j.platformFee.toFixed(2)}</td>
+      <td class="num total">$${j.totalCharge.toFixed(2)}</td>
+    </tr>`).join("")
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Invoice ${invoiceNumber}</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, Arial, sans-serif; color: #1a1a1a; padding: 48px; font-size: 13px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
+  .brand { font-size: 22px; font-weight: 700; color: #4f46e5; }
+  .brand-sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
+  .invoice-meta { text-align: right; }
+  .invoice-meta h2 { font-size: 18px; font-weight: 700; color: #111; margin-bottom: 6px; }
+  .invoice-meta p { color: #6b7280; font-size: 12px; line-height: 1.6; }
+  .bill-section { display: flex; justify-content: space-between; margin-bottom: 32px; background: #f9fafb; border-radius: 8px; padding: 20px 24px; }
+  .bill-to h3 { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .bill-to p { line-height: 1.6; }
+  .period h3 { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; text-align: right; }
+  .period p { text-align: right; line-height: 1.6; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+  thead tr { background: #4f46e5; color: white; }
+  thead th { padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  thead th.num { text-align: right; }
+  tbody tr { border-bottom: 1px solid #f3f4f6; }
+  tbody tr:nth-child(even) { background: #fafafa; }
+  td { padding: 9px 12px; vertical-align: top; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.total { font-weight: 600; }
+  .totals { display: flex; justify-content: flex-end; margin-bottom: 40px; }
+  .totals-box { min-width: 280px; }
+  .totals-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+  .totals-row.grand { border-top: 2px solid #4f46e5; border-bottom: none; padding-top: 12px; margin-top: 4px; font-size: 16px; font-weight: 700; color: #4f46e5; }
+  .footnote { border-top: 1px solid #e5e7eb; padding-top: 20px; color: #9ca3af; font-size: 11px; line-height: 1.7; }
+  @media print { body { padding: 24px; } }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="brand">Jendee AI</div>
+      <div class="brand-sub">AI Translation Platform</div>
+    </div>
+    <div class="invoice-meta">
+      <h2>Invoice</h2>
+      <p>${invoiceNumber}<br/>Issue date: ${now.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>
+    </div>
+  </div>
+
+  <div class="bill-section">
+    <div class="bill-to">
+      <h3>Bill to</h3>
+      <p><strong>${userName.replace(/</g, "&lt;")}</strong><br/>${userEmail.replace(/</g, "&lt;")}</p>
+    </div>
+    <div class="period">
+      <h3>Billing period</h3>
+      <p>${monthLabel}</p>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Job name</th>
+        <th>Date</th>
+        <th>Languages</th>
+        <th>Words</th>
+        <th class="num">AI cost</th>
+        <th class="num">Platform fee</th>
+        <th class="num">Charge</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows || '<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:24px">No completed jobs this month</td></tr>'}
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div class="totals-box">
+      <div class="totals-row"><span>Subtotal</span><span>${usd(monthTotal)}</span></div>
+      <div class="totals-row"><span>Tax</span><span>$0.00</span></div>
+      <div class="totals-row grand"><span>Total due</span><span>${usd(monthTotal)}</span></div>
+    </div>
+  </div>
+
+  <div class="footnote">
+    <p>Charges are calculated as: (raw AI API cost × 5× markup) + platform service fee ($0.007/word, min $5/job).</p>
+    <p>AI costs are estimated based on word count and model pricing. Actual charges may vary slightly.</p>
+    <p>Questions? Contact support@jendeeai.com</p>
+  </div>
+
+  <script>window.onload = function() { window.print(); }</script>
+</body>
+</html>`
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 function BillingPageInner() {
   const { data: session } = useSession()
   const searchParams = useSearchParams()
   const [usage, setUsage] = useState<UsageData | null>(null)
+  const [jobs, setJobs] = useState<JobsData | null>(null)
   const [setupLoading, setSetupLoading] = useState(false)
   const [portalLoading, setPortalLoading] = useState(false)
   const [error, setError] = useState("")
@@ -80,6 +225,15 @@ function BillingPageInner() {
       .then((d: UsageData) => setUsage(d))
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (role !== "admin") {
+      fetch("/api/billing/jobs")
+        .then(r => r.json())
+        .then((d: JobsData) => setJobs(d))
+        .catch(() => {})
+    }
+  }, [role])
 
   async function addCard() {
     setError("")
@@ -109,6 +263,24 @@ function BillingPageInner() {
     }
   }
 
+  function downloadInvoice() {
+    if (!jobs || !session?.user) return
+    const monthDate = new Date(jobs.month)
+    const monthLabel = monthDate.toLocaleString("en-US", { month: "long", year: "numeric" })
+    const html = generateInvoiceHtml(
+      jobs.jobs,
+      jobs.monthTotal,
+      monthLabel,
+      session.user.name ?? "Customer",
+      session.user.email ?? ""
+    )
+    const win = window.open("", "_blank")
+    if (win) {
+      win.document.write(html)
+      win.document.close()
+    }
+  }
+
   const monthLabel = new Date().toLocaleString("en-US", { month: "long" })
 
   return (
@@ -117,15 +289,26 @@ function BillingPageInner() {
       <main className="max-w-5xl mx-auto px-6 py-10">
 
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">
-            {role === "admin" ? "Revenue & Billing" : "Billing"}
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {role === "admin"
-              ? `Platform-wide AI spend vs revenue at ${5}× markup + $0.007/word platform fee.`
-              : "Pay as you go — charged at 5× the AI translation cost plus $0.007/word. No monthly subscription."}
-          </p>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {role === "admin" ? "Revenue & Billing" : "Billing"}
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              {role === "admin"
+                ? `Platform-wide AI spend vs revenue at ${5}× markup + $0.007/word platform fee.`
+                : "Pay as you go — charged at 5× the AI translation cost plus $0.007/word. No monthly subscription."}
+            </p>
+          </div>
+          {role !== "admin" && (
+            <button
+              onClick={downloadInvoice}
+              disabled={!jobs}
+              className="flex items-center gap-2 border border-gray-300 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 disabled:opacity-40 transition-colors"
+            >
+              <span>↓</span> Download invoice PDF
+            </button>
+          )}
         </div>
 
         {/* Banners */}
@@ -156,12 +339,13 @@ function BillingPageInner() {
         {role !== "admin" && (
           <RequesterView
             usage={usage as RequesterUsage | null}
+            jobs={jobs}
             monthLabel={monthLabel}
             onAddCard={addCard}
             onManageCard={openPortal}
             setupLoading={setupLoading}
             portalLoading={portalLoading}
-            isAdmin={role === "admin"}
+            onDownloadInvoice={downloadInvoice}
           />
         )}
 
@@ -238,7 +422,7 @@ function AdminView({ usage, monthLabel }: { usage: AdminUsage | null; monthLabel
       <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6 text-sm text-gray-600 flex gap-3 items-start">
         <span className="text-indigo-500 text-base shrink-0">ℹ</span>
         <span>
-          Revenue = API cost × {usage?.markup ?? 30}. Gross margin is{" "}
+          Revenue = API cost × {usage?.markup ?? 5}. Gross margin is{" "}
           <strong>{usage ? `${usage.grossMarginPct}%` : "…"}</strong> because you absorb the raw API spend.
           Each requester is charged their monthly accumulated AI cost times the markup, invoiced via Stripe.
         </span>
@@ -265,7 +449,7 @@ function AdminView({ usage, monthLabel }: { usage: AdminUsage | null; monthLabel
                 <th className="px-5 py-3">Customer</th>
                 <th className="px-4 py-3 text-right">Jobs</th>
                 <th className="px-4 py-3 text-right">API cost</th>
-                <th className="px-4 py-3 text-right">Revenue (30×)</th>
+                <th className="px-4 py-3 text-right">Revenue ({usage.markup}×)</th>
                 <th className="px-4 py-3 text-center">Card</th>
               </tr>
             </thead>
@@ -320,20 +504,22 @@ function AdminView({ usage, monthLabel }: { usage: AdminUsage | null; monthLabel
 
 function RequesterView({
   usage,
+  jobs,
   monthLabel,
   onAddCard,
   onManageCard,
   setupLoading,
   portalLoading,
-  isAdmin,
+  onDownloadInvoice,
 }: {
   usage: RequesterUsage | null
+  jobs: JobsData | null
   monthLabel: string
   onAddCard: () => void
   onManageCard: () => void
   setupLoading: boolean
   portalLoading: boolean
-  isAdmin: boolean
+  onDownloadInvoice: () => void
 }) {
   const hasCard = usage?.cardStatus === "active"
   const isPastDue = usage?.cardStatus === "past_due"
@@ -392,9 +578,8 @@ function RequesterView({
         </div>
       </div>
 
-      {/* Usage + charge this month */}
+      {/* Usage stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {/* Usage stats */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4">{monthLabel} usage</p>
           {usage ? (
@@ -410,7 +595,7 @@ function RequesterView({
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900">{usage.languagesThisMonth}</p>
-                <p className="text-xs text-gray-400 mt-0.5">languages</p>
+                <p className="text-xs text-gray-400 mt-0.5">task runs</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900">{usage.totalProjects}</p>
@@ -432,27 +617,20 @@ function RequesterView({
         {/* Projected charge */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4">
-            {monthLabel} projected charge
+            {monthLabel} total charge
           </p>
-          {usage ? (
+          {jobs ? (
             <>
-              <div className="flex items-end gap-4 mb-3">
-                <div>
-                  <p className="text-3xl font-bold text-indigo-600">{usd(usage.estimatedCharge)}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">your invoice estimate</p>
-                </div>
-                {isAdmin && (
-                  <div className="text-right pb-1">
-                    <p className="text-sm font-medium text-gray-500">{usd(usage.estimatedApiCost, 4)}</p>
-                    <p className="text-xs text-gray-400">AI API cost</p>
-                  </div>
-                )}
-              </div>
-              {isAdmin && (
-                <div className="border-t border-gray-100 pt-3 text-xs text-gray-400">
-                  Formula: API cost × {usage.markup} = your charge
-                </div>
-              )}
+              <p className="text-3xl font-bold text-indigo-600 mb-1">{usd(jobs.monthTotal)}</p>
+              <p className="text-xs text-gray-400">
+                {jobs.jobs.length} job{jobs.jobs.length !== 1 ? "s" : ""} this month
+              </p>
+              <button
+                onClick={onDownloadInvoice}
+                className="mt-3 text-xs text-indigo-600 hover:text-indigo-800 font-medium underline underline-offset-2"
+              >
+                Download PDF invoice →
+              </button>
             </>
           ) : (
             <div className="animate-pulse space-y-2">
@@ -463,34 +641,95 @@ function RequesterView({
         </div>
       </div>
 
-      {/* Activity overview */}
-      {usage && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4">Activity overview</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-indigo-600">{usage.totalProjects}</p>
-              <p className="text-xs text-gray-500 mt-1">Total projects</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-indigo-600">{usage.projectsThisMonth}</p>
-              <p className="text-xs text-gray-500 mt-1">New this month</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-indigo-600">{usage.jobsThisMonth}</p>
-              <p className="text-xs text-gray-500 mt-1">AI jobs run</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-indigo-600">{usd(usage.estimatedCharge)}</p>
-              <p className="text-xs text-gray-500 mt-1">Est. this month</p>
-            </div>
-          </div>
-          <p className="text-xs text-gray-400 mt-4 border-t border-gray-100 pt-3">
-            AI cost is estimated from job unit counts and model pricing. Actual charges may differ slightly.
-            Invoices are issued monthly and charged to your card on file.
-          </p>
+      {/* Per-job breakdown table */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-4">
+        <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+          <p className="text-sm font-semibold text-gray-900">{monthLabel} — job breakdown</p>
+          <p className="text-xs text-gray-400">AI cost × 5 + platform fee</p>
         </div>
-      )}
+
+        {!jobs ? (
+          <div className="p-6 space-y-3">
+            {[0, 1, 2].map(i => <div key={i} className="animate-pulse h-10 bg-gray-50 rounded" />)}
+          </div>
+        ) : jobs.jobs.length === 0 ? (
+          <p className="px-5 py-10 text-center text-sm text-gray-400">No completed jobs this month.</p>
+        ) : (
+          <>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50 text-left text-xs font-medium text-gray-500">
+                  <th className="px-5 py-3">Job name</th>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Languages</th>
+                  <th className="px-4 py-3 text-right">Words</th>
+                  <th className="px-4 py-3 text-right">AI cost</th>
+                  <th className="px-4 py-3 text-right">Platform fee</th>
+                  <th className="px-4 py-3 text-right">Total</th>
+                  <th className="px-4 py-3 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {jobs.jobs.map((job: JobEntry) => (
+                  <tr key={job.id} className="hover:bg-gray-50">
+                    <td className="px-5 py-3">
+                      <p className="font-medium text-gray-900 truncate max-w-[180px]" title={job.name}>{job.name}</p>
+                      <p className="text-xs text-gray-400">{shortModel(job.model)}</p>
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">
+                      {new Date(job.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1 max-w-[140px]">
+                        {job.languages.slice(0, 3).map((l: string) => (
+                          <span key={l} className="text-xs bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded">{l}</span>
+                        ))}
+                        {job.languages.length > 3 && (
+                          <span className="text-xs text-gray-400">+{job.languages.length - 3}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right text-gray-700 tabular-nums">
+                      {job.totalWords > 0 ? job.totalWords.toLocaleString() : <span className="text-gray-300">—</span>}
+                    </td>
+                    <td className="px-4 py-3 text-right text-gray-500 tabular-nums text-xs">
+                      {usd(job.apiCost, 5)}
+                    </td>
+                    <td className="px-4 py-3 text-right text-gray-500 tabular-nums">
+                      {usd(job.platformFee)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-semibold text-indigo-700 tabular-nums">
+                      {usd(job.totalCharge)}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={cn(
+                        "text-xs font-medium px-2 py-0.5 rounded-full",
+                        job.status === "completed"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-amber-100 text-amber-700"
+                      )}>
+                        {job.status === "completed" ? "done" : "running"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-gray-200 bg-gray-50">
+                  <td colSpan={6} className="px-5 py-3 text-xs font-semibold text-gray-600 text-right">Month total</td>
+                  <td className="px-4 py-3 text-right text-sm font-bold text-indigo-700">{usd(jobs.monthTotal)}</td>
+                  <td />
+                </tr>
+              </tfoot>
+            </table>
+          </>
+        )}
+      </div>
+
+      <p className="text-xs text-gray-400 px-1">
+        AI cost is estimated from word count and model pricing. Actual charges may differ slightly.
+        Invoices are issued monthly and charged to your card on file.
+      </p>
     </>
   )
 }
