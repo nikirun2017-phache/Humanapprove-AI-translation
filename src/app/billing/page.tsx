@@ -103,8 +103,6 @@ function generateInvoiceHtml(
       <td>${new Date(j.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</td>
       <td>${j.languageCount} lang${j.languageCount !== 1 ? "s" : ""}</td>
       <td>${j.totalWords.toLocaleString()} words</td>
-      <td class="num">$${j.apiCost.toFixed(5)}</td>
-      <td class="num">$${j.platformFee.toFixed(2)}</td>
       <td class="num total">$${j.totalCharge.toFixed(2)}</td>
     </tr>`).join("")
 
@@ -174,13 +172,11 @@ function generateInvoiceHtml(
         <th>Date</th>
         <th>Languages</th>
         <th>Words</th>
-        <th class="num">AI cost</th>
-        <th class="num">Platform fee</th>
         <th class="num">Charge</th>
       </tr>
     </thead>
     <tbody>
-      ${rows || '<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:24px">No completed jobs this month</td></tr>'}
+      ${rows || '<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:24px">No completed jobs this month</td></tr>'}
     </tbody>
   </table>
 
@@ -645,7 +641,7 @@ function RequesterView({
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-4">
         <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
           <p className="text-sm font-semibold text-gray-900">{monthLabel} — job breakdown</p>
-          <p className="text-xs text-gray-400">AI cost × 5 + platform fee</p>
+          <p className="text-xs text-gray-400">Per-job charges for this month</p>
         </div>
 
         {!jobs ? (
@@ -663,9 +659,7 @@ function RequesterView({
                   <th className="px-4 py-3">Date</th>
                   <th className="px-4 py-3">Languages</th>
                   <th className="px-4 py-3 text-right">Words</th>
-                  <th className="px-4 py-3 text-right">AI cost</th>
-                  <th className="px-4 py-3 text-right">Platform fee</th>
-                  <th className="px-4 py-3 text-right">Total</th>
+                  <th className="px-4 py-3 text-right">Charge</th>
                   <th className="px-4 py-3 text-center">Status</th>
                 </tr>
               </thead>
@@ -692,12 +686,6 @@ function RequesterView({
                     <td className="px-4 py-3 text-right text-gray-700 tabular-nums">
                       {job.totalWords > 0 ? job.totalWords.toLocaleString() : <span className="text-gray-300">—</span>}
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-500 tabular-nums text-xs">
-                      {usd(job.apiCost, 5)}
-                    </td>
-                    <td className="px-4 py-3 text-right text-gray-500 tabular-nums">
-                      {usd(job.platformFee)}
-                    </td>
                     <td className="px-4 py-3 text-right font-semibold text-indigo-700 tabular-nums">
                       {usd(job.totalCharge)}
                     </td>
@@ -716,7 +704,7 @@ function RequesterView({
               </tbody>
               <tfoot>
                 <tr className="border-t border-gray-200 bg-gray-50">
-                  <td colSpan={6} className="px-5 py-3 text-xs font-semibold text-gray-600 text-right">Month total</td>
+                  <td colSpan={4} className="px-5 py-3 text-xs font-semibold text-gray-600 text-right">Month total</td>
                   <td className="px-4 py-3 text-right text-sm font-bold text-indigo-700">{usd(jobs.monthTotal)}</td>
                   <td />
                 </tr>
