@@ -138,6 +138,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
 
   // Step 2 state
   const [jobName, setJobName] = useState("")
+  const [sourceLanguage, setSourceLanguage] = useState("en-US")
   // MVP: locked to Claude Sonnet 4.6
   const provider = "anthropic"
   const model = "claude-sonnet-4-6"
@@ -391,7 +392,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
       fd.append("provider", provider)
       fd.append("model", model)
       fd.append("targetLanguages", langs)
-      fd.append("sourceLanguage", entry.xliffMeta?.sourceLanguage ?? "en-US")
+      fd.append("sourceLanguage", entry.xliffMeta?.sourceLanguage ?? sourceLanguage)
 
       const res = await fetch("/api/translation-studio/jobs", { method: "POST", body: fd })
       const data = await res.json() as { jobId?: string; error?: string }
@@ -808,6 +809,21 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
+            {entries.some((e: FileEntry) => !e.xliffMeta) && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Source language</label>
+                <select
+                  value={sourceLanguage}
+                  onChange={(e) => setSourceLanguage(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  {STUDIO_LANGUAGES.map((l: (typeof STUDIO_LANGUAGES)[number]) => (
+                    <option key={l.code} value={l.code}>{l.name} ({l.code})</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-400 mt-1">The language your file is written in.</p>
+              </div>
+            )}
           </div>
 
           <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
