@@ -15,10 +15,16 @@ export async function POST(req: NextRequest) {
 
   const origin = req.headers.get("origin") ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000"
 
-  const portalSession = await stripe.billingPortal.sessions.create({
-    customer: user.stripeCustomerId,
-    return_url: `${origin}/billing`,
-  })
+  let portalSession
+  try {
+    portalSession = await stripe.billingPortal.sessions.create({
+      customer: user.stripeCustomerId,
+      return_url: `${origin}/billing`,
+    })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Stripe error"
+    return NextResponse.json({ error: msg }, { status: 502 })
+  }
 
   return NextResponse.json({ url: portalSession.url })
 }
