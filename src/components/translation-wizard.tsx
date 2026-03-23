@@ -296,7 +296,24 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     }
   }
 
-  const TXT_MAX_BYTES = 500 * 1024 // 500 KB warning threshold for .txt files
+  const FILE_SIZE_LIMITS: Record<string, number> = {
+    pdf:   50 * 1024 * 1024,  // 50 MB — scanned/image PDFs are large
+    json:   5 * 1024 * 1024,  // 5 MB
+    csv:    5 * 1024 * 1024,
+    md:     5 * 1024 * 1024,
+    txt:    5 * 1024 * 1024,
+    xliff:  5 * 1024 * 1024,
+    xlf:    5 * 1024 * 1024,
+  }
+
+  function fileSizeError(f: File): string | null {
+    const ext = f.name.split(".").pop()?.toLowerCase() ?? ""
+    const limit = FILE_SIZE_LIMITS[ext]
+    if (!limit || f.size <= limit) return null
+    const limitMb = limit / 1024 / 1024
+    const sizeMb = (f.size / 1024 / 1024).toFixed(1)
+    return `File is ${sizeMb} MB — exceeds the ${limitMb} MB limit for .${ext} files. Please split or compress it.`
+  }
 
   async function addFiles(newFiles: File[]) {
     const existingKeys = new Set(entries.map((e: FileEntry) => e.key))
@@ -306,14 +323,12 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     // Parse non-PDF files client-side; PDFs get a probe stub immediately
     const parsed = await Promise.all(
       fresh.map((f: File) => {
+        const sizeErr = fileSizeError(f)
+        if (sizeErr) {
+          return Promise.resolve<FileEntry>({ key: fileKey(f), file: f, preview: [], parseError: sizeErr })
+        }
         if (f.name.endsWith(".pdf")) {
           return Promise.resolve<FileEntry>({ key: fileKey(f), file: f, preview: [], parseError: "", probePending: true })
-        }
-        if (f.name.endsWith(".txt") && f.size > TXT_MAX_BYTES) {
-          return Promise.resolve<FileEntry>({
-            key: fileKey(f), file: f, preview: [], parseError: "",
-            sizeWarning: `Large file (${(f.size / 1024).toFixed(0)} KB). Files over 500 KB may be slow to translate and cost more. Consider splitting it into smaller files.`,
-          })
         }
         return parseNonPdfFile(f)
       })
@@ -1188,7 +1203,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             </button>
             <button
               onClick={() => setStep(3)}
-              disabled={!jobName.trim() || selectedLangs.size === 0 || entries.some((e: FileEntry) => e.probePending)}
+              disabled={!jobName.trim() || selectedLangs.size === 0 || entries.some((e: FileEntry) => e.probePending || e.parseError)}
               className="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-40"
               title={entries.some((e: FileEntry) => e.probePending) ? "Wait for PDF analysis to complete" : undefined}
             >

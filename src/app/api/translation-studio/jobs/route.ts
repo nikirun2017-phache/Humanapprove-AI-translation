@@ -59,8 +59,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
   }
 
-  // Enforce file size limit: 20 MB for PDF, 5 MB for all other types
-  const MAX_PDF_BYTES = 20 * 1024 * 1024
+  // Enforce file size limit: 50 MB for PDF, 5 MB for all text-based types
+  const MAX_PDF_BYTES = 50 * 1024 * 1024
   const MAX_TEXT_BYTES = 5 * 1024 * 1024
   const rawExtCheck = file.name.split(".").pop()?.toLowerCase()
   const maxBytes = rawExtCheck === "pdf" ? MAX_PDF_BYTES : MAX_TEXT_BYTES
