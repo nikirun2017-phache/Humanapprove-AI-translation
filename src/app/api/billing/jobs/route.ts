@@ -66,7 +66,9 @@ export async function GET(req: NextRequest) {
     const totalWords = tasks.reduce((s, t) => s + taskWords(t), 0)
     const apiCost = tasks.reduce((s, t) => s + estimateApiCostForTask(t), 0)
     const platformFee = Math.max(MIN_JOB_FEE, totalWords * PLATFORM_FEE_PER_WORD)
-    const totalCharge = apiCost * PAYG_MARKUP + platformFee
+    const baseCharge = apiCost * PAYG_MARKUP + platformFee
+    const discount = job.discountPct > 0 ? baseCharge * (job.discountPct / 100) : 0
+    const totalCharge = baseCharge - discount
     const languages = job.tasks.map(t => t.targetLanguage)
 
     return {
@@ -81,6 +83,9 @@ export async function GET(req: NextRequest) {
       apiCost: Math.round(apiCost * 100000) / 100000,
       platformFee: Math.round(platformFee * 100) / 100,
       totalCharge: Math.round(totalCharge * 100) / 100,
+      promoCode: job.promoCode ?? null,
+      discountPct: job.discountPct,
+      discountAmt: Math.round(discount * 100) / 100,
       status: job.tasks.every(t => t.status === "completed" || t.status === "imported") ? "completed" : "in_progress",
     }
   })

@@ -150,6 +150,9 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
   const [cardError, setCardError] = useState("")
+  const [promoInput, setPromoInput] = useState("")
+  const [promoState, setPromoState] = useState<{ valid: boolean; discountPct: number; code: string; error?: string } | null>(null)
+  const [promoLoading, setPromoLoading] = useState(false)
 
   // Restore wizard config after returning from Stripe card setup
   useEffect(() => {
@@ -393,6 +396,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
       fd.append("model", model)
       fd.append("targetLanguages", langs)
       fd.append("sourceLanguage", entry.xliffMeta?.sourceLanguage ?? sourceLanguage)
+      if (promoState?.valid) fd.append("promoCode", promoState.code)
 
       const res = await fetch("/api/translation-studio/jobs", { method: "POST", body: fd })
       const data = await res.json() as { jobId?: string; error?: string }
@@ -1083,12 +1087,15 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
 
         const grandTotalRaw = fileRows.reduce((s: number, r: (typeof fileRows)[number]) => s + r.totalFileCost, 0)
         // Apply minimum job fee: total must be at least $5
-        const grandTotalCharge = Math.max(MIN_JOB_FEE, grandTotalRaw)
+        const grandTotalBeforeDiscount = Math.max(MIN_JOB_FEE, grandTotalRaw)
+        // Apply promo discount on top of the (post-minimum) total
+        const promoDiscount = promoState?.valid ? grandTotalBeforeDiscount * (promoState.discountPct / 100) : 0
+        const grandTotalCharge = grandTotalBeforeDiscount - promoDiscount
         const totalWords = fileRows.reduce((s: number, r: (typeof fileRows)[number]) => s + r.estimatedWords, 0)
         // Split into fixed (platform fee) and variable (AI markup) components for transparency
         const totalPlatformFee = fileRows.reduce((s: number, r: (typeof fileRows)[number]) => s + r.estimatedWords * PLATFORM_FEE_PER_WORD * selectedLangs.size, 0)
         const totalAiMarkup = Math.max(0, grandTotalRaw - totalPlatformFee)
-        const minFeeApplied = grandTotalCharge > grandTotalRaw
+        const minFeeApplied = grandTotalBeforeDiscount > grandTotalRaw
 
         return (
           <div className="space-y-4">
@@ -1139,7 +1146,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                         {isPdf ? `~${estimatedWords.toLocaleString()}` : estimatedWords.toLocaleString()}
                       </td>
                       <td className="px-5 py-2.5 text-right font-medium text-gray-900">
-                        {fmt(minFeeApplied ? grandTotalCharge / fileRows.length : totalFileCost)}
+                        {fmt(minFeeApplied ? grandTotalBeforeDiscount / fileRows.length : totalFileCost)}
                         {minFeeApplied && (
                           <span className="block text-xs text-gray-400 font-normal">min. fee</span>
                         )}
@@ -1173,6 +1180,12 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                     <span className="font-medium text-gray-700">{fmt(MIN_JOB_FEE)}</span>
                   </div>
                 )}
+                {promoState?.valid && (
+                  <div className="flex justify-between text-xs text-green-600 font-medium">
+                    <span>Promo code <span className="font-bold">{promoState.code}</span> ({promoState.discountPct}% off)</span>
+                    <span>−{fmt(promoDiscount)}</span>
+                  </div>
+                )}
                 <p className="text-xs text-gray-400 pt-1 border-t border-gray-200 mt-1">
                   The platform fee is calculated from the extracted word count and will not change. The AI portion varies slightly based on actual token usage.
                 </p>
@@ -1182,6 +1195,54 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                   </p>
                 )}
               </div>
+            </div>
+
+            {/* Promo code */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <p className="text-xs font-medium text-gray-700 mb-2">Promo code</p>
+              <div className="flex gap-2">
+                <input
+                  value={promoInput}
+                  onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoState(null) }}
+                  placeholder="Enter code"
+                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  disabled={submitting}
+                />
+                <button
+                  type="button"
+                  disabled={!promoInput.trim() || promoLoading || submitting}
+                  onClick={async () => {
+                    setPromoLoading(true)
+                    setPromoState(null)
+                    try {
+                      const res = await fetch("/api/billing/promo", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ code: promoInput.trim() }),
+                      })
+                      const data = await res.json() as { valid: boolean; discountPct?: number; code?: string; error?: string }
+                      if (data.valid) {
+                        setPromoState({ valid: true, discountPct: data.discountPct!, code: data.code! })
+                      } else {
+                        setPromoState({ valid: false, discountPct: 0, code: "", error: data.error })
+                      }
+                    } catch {
+                      setPromoState({ valid: false, discountPct: 0, code: "", error: "Failed to validate code" })
+                    }
+                    setPromoLoading(false)
+                  }}
+                  className="px-4 py-2 text-sm bg-gray-900 text-white rounded-lg hover:bg-gray-700 disabled:opacity-40 transition-colors"
+                >
+                  {promoLoading ? "…" : "Apply"}
+                </button>
+              </div>
+              {promoState && (
+                <p className={`text-xs mt-1.5 ${promoState.valid ? "text-green-600" : "text-red-500"}`}>
+                  {promoState.valid
+                    ? `✓ ${promoState.discountPct}% discount applied!`
+                    : `✕ ${promoState.error}`}
+                </p>
+              )}
             </div>
 
             {submitError && (

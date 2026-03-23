@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
   const model = formData.get("model") as string
   const targetLanguagesRaw = formData.get("targetLanguages") as string
   const apiKey = formData.get("apiKey") as string | null
+  const promoCodeInput = ((formData.get("promoCode") as string) || "").trim().toUpperCase()
   let sourceLanguage = (formData.get("sourceLanguage") as string) || "en-US"
 
   if (!file || !name || !provider || !model || !targetLanguagesRaw) {
@@ -125,6 +126,19 @@ export async function POST(req: NextRequest) {
     writeFile(unitsFilePath, JSON.stringify(units), "utf-8"),
   ])
 
+  // Validate promo code if provided
+  let appliedPromoCode: string | null = null
+  let discountPct = 0
+  if (promoCodeInput) {
+    const promo = await db.promoCode.findUnique({ where: { code: promoCodeInput } })
+    if (promo && promo.active &&
+        (!promo.expiresAt || promo.expiresAt > new Date()) &&
+        (promo.maxUses === null || promo.usedCount < promo.maxUses)) {
+      appliedPromoCode = promo.code
+      discountPct = promo.discountPct
+    }
+  }
+
   // Create job and tasks in a transaction
   const job = await db.$transaction(async (tx: Parameters<Parameters<typeof db.$transaction>[0]>[0]) => {
     const j = await tx.translationJob.create({
@@ -141,8 +155,18 @@ export async function POST(req: NextRequest) {
         provider,
         model,
         status: "pending",
+        promoCode: appliedPromoCode,
+        discountPct,
       },
     })
+
+    // Increment usage counter on the promo code
+    if (appliedPromoCode) {
+      await tx.promoCode.update({
+        where: { code: appliedPromoCode },
+        data: { usedCount: { increment: 1 } },
+      })
+    }
 
     const wordCount = (units as Array<{ source?: string }>).reduce(
       (sum, u) => sum + (u.source?.split(/\s+/).filter(Boolean).length ?? 0), 0

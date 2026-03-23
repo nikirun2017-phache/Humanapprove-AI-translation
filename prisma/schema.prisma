@@ -169,8 +169,24 @@ model TranslationJob {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  promoCode   String?  // coupon code applied at job creation
+  discountPct Int      @default(0)  // 0-100, e.g. 50 = 50% off
+
   createdBy User              @relation(fields: [createdById], references: [id])
   tasks     TranslationTask[]
+}
+
+// Promotion / coupon codes
+model PromoCode {
+  id          String    @id @default(cuid())
+  code        String    @unique  // e.g. "SPRINT"
+  discountPct Int       // percentage off, 1-100
+  maxUses     Int?      // null = unlimited
+  usedCount   Int       @default(0)
+  expiresAt   DateTime? // null = never expires
+  active      Boolean   @default(true)
+  description String?   // internal note
+  createdAt   DateTime  @default(now())
 }
 
 // Immutable log of reviewer actions: approve, reject, revise, submit
