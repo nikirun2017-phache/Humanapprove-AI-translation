@@ -224,6 +224,9 @@ export function JobProgress({ initialJob }: Props) {
                   setPaused(true)
                 }
               }}
+              title={paused
+                ? "Resume — continue translating remaining languages"
+                : "Pause after the current language finishes. The translation in progress will not be interrupted."}
               className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               {paused ? "Resume" : "Pause"}
