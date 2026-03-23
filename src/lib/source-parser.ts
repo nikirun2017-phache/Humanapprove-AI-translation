@@ -618,6 +618,29 @@ export function parseMarkdownSource(content: string): SourceUnit[] {
   return units
 }
 
+// Plain text parser — splits on blank lines into paragraphs
+export function parseTxtSource(content: string): SourceUnit[] {
+  const units: SourceUnit[] = []
+  let index = 0
+  const paragraphs = content.split(/\r?\n\r?\n+/)
+  for (const para of paragraphs) {
+    const text = para.trim()
+    if (text) {
+      units.push({ id: `p_${index++}`, sourceText: text })
+    }
+  }
+  // If no double-newline breaks, treat each non-empty line as a unit
+  if (units.length <= 1 && content.includes("\n")) {
+    units.length = 0
+    index = 0
+    for (const line of content.split(/\r?\n/)) {
+      const text = line.trim()
+      if (text) units.push({ id: `l_${index++}`, sourceText: text })
+    }
+  }
+  return units
+}
+
 function parseCsvLine(line: string): string[] {
   const cols: string[] = []
   let current = ""

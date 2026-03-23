@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { parseJsonSource, parseCsvSource, parseMarkdownSource, parsePdfSource, parseXliffSource } from "@/lib/source-parser"
+import { parseJsonSource, parseCsvSource, parseMarkdownSource, parseTxtSource, parsePdfSource, parseXliffSource } from "@/lib/source-parser"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
 
@@ -59,8 +59,8 @@ export async function POST(req: NextRequest) {
   }
 
   const rawExt = file.name.split(".").pop()?.toLowerCase()
-  if (rawExt !== "json" && rawExt !== "csv" && rawExt !== "md" && rawExt !== "pdf" && rawExt !== "xliff" && rawExt !== "xlf") {
-    return NextResponse.json({ error: "Only .json, .csv, .md, .pdf, .xliff, or .xlf files are accepted" }, { status: 400 })
+  if (rawExt !== "json" && rawExt !== "csv" && rawExt !== "md" && rawExt !== "txt" && rawExt !== "pdf" && rawExt !== "xliff" && rawExt !== "xlf") {
+    return NextResponse.json({ error: "Only .json, .csv, .md, .txt, .pdf, .xliff, or .xlf files are accepted" }, { status: 400 })
   }
   // Normalise .xlf → xliff so sourceFormat is consistent throughout
   const ext = rawExt === "xlf" ? "xliff" : rawExt
@@ -98,7 +98,10 @@ export async function POST(req: NextRequest) {
       }
     } else {
       const content = await file.text()
-      units = ext === "json" ? parseJsonSource(content) : ext === "md" ? parseMarkdownSource(content) : parseCsvSource(content)
+      units = ext === "json" ? parseJsonSource(content)
+            : ext === "md"   ? parseMarkdownSource(content)
+            : ext === "txt"  ? parseTxtSource(content)
+            : parseCsvSource(content)
     }
   } catch (err) {
     return NextResponse.json({ error: `Failed to parse file: ${(err as Error).message}` }, { status: 400 })

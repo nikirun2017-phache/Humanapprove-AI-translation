@@ -40,6 +40,7 @@ interface FileEntry {
   pdfProbe?: PdfProbe  // set after server-side probe for PDF files
   probePending?: boolean
   xliffMeta?: XliffMeta
+  sizeWarning?: string  // shown for large .txt files
 }
 
 function fileKey(f: File) {
@@ -51,6 +52,7 @@ function fileTypeLabel(name: string) {
   if (name.endsWith(".json")) return "JSON"
   if (name.endsWith(".csv")) return "CSV"
   if (name.endsWith(".md")) return "MD"
+  if (name.endsWith(".txt")) return "TXT"
   if (name.endsWith(".xliff") || name.endsWith(".xlf")) return "XLIFF"
   return "file"
 }
@@ -240,7 +242,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             let units: SourceUnit[]
             if (f.name.endsWith(".json")) {
               units = flattenForPreview(JSON.parse(content) as unknown)
-            } else if (f.name.endsWith(".md")) {
+            } else if (f.name.endsWith(".md") || f.name.endsWith(".txt")) {
               units = parseMarkdownPreview(content)
             } else {
               units = parseCsvPreview(content)
@@ -248,7 +250,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             resolve({ key, file: f, preview: units, parseError: "" })
           }
         } catch {
-          resolve({ key, file: f, preview: [], parseError: "Could not parse file — check that it is valid JSON, CSV, Markdown, or XLIFF." })
+          resolve({ key, file: f, preview: [], parseError: "Could not parse file — check that it is valid JSON, CSV, Markdown, TXT, or XLIFF." })
         }
       }
       reader.readAsText(f)
@@ -267,6 +269,8 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     }
   }
 
+  const TXT_MAX_BYTES = 500 * 1024 // 500 KB warning threshold for .txt files
+
   async function addFiles(newFiles: File[]) {
     const existingKeys = new Set(entries.map((e: FileEntry) => e.key))
     const fresh = newFiles.filter((f: File) => !existingKeys.has(fileKey(f)))
@@ -274,17 +278,24 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
 
     // Parse non-PDF files client-side; PDFs get a probe stub immediately
     const parsed = await Promise.all(
-      fresh.map((f: File) =>
-        f.name.endsWith(".pdf")
-          ? Promise.resolve<FileEntry>({ key: fileKey(f), file: f, preview: [], parseError: "", probePending: true })
-          : parseNonPdfFile(f)
-      )
+      fresh.map((f: File) => {
+        if (f.name.endsWith(".pdf")) {
+          return Promise.resolve<FileEntry>({ key: fileKey(f), file: f, preview: [], parseError: "", probePending: true })
+        }
+        if (f.name.endsWith(".txt") && f.size > TXT_MAX_BYTES) {
+          return Promise.resolve<FileEntry>({
+            key: fileKey(f), file: f, preview: [], parseError: "",
+            sizeWarning: `Large file (${(f.size / 1024).toFixed(0)} KB). Files over 500 KB may be slow to translate and cost more. Consider splitting it into smaller files.`,
+          })
+        }
+        return parseNonPdfFile(f)
+      })
     )
 
     setEntries((prev) => {
       const next = [...prev, ...parsed]
       if (!jobName && next.length > 0) {
-        setJobName(next[0].file.name.replace(/\.(json|csv|md|pdf|xliff)$/i, ""))
+        setJobName(next[0].file.name.replace(/\.(json|csv|md|txt|pdf|xliff)$/i, ""))
       }
       return next
     })
@@ -651,15 +662,15 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             <input
               id="file-input"
               type="file"
-              accept=".json,.csv,.md,.pdf,.xliff,.xlf"
+              accept=".json,.csv,.md,.txt,.pdf,.xliff,.xlf"
               multiple
               className="hidden"
               onChange={handleInputChange}
             />
             <p className="text-gray-500">
-              Drop <strong>.json</strong>, <strong>.csv</strong>, <strong>.md</strong>, <strong>.pdf</strong>, <strong>.xliff</strong>, or <strong>.xlf</strong> files here, or click to browse
+              Drop <strong>.json</strong>, <strong>.csv</strong>, <strong>.md</strong>, <strong>.txt</strong>, <strong>.pdf</strong>, <strong>.xliff</strong>, or <strong>.xlf</strong> files here, or click to browse
             </p>
-            <p className="text-xs text-gray-400 mt-1">Multiple files supported — each becomes a separate translation job. XLIFF files must have empty &lt;target&gt; elements.</p>
+            <p className="text-xs text-gray-400 mt-1">Multiple files supported — each becomes a separate translation job. XLIFF files must have empty &lt;target&gt; elements. .txt files over 500 KB will show a size warning.</p>
           </div>
 
           {/* File list */}
@@ -699,6 +710,8 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                       <p className="text-sm font-medium text-gray-900 truncate">{entry.file.name}</p>
                       {entry.parseError ? (
                         <p className="text-xs text-red-600 mt-0.5">{entry.parseError}</p>
+                      ) : entry.sizeWarning ? (
+                        <p className="text-xs text-amber-600 mt-0.5">⚠ {entry.sizeWarning}</p>
                       ) : (
                         <p className="text-xs text-gray-400 mt-0.5">
                           {formatBytes(entry.file.size)}
