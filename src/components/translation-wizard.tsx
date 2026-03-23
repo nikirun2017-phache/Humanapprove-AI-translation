@@ -1163,38 +1163,22 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                 </tfoot>
               </table>
 
-              {/* Cost breakdown — shows what's fixed vs variable */}
-              <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 space-y-1.5">
-                <p className="text-xs font-medium text-gray-600 mb-2">What makes up this charge:</p>
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>Platform fee <span className="text-gray-400">($0.007 × {totalWords.toLocaleString()} words)</span></span>
-                  <span className="font-medium text-gray-700">{fmt(totalPlatformFee)} <span className="text-green-600 font-normal">fixed</span></span>
+              {/* Cost summary — promo discount only */}
+              {(promoState?.valid || minFeeApplied || fileRows.some((r: (typeof fileRows)[number]) => r.isPdf)) && (
+                <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 space-y-1.5">
+                  {promoState?.valid && (
+                    <div className="flex justify-between text-xs text-green-600 font-medium">
+                      <span>Promo code <span className="font-bold">{promoState.code}</span> ({promoState.discountPct}% off)</span>
+                      <span>−{fmt(promoDiscount)}</span>
+                    </div>
+                  )}
+                  {fileRows.some((r: (typeof fileRows)[number]) => r.isPdf) && (
+                    <p className="text-xs text-gray-400">
+                      PDF output: delivered as .xliff (for human review) and .txt (ready to use). Original PDF layout is not reconstructed.
+                    </p>
+                  )}
                 </div>
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>AI translation <span className="text-gray-400">(raw API cost × {PAYG_MARKUP})</span></span>
-                  <span className="font-medium text-gray-700">~{fmt(totalAiMarkup)} <span className="text-amber-600 font-normal">±20%</span></span>
-                </div>
-                {minFeeApplied && (
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>Minimum job fee applied</span>
-                    <span className="font-medium text-gray-700">{fmt(MIN_JOB_FEE)}</span>
-                  </div>
-                )}
-                {promoState?.valid && (
-                  <div className="flex justify-between text-xs text-green-600 font-medium">
-                    <span>Promo code <span className="font-bold">{promoState.code}</span> ({promoState.discountPct}% off)</span>
-                    <span>−{fmt(promoDiscount)}</span>
-                  </div>
-                )}
-                <p className="text-xs text-gray-400 pt-1 border-t border-gray-200 mt-1">
-                  The platform fee is calculated from the extracted word count and will not change. The AI portion varies slightly based on actual token usage.
-                </p>
-                {fileRows.some((r: (typeof fileRows)[number]) => r.isPdf) && (
-                  <p className="text-xs text-gray-400">
-                    PDF output: delivered as .xliff (for human review) and .txt (ready to use). Original PDF layout is not reconstructed.
-                  </p>
-                )}
-              </div>
+              )}
             </div>
 
             {/* Promo code */}
