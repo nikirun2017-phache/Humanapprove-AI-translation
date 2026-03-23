@@ -10,7 +10,7 @@ import { buildMarkdownBatches, parseMarkdownTranslation } from "@/lib/xliff-mark
 import { chunkUnits } from "@/lib/translation-batcher"
 import { buildXliffFromTranslations, mergeTranslationsIntoXliff } from "@/lib/xliff-builder"
 import type { SourceUnit } from "@/lib/source-parser"
-import type { ProviderName } from "@/lib/ai-providers/types"
+import type { ProviderName, GlossaryTerm } from "@/lib/ai-providers/types"
 
 export const maxDuration = 300 // 5 min timeout for long translation jobs
 
@@ -79,6 +79,18 @@ export async function POST(
     const unitsRaw = job.unitsData ?? await readFile(job.unitsFileUrl, "utf-8")
     const units: SourceUnit[] = JSON.parse(unitsRaw)
 
+    // Resolve glossary terms for this specific target language
+    let glossaryTerms: GlossaryTerm[] | undefined
+    if (job.glossaryData) {
+      try {
+        const allGlossary = JSON.parse(job.glossaryData) as Record<string, GlossaryTerm[]>
+        const terms = allGlossary[task.targetLanguage]
+        if (Array.isArray(terms) && terms.length > 0) {
+          glossaryTerms = terms.filter((t: GlossaryTerm) => t.source?.trim() && t.target?.trim())
+        }
+      } catch { /* malformed glossaryData — ignore */ }
+    }
+
     let xliff: string
 
     if (job.sourceFormat === "xliff") {
@@ -102,7 +114,8 @@ export async function POST(
             task.targetLanguage,
             job.provider as ProviderName,
             apiKey,
-            job.model
+            job.model,
+            glossaryTerms
           )
         )
         const indexedMap = parseMarkdownTranslation(translated)
@@ -132,7 +145,8 @@ export async function POST(
                 task.targetLanguage,
                 job.provider as ProviderName,
                 apiKey,
-                job.model
+                job.model,
+                glossaryTerms
               )
             )
             const indexedMap = parseMarkdownTranslation(translated)
@@ -173,7 +187,7 @@ export async function POST(
           for (const { markdown: sm, indexToId: sIdx } of structBatches) {
             try {
               const translated = await withRetry(() =>
-                translateMarkdownBatch(sm, job.sourceLanguage, task.targetLanguage, job.provider as ProviderName, apiKey, job.model)
+                translateMarkdownBatch(sm, job.sourceLanguage, task.targetLanguage, job.provider as ProviderName, apiKey, job.model, glossaryTerms)
               )
               const indexedMap = parseMarkdownTranslation(translated)
               for (const [idx, text] of indexedMap) {
@@ -208,7 +222,8 @@ export async function POST(
             task.targetLanguage,
             job.provider as ProviderName,
             apiKey,
-            job.model
+            job.model,
+            glossaryTerms
           )
         )
         const indexedMap = parseMarkdownTranslation(translated)
@@ -229,7 +244,7 @@ export async function POST(
         for (const { markdown: gapMd, indexToId: gapIdx } of gapBatches) {
           try {
             const translated = await withRetry(() =>
-              translateMarkdownBatch(gapMd, job.sourceLanguage, task.targetLanguage, job.provider as ProviderName, apiKey, job.model)
+              translateMarkdownBatch(gapMd, job.sourceLanguage, task.targetLanguage, job.provider as ProviderName, apiKey, job.model, glossaryTerms)
             )
             const indexedMap = parseMarkdownTranslation(translated)
             for (const [idx, text] of indexedMap) {
@@ -260,7 +275,7 @@ export async function POST(
       for (const batch of batches) {
         const result = await withRetry(() =>
           provider.translate(
-            { units: batch, sourceLanguage: job.sourceLanguage, targetLanguage: task.targetLanguage },
+            { units: batch, sourceLanguage: job.sourceLanguage, targetLanguage: task.targetLanguage, glossaryTerms },
             apiKey,
             job.model
           )

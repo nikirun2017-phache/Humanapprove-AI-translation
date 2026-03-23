@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
   const targetLanguagesRaw = formData.get("targetLanguages") as string
   const apiKey = formData.get("apiKey") as string | null
   const promoCodeInput = ((formData.get("promoCode") as string) || "").trim().toUpperCase()
+  const glossaryRaw = (formData.get("glossaryData") as string | null) || null
   let sourceLanguage = (formData.get("sourceLanguage") as string) || "en-US"
 
   if (!file || !name || !provider || !model || !targetLanguagesRaw) {
@@ -176,6 +177,7 @@ export async function POST(req: NextRequest) {
         status: "pending",
         promoCode: appliedPromoCode,
         discountPct,
+        glossaryData: glossaryRaw,
       },
     })
 

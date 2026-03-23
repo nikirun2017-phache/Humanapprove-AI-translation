@@ -169,8 +169,9 @@ model TranslationJob {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  promoCode   String?  // coupon code applied at job creation
-  discountPct Int      @default(0)  // 0-100, e.g. 50 = 50% off
+  promoCode    String?  // coupon code applied at job creation
+  discountPct  Int      @default(0)  // 0-100, e.g. 50 = 50% off
+  glossaryData String?  // JSON: { [langCode]: { source: string; target: string }[] }
 
   createdBy User              @relation(fields: [createdById], references: [id])
   tasks     TranslationTask[]

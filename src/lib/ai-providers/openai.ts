@@ -1,4 +1,5 @@
 import type { AIProvider, TranslationBatch, TranslationResult, TranslatedUnit, SourceUnit } from "./types"
+import { buildGlossaryPromptSection } from "./anthropic"
 
 const SYSTEM_PROMPT = `You are a professional translator. Translate the provided JSON array of strings from {SOURCE} to {TARGET}.
 Rules:
@@ -13,7 +14,8 @@ function buildProvider(baseUrl: string, providerName: "openai" | "deepseek"): AI
     name: providerName,
 
     async translate(batch: TranslationBatch, apiKey: string, model: string): Promise<TranslationResult> {
-      const systemPrompt = SYSTEM_PROMPT
+      const glossarySection = batch.glossaryTerms ? buildGlossaryPromptSection(batch.glossaryTerms) : ""
+      const systemPrompt = (SYSTEM_PROMPT + glossarySection)
         .replace("{SOURCE}", batch.sourceLanguage)
         .replace("{TARGET}", batch.targetLanguage)
 

@@ -1,4 +1,4 @@
-import type { AIProvider, TranslationBatch, TranslationResult, TranslatedUnit, SourceUnit } from "./types"
+import type { AIProvider, TranslationBatch, TranslationResult, TranslatedUnit, SourceUnit, GlossaryTerm } from "./types"
 
 const SYSTEM_PROMPT = `You are a professional translator. Translate the provided JSON array of strings from {SOURCE} to {TARGET}.
 Rules:
@@ -8,11 +8,19 @@ Rules:
 - Keep the same tone and formality as the source.
 - Do not add explanations or notes outside the JSON.`
 
+export function buildGlossaryPromptSection(terms: GlossaryTerm[]): string {
+  const valid = terms.filter(t => t.source.trim() && t.target.trim())
+  if (valid.length === 0) return ""
+  const lines = valid.map(t => `  - "${t.source}" → "${t.target}"`).join("\n")
+  return `\nTerminology glossary — apply these translations exactly and consistently:\n${lines}\n`
+}
+
 export const anthropicProvider: AIProvider = {
   name: "anthropic",
 
   async translate(batch: TranslationBatch, apiKey: string, model: string): Promise<TranslationResult> {
-    const systemPrompt = SYSTEM_PROMPT
+    const glossarySection = batch.glossaryTerms ? buildGlossaryPromptSection(batch.glossaryTerms) : ""
+    const systemPrompt = (SYSTEM_PROMPT + glossarySection)
       .replace("{SOURCE}", batch.sourceLanguage)
       .replace("{TARGET}", batch.targetLanguage)
 

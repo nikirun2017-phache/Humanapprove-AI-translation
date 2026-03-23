@@ -148,6 +148,33 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
   const [langSearch, setLangSearch] = useState("")
   const [regionFilter, setRegionFilter] = useState("")
 
+  // Terminology / glossary state
+  type GlossaryTerm = { source: string; target: string }
+  const [glossary, setGlossary] = useState<Record<string, GlossaryTerm[]>>({})
+  const [glossaryOpen, setGlossaryOpen] = useState(false)
+  const [glossaryTab, setGlossaryTab] = useState<string>("")
+
+  const MAX_TERMS = 5
+
+  function addTerm(lang: string) {
+    setGlossary(prev => ({ ...prev, [lang]: [...(prev[lang] ?? []), { source: "", target: "" }] }))
+  }
+  function removeTerm(lang: string, i: number) {
+    setGlossary(prev => {
+      const terms = (prev[lang] ?? []).filter((_: GlossaryTerm, idx: number) => idx !== i)
+      if (terms.length === 0) { const next = { ...prev }; delete next[lang]; return next }
+      return { ...prev, [lang]: terms }
+    })
+  }
+  function updateTerm(lang: string, i: number, field: "source" | "target", value: string) {
+    setGlossary(prev => {
+      const terms = [...(prev[lang] ?? [])]
+      terms[i] = { ...terms[i], [field]: value }
+      return { ...prev, [lang]: terms }
+    })
+  }
+  const totalGlossaryTerms = Object.values(glossary).reduce((s, t) => s + t.filter((x: GlossaryTerm) => x.source.trim() && x.target.trim()).length, 0)
+
   // Step 3 state
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
@@ -408,6 +435,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
       fd.append("targetLanguages", langs)
       fd.append("sourceLanguage", entry.xliffMeta?.sourceLanguage ?? sourceLanguage)
       if (promoState?.valid) fd.append("promoCode", promoState.code)
+      if (Object.keys(glossary).length > 0) fd.append("glossaryData", JSON.stringify(glossary))
 
       const res = await fetch("/api/translation-studio/jobs", { method: "POST", body: fd })
       const data = await res.json() as { jobId?: string; error?: string }
@@ -1006,6 +1034,147 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                   )}
                 </div>
             </div>
+          </div>
+
+          {/* ── Terminology / Glossary ── */}
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            {/* Header toggle */}
+            <button
+              type="button"
+              onClick={() => setGlossaryOpen(o => !o)}
+              className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-medium text-gray-900">Terminology</h2>
+                  <span className="text-xs text-gray-400 font-normal">optional</span>
+                  {totalGlossaryTerms > 0 && (
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                      {totalGlossaryTerms} term{totalGlossaryTerms !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Pin key phrases so the AI translates them consistently every time.
+                </p>
+              </div>
+              <span className="text-gray-400 text-sm ml-4 shrink-0">{glossaryOpen ? "▲" : "▼"}</span>
+            </button>
+
+            {/* Body */}
+            {glossaryOpen && (
+              <div className="border-t border-gray-100 px-5 pb-5 pt-4 space-y-4">
+                {selectedLangs.size === 0 ? (
+                  <p className="text-sm text-gray-400 text-center py-6">
+                    Select target languages above to add terminology.
+                  </p>
+                ) : (() => {
+                  const langs = STUDIO_LANGUAGES.filter((l: (typeof STUDIO_LANGUAGES)[number]) => selectedLangs.has(l.code))
+                  const activeLang = selectedLangs.size === 1
+                    ? langs[0]?.code ?? ""
+                    : (selectedLangs.has(glossaryTab) ? glossaryTab : "")
+                  const terms = glossary[activeLang] ?? []
+
+                  return (
+                    <>
+                      {/* Language tabs — only shown for multiple languages */}
+                      {selectedLangs.size > 1 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {langs.map((lang: (typeof STUDIO_LANGUAGES)[number]) => {
+                            const count = (glossary[lang.code] ?? []).filter((t: GlossaryTerm) => t.source.trim() && t.target.trim()).length
+                            const isActive = glossaryTab === lang.code
+                            return (
+                              <button
+                                key={lang.code}
+                                type="button"
+                                onClick={() => setGlossaryTab(lang.code)}
+                                className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                                  isActive
+                                    ? "bg-indigo-600 text-white border-indigo-600"
+                                    : "border-gray-200 bg-gray-50 text-gray-600 hover:border-indigo-300 hover:text-indigo-700"
+                                }`}
+                              >
+                                {lang.code}
+                                {count > 0 && (
+                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                                    isActive ? "bg-indigo-500 text-white" : "bg-gray-200 text-gray-600"
+                                  }`}>{count}</span>
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
+
+                      {/* Term editor pane */}
+                      {(!activeLang && selectedLangs.size > 1) ? (
+                        <p className="text-sm text-gray-400 text-center py-4">
+                          Select a language tab to add terms.
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          {/* Column headers */}
+                          {terms.length > 0 && (
+                            <div className="grid grid-cols-[1fr_16px_1fr_24px] gap-2 px-1 pb-0.5">
+                              <p className="text-xs font-medium text-gray-500">Source term</p>
+                              <span />
+                              <p className="text-xs font-medium text-gray-500">
+                                {STUDIO_LANGUAGES.find((l: (typeof STUDIO_LANGUAGES)[number]) => l.code === activeLang)?.name ?? activeLang} translation
+                              </p>
+                              <span />
+                            </div>
+                          )}
+
+                          {/* Term rows */}
+                          {terms.map((term: GlossaryTerm, i: number) => (
+                            <div key={i} className="grid grid-cols-[1fr_16px_1fr_24px] gap-2 items-center">
+                              <input
+                                value={term.source}
+                                onChange={e => updateTerm(activeLang, i, "source", e.target.value)}
+                                placeholder="e.g. l10n"
+                                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-gray-300"
+                              />
+                              <span className="text-gray-300 text-sm text-center">→</span>
+                              <input
+                                value={term.target}
+                                onChange={e => updateTerm(activeLang, i, "target", e.target.value)}
+                                placeholder="e.g. 本地化"
+                                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-gray-300"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeTerm(activeLang, i)}
+                                className="text-gray-300 hover:text-red-400 transition-colors text-xl leading-none flex items-center justify-center"
+                                title="Remove term"
+                              >×</button>
+                            </div>
+                          ))}
+
+                          {/* Add term / counter row */}
+                          <div className="flex items-center justify-between pt-1">
+                            <button
+                              type="button"
+                              disabled={terms.length >= MAX_TERMS}
+                              onClick={() => addTerm(activeLang)}
+                              className="text-xs text-indigo-600 hover:text-indigo-800 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1 transition-colors"
+                            >
+                              <span className="text-base leading-none font-light">+</span> Add term
+                            </button>
+                            <span className={`text-xs tabular-nums ${terms.length >= MAX_TERMS ? "text-amber-500 font-medium" : "text-gray-400"}`}>
+                              {terms.length}/{MAX_TERMS}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2.5 leading-relaxed">
+                        These translations are applied consistently across your entire document. Leave a field blank for terms you want the AI to handle automatically.
+                      </p>
+                    </>
+                  )
+                })()}
+              </div>
+            )}
           </div>
 
           {entries.some((e: FileEntry) => e.probePending) && (
