@@ -1138,7 +1138,12 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                       <td className="px-5 py-2.5 text-right text-gray-500">
                         {isPdf ? `~${estimatedWords.toLocaleString()}` : estimatedWords.toLocaleString()}
                       </td>
-                      <td className="px-5 py-2.5 text-right font-medium text-gray-900">{fmt(totalFileCost)}</td>
+                      <td className="px-5 py-2.5 text-right font-medium text-gray-900">
+                        {fmt(minFeeApplied ? grandTotalCharge / fileRows.length : totalFileCost)}
+                        {minFeeApplied && (
+                          <span className="block text-xs text-gray-400 font-normal">min. fee</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
