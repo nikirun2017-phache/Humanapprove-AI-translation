@@ -189,9 +189,8 @@ function generateInvoiceHtml(
   </div>
 
   <div class="footnote">
-    <p>Charges are calculated as: (raw AI API cost × 5× markup) + platform service fee ($0.007/word, min $5/job).</p>
-    <p>AI costs are estimated based on word count and model pricing. Actual charges may vary slightly.</p>
-    <p>Questions? Contact support@jendeeai.com</p>
+    <p>All charges reflect professional AI-powered translation services, including quality assurance and platform support. Final amounts may vary slightly based on content volume and complexity.</p>
+    <p>Questions about your invoice? We're here to help — contact support@jendeeai.com</p>
   </div>
 
   <script>window.onload = function() { window.print(); }</script>
