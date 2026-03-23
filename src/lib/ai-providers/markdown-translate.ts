@@ -41,9 +41,13 @@ export async function translateMarkdownBatch(
   glossaryTerms?: GlossaryTerm[]
 ): Promise<string> {
   const glossarySection = glossaryTerms ? buildGlossaryPromptSection(glossaryTerms) : ""
-  const systemPrompt = (SYSTEM_PROMPT + glossarySection)
+  // Inject glossary BEFORE "Rules:" so it outranks the default abbreviation-handling rule
+  const basePrompt = SYSTEM_PROMPT
     .replace("{SOURCE}", sourceLanguage)
     .replace("{TARGET}", targetLanguage)
+  const systemPrompt = glossarySection
+    ? basePrompt.replace("Rules:\n", `${glossarySection}\nRules:\n`)
+    : basePrompt
 
   switch (provider) {
     case "anthropic":

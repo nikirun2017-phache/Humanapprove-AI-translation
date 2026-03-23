@@ -14,9 +14,12 @@ export const geminiProvider: AIProvider = {
 
   async translate(batch: TranslationBatch, apiKey: string, model: string): Promise<TranslationResult> {
     const glossarySection = batch.glossaryTerms ? buildGlossaryPromptSection(batch.glossaryTerms) : ""
-    const systemPrompt = (SYSTEM_PROMPT + glossarySection)
+    const basePrompt = SYSTEM_PROMPT
       .replace("{SOURCE}", batch.sourceLanguage)
       .replace("{TARGET}", batch.targetLanguage)
+    const systemPrompt = glossarySection
+      ? basePrompt.replace("Rules:\n", `${glossarySection}\nRules:\n`)
+      : basePrompt
 
     const userContent = JSON.stringify(
       batch.units.map((u: SourceUnit) => ({ id: u.id, text: u.sourceText }))

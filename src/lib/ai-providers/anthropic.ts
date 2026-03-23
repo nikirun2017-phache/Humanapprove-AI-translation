@@ -12,7 +12,11 @@ export function buildGlossaryPromptSection(terms: GlossaryTerm[]): string {
   const valid = terms.filter(t => t.source.trim() && t.target.trim())
   if (valid.length === 0) return ""
   const lines = valid.map(t => `  - "${t.source}" → "${t.target}"`).join("\n")
-  return `\nTerminology glossary — apply these translations exactly and consistently:\n${lines}\n`
+  return (
+    `\nCRITICAL — Terminology glossary (HIGHEST PRIORITY — overrides all other rules):\n` +
+    `The terms below MUST be translated exactly as specified. This applies even when a term looks like an abbreviation, code, or proper name that would normally be kept in English. Match terms case-insensitively.\n` +
+    `${lines}\n`
+  )
 }
 
 export const anthropicProvider: AIProvider = {
@@ -20,9 +24,12 @@ export const anthropicProvider: AIProvider = {
 
   async translate(batch: TranslationBatch, apiKey: string, model: string): Promise<TranslationResult> {
     const glossarySection = batch.glossaryTerms ? buildGlossaryPromptSection(batch.glossaryTerms) : ""
-    const systemPrompt = (SYSTEM_PROMPT + glossarySection)
+    const basePrompt = SYSTEM_PROMPT
       .replace("{SOURCE}", batch.sourceLanguage)
       .replace("{TARGET}", batch.targetLanguage)
+    const systemPrompt = glossarySection
+      ? basePrompt.replace("Rules:\n", `${glossarySection}\nRules:\n`)
+      : basePrompt
 
     const userContent = JSON.stringify(
       batch.units.map((u: SourceUnit) => ({ id: u.id, text: u.sourceText }))
