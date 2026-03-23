@@ -58,6 +58,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
   }
 
+  // Enforce file size limit: 20 MB for PDF, 5 MB for all other types
+  const MAX_PDF_BYTES = 20 * 1024 * 1024
+  const MAX_TEXT_BYTES = 5 * 1024 * 1024
+  const rawExtCheck = file.name.split(".").pop()?.toLowerCase()
+  const maxBytes = rawExtCheck === "pdf" ? MAX_PDF_BYTES : MAX_TEXT_BYTES
+  if (file.size > maxBytes) {
+    const limitMb = maxBytes / 1024 / 1024
+    return NextResponse.json({ error: `File exceeds the ${limitMb} MB size limit` }, { status: 413 })
+  }
+
+  // Sanitize job name to prevent stored XSS
+  const safeName = name.replace(/[<>"'&]/g, "").trim().slice(0, 200)
+  if (!safeName) {
+    return NextResponse.json({ error: "Invalid job name" }, { status: 400 })
+  }
+
   const rawExt = file.name.split(".").pop()?.toLowerCase()
   if (rawExt !== "json" && rawExt !== "csv" && rawExt !== "md" && rawExt !== "txt" && rawExt !== "pdf" && rawExt !== "xliff" && rawExt !== "xlf") {
     return NextResponse.json({ error: "Only .json, .csv, .md, .txt, .pdf, .xliff, or .xlf files are accepted" }, { status: 400 })
@@ -146,7 +162,7 @@ export async function POST(req: NextRequest) {
   const job = await db.$transaction(async (tx: Parameters<Parameters<typeof db.$transaction>[0]>[0]) => {
     const j = await tx.translationJob.create({
       data: {
-        name,
+        name: safeName,
         createdById: session.user.id,
         sourceFileUrl: sourceFilePath,
         unitsFileUrl: unitsFilePath,

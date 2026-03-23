@@ -70,6 +70,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Only .xliff or .xlf files are accepted" }, { status: 400 })
   }
 
+  // Enforce 10 MB file size limit
+  const MAX_XLIFF_BYTES = 10 * 1024 * 1024
+  if (file.size > MAX_XLIFF_BYTES) {
+    return NextResponse.json({ error: "File exceeds the 10 MB size limit" }, { status: 413 })
+  }
+
+  // Sanitize project name
+  const safeName = name.replace(/[<>"'&]/g, "").trim().slice(0, 200)
+  if (!safeName) {
+    return NextResponse.json({ error: "Invalid project name" }, { status: 400 })
+  }
+
   const xmlContent = await file.text()
 
   let parsed
@@ -126,7 +138,7 @@ export async function POST(req: NextRequest) {
   const project = await db.$transaction(async (tx: Parameters<Parameters<typeof db.$transaction>[0]>[0]) => {
     const proj = await tx.project.create({
       data: {
-        name,
+        name: safeName,
         sourceLanguage: parsed.sourceLanguage,
         targetLanguage: parsed.targetLanguage,
         xliffFileUrl: filePath,

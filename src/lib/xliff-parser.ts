@@ -23,6 +23,8 @@ const parser = new XMLParser({
   trimValues: false,
   // Preserve text content
   cdataPropName: "__cdata",
+  // XXE prevention: do not process external entities or DOCTYPE declarations
+  processEntities: false,
 })
 
 function extractText(node: unknown): string {
