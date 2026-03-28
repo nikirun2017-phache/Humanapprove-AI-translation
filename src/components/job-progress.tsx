@@ -129,7 +129,9 @@ export function JobProgress({ initialJob }: Props) {
     const latest = await fetchJob()
     if (!latest) { runningRef.current = false; return }
 
-    const pending = latest.tasks.filter((t: Task) => t.status === "pending")
+    // Include "running" tasks — they may be stale from a dead browser session
+    // The translate API accepts them and resets progress from scratch
+    const pending = latest.tasks.filter((t: Task) => t.status === "pending" || t.status === "running")
 
     for (const task of pending) {
       if (pausedRef.current) break
@@ -140,8 +142,12 @@ export function JobProgress({ initialJob }: Props) {
   }
 
   useEffect(() => {
-    const hasPending = initialJob.tasks.some((t: Task) => t.status === "pending")
-    if (hasPending) runTranslation()
+    // Resume if there are pending tasks OR stale "running" tasks from a
+    // previous session that was closed mid-translation
+    const hasActive = initialJob.tasks.some(
+      (t: Task) => t.status === "pending" || t.status === "running"
+    )
+    if (hasActive) runTranslation()
   }, [])
 
   async function handleRetry(task: Task) {

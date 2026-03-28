@@ -434,6 +434,13 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
   function clearAll() { setSelectedLangs(new Set()) }
 
   async function submit() {
+    // Guard: re-validate before submission in case state drifted
+    const validEntries = entries.filter((e: FileEntry) => !e.parseError)
+    if (validEntries.length === 0) {
+      setSubmitError("No valid files to submit. Please go back and check your files.")
+      return
+    }
+
     setSubmitting(true)
     setSubmitError("")
 
@@ -441,10 +448,10 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     let lastJobId: string | null = null
     const errors: string[] = []
 
-    for (const entry of entries) {
+    for (const entry of validEntries) {
       const fd = new FormData()
       fd.append("file", entry.file)
-      fd.append("name", entries.length === 1 ? jobName : `${jobName} — ${entry.file.name.replace(/\.(json|csv|md|pdf|xliff)$/i, "")}`)
+      fd.append("name", validEntries.length === 1 ? jobName : `${jobName} — ${entry.file.name.replace(/\.(json|csv|md|pdf|xliff)$/i, "")}`)
       fd.append("provider", provider)
       fd.append("model", model)
       fd.append("targetLanguages", langs)
@@ -469,7 +476,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     }
 
     // Single file → go to job detail; multiple → go to studio list
-    if (entries.length === 1 && lastJobId) {
+    if (validEntries.length === 1 && lastJobId) {
       router.push(`/translation-studio/${lastJobId}`)
     } else {
       router.push("/translation-studio")
@@ -1363,6 +1370,12 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
               {/* Cost summary — promo discount only */}
               {(promoState?.valid || minFeeApplied || fileRows.some((r: (typeof fileRows)[number]) => r.isPdf)) && (
                 <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 space-y-1.5">
+                  {minFeeApplied && (
+                    <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                      <span className="shrink-0 mt-0.5">ⓘ</span>
+                      <span>A minimum job fee of {fmt(MIN_JOB_FEE)} applies to this order. Removing files or languages will not reduce the total below this amount.</span>
+                    </div>
+                  )}
                   {promoState?.valid && (
                     <div className="flex justify-between text-xs text-green-600 font-medium">
                       <span>Promo code <span className="font-bold">{promoState.code}</span> ({promoState.discountPct}% off)</span>
