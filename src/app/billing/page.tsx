@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, Suspense } from "react"
+import { useEffect, useState, Suspense, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { useSession } from "next-auth/react"
@@ -45,12 +45,18 @@ interface AdminUsage {
   users: AdminUser[]
 }
 
+interface DownloadableTask {
+  id: string
+  targetLanguage: string
+}
+
 interface JobEntry {
   id: string
   name: string
   createdAt: string
   model: string
   sourceLanguage: string
+  sourceFormat: string
   languages: string[]
   languageCount: number
   totalWords: number
@@ -58,6 +64,7 @@ interface JobEntry {
   platformFee: number
   totalCharge: number
   status: "completed" | "in_progress"
+  downloadableTasks: DownloadableTask[]
 }
 
 interface JobsData {
@@ -196,6 +203,67 @@ function generateInvoiceHtml(
   <script>window.onload = function() { window.print(); }</script>
 </body>
 </html>`
+}
+
+// ── Download dropdown ─────────────────────────────────────────────────────────
+
+function DownloadDropdown({ job }: { job: JobEntry }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function close(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener("mousedown", close)
+    return () => document.removeEventListener("mousedown", close)
+  }, [open])
+
+  const isSingleLang = job.downloadableTasks.length === 1
+
+  // For a single language, download directly; for multiple, show a dropdown
+  function downloadUrl(task: DownloadableTask) {
+    return `/api/translation-studio/jobs/${job.id}/tasks/${task.id}/download`
+  }
+
+  if (isSingleLang) {
+    return (
+      <a
+        href={downloadUrl(job.downloadableTasks[0])}
+        className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded transition-colors"
+        title="Download translated file"
+      >
+        ↓ Download
+      </a>
+    )
+  }
+
+  return (
+    <div className="relative inline-block" ref={ref}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded transition-colors"
+      >
+        ↓ Files ▾
+      </button>
+      {open && (
+        <div className="absolute right-0 z-20 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg py-1">
+          {job.downloadableTasks.map(task => (
+            <a
+              key={task.id}
+              href={downloadUrl(task)}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50"
+            >
+              <span className="text-indigo-400">↓</span>
+              <span>{task.targetLanguage}</span>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -660,6 +728,7 @@ function RequesterView({
                   <th className="px-4 py-3 text-right">Words</th>
                   <th className="px-4 py-3 text-right">Charge</th>
                   <th className="px-4 py-3 text-center">Status</th>
+                  <th className="px-4 py-3 text-center">Files</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -698,6 +767,12 @@ function RequesterView({
                         {job.status === "completed" ? "done" : "running"}
                       </span>
                     </td>
+                    <td className="px-4 py-3 text-center">
+                      {job.downloadableTasks.length > 0
+                        ? <DownloadDropdown job={job} />
+                        : <span className="text-xs text-gray-300">—</span>
+                      }
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -705,7 +780,7 @@ function RequesterView({
                 <tr className="border-t border-gray-200 bg-gray-50">
                   <td colSpan={4} className="px-5 py-3 text-xs font-semibold text-gray-600 text-right">Month total</td>
                   <td className="px-4 py-3 text-right text-sm font-bold text-indigo-700">{usd(jobs.monthTotal)}</td>
-                  <td />
+                  <td colSpan={2} />
                 </tr>
               </tfoot>
             </table>

@@ -47,6 +47,8 @@ export async function GET(req: NextRequest) {
   // Admins can optionally query a specific requester
   const targetUserId = (role === "admin" && new URL(req.url).searchParams.get("userId")) || userId
 
+  const cutoff48h = new Date(Date.now() - 48 * 60 * 60 * 1000)
+
   const jobs = await db.translationJob.findMany({
     where: {
       createdById: targetUserId,
@@ -55,11 +57,12 @@ export async function GET(req: NextRequest) {
     include: {
       tasks: {
         where: { status: { in: ["completed", "imported"] } },
-        select: { id: true, targetLanguage: true, totalUnits: true, wordCount: true, status: true },
+        select: { id: true, targetLanguage: true, totalUnits: true, wordCount: true, status: true, updatedAt: true },
       },
     },
     orderBy: { createdAt: "desc" },
   })
+
 
   const result = jobs.map(job => {
     const tasks = job.tasks.map(t => ({ ...t, job: { model: job.model } }))
@@ -71,12 +74,18 @@ export async function GET(req: NextRequest) {
     const totalCharge = baseCharge - discount
     const languages = job.tasks.map(t => t.targetLanguage)
 
+    // Tasks completed within the past 48 hours — eligible for quick download
+    const downloadableTasks = job.tasks
+      .filter(t => t.updatedAt >= cutoff48h)
+      .map(t => ({ id: t.id, targetLanguage: t.targetLanguage }))
+
     return {
       id: job.id,
       name: job.name ?? job.sourceFormat ?? "Translation job",
       createdAt: job.createdAt,
       model: job.model,
       sourceLanguage: job.sourceLanguage,
+      sourceFormat: job.sourceFormat,
       languages,
       languageCount: languages.length,
       totalWords,
@@ -87,6 +96,7 @@ export async function GET(req: NextRequest) {
       discountPct: job.discountPct,
       discountAmt: Math.round(discount * 100) / 100,
       status: job.tasks.every(t => t.status === "completed" || t.status === "imported") ? "completed" : "in_progress",
+      downloadableTasks,
     }
   })
 
