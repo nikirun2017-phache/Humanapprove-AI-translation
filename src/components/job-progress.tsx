@@ -64,6 +64,17 @@ export function JobProgress({ initialJob }: Props) {
   const readyCount = tasks.filter((t: Task) => t.status === "completed").length
   const runningTask = tasks.find((t: Task) => t.status === "running")
 
+  const isPdf = job.sourceFormat === "pdf"
+
+  function triggerDownload(url: string) {
+    const a = document.createElement("a")
+    a.href = url
+    a.download = ""
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
+
   // Auto-download all completed files as soon as translation finishes
   useEffect(() => {
     if (allDone && completedCount > 0 && !autoDownloadedRef.current) {
@@ -72,14 +83,17 @@ export function JobProgress({ initialJob }: Props) {
       ;(async () => {
         for (const task of tasks) {
           if (task.status === "completed") {
-            const a = document.createElement("a")
-            a.href = `/api/translation-studio/jobs/${job.id}/tasks/${task.id}/download`
-            a.download = ""
-            document.body.appendChild(a)
-            a.click()
-            document.body.removeChild(a)
-            // small delay between downloads to avoid browser blocking
-            await new Promise(r => setTimeout(r, 800))
+            const base = `/api/translation-studio/jobs/${job.id}/tasks/${task.id}/download`
+            if (isPdf) {
+              // PDF source: download translated .txt then .pdf
+              triggerDownload(`${base}?format=txt`)
+              await new Promise(r => setTimeout(r, 800))
+              triggerDownload(`${base}?format=pdf`)
+              await new Promise(r => setTimeout(r, 800))
+            } else {
+              triggerDownload(base)
+              await new Promise(r => setTimeout(r, 800))
+            }
           }
         }
       })()
@@ -164,19 +178,21 @@ export function JobProgress({ initialJob }: Props) {
     }
   }
 
-  function downloadTask(task: Task) {
-    const a = document.createElement("a")
-    a.href = `/api/translation-studio/jobs/${job.id}/tasks/${task.id}/download`
-    a.download = ""
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
+  async function downloadTask(task: Task) {
+    const base = `/api/translation-studio/jobs/${job.id}/tasks/${task.id}/download`
+    if (isPdf) {
+      triggerDownload(`${base}?format=txt`)
+      await new Promise(r => setTimeout(r, 600))
+      triggerDownload(`${base}?format=pdf`)
+    } else {
+      triggerDownload(base)
+    }
   }
 
   async function downloadAll() {
     const ready = tasks.filter((t) => t.status === "completed")
     for (const task of ready) {
-      downloadTask(task)
+      await downloadTask(task)
       await new Promise((r) => setTimeout(r, 300))
     }
   }
@@ -197,7 +213,7 @@ export function JobProgress({ initialJob }: Props) {
       return {
         icon: "✦",
         color: "bg-indigo-50 border-indigo-200 text-indigo-800",
-        text: `Translating into ${langName} — ${pct}% complete. Your files will download automatically when done. Please keep this tab open — large files may take a few minutes.`,
+        text: `Translating ${langName} — ${pct}% done. Files download automatically when complete. Keep this tab open.`,
       }
     }
     const pendingCount = tasks.filter((t: Task) => t.status === "pending").length
@@ -262,7 +278,7 @@ export function JobProgress({ initialJob }: Props) {
         <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-start gap-2">
           <span className="text-blue-500 mt-0.5 shrink-0">ℹ</span>
           <p className="text-sm text-blue-800">
-            <strong>Your translated PDF will be ready in two formats:</strong> an <strong>.xliff</strong> for side-by-side human review, and a clean <strong>.txt</strong> you can copy, paste, or import directly. Both files download automatically when translation completes — no extra steps needed.
+            <strong>Two files download automatically when done:</strong> a <strong>.txt</strong> you can open, copy, or import anywhere, and a <strong>.pdf</strong> with the translated content ready to share. Original layout is not preserved.
           </p>
         </div>
       )}
@@ -320,11 +336,10 @@ export function JobProgress({ initialJob }: Props) {
             <span className="text-2xl">✅</span>
             <div>
               <p className="text-sm font-semibold text-green-900">
-                {completedCount} translation{completedCount !== 1 ? "s" : ""} ready — files are downloading to your Downloads folder
+                {completedCount} {completedCount !== 1 ? "files" : "file"} ready — downloading to your Downloads folder
               </p>
               <p className="text-xs text-green-700 mt-1">
-                Your translated {completedCount === 1 ? "file has" : "files have"} been saved automatically.
-                You can also re-download them any time using the buttons below.
+                Use the buttons below to re-download any file.
               </p>
             </div>
           </div>
@@ -381,13 +396,31 @@ export function JobProgress({ initialJob }: Props) {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-3">
-                      {task.status === "completed" && (
+                      {task.status === "completed" && !isPdf && (
                         <button
                           onClick={() => downloadTask(task)}
                           className="text-xs text-gray-500 hover:text-gray-700 underline"
                         >
                           Download
                         </button>
+                      )}
+                      {task.status === "completed" && isPdf && (
+                        <>
+                          <a
+                            href={`/api/translation-studio/jobs/${job.id}/tasks/${task.id}/download?format=txt`}
+                            download
+                            className="text-xs text-gray-500 hover:text-gray-700 underline"
+                          >
+                            .txt
+                          </a>
+                          <a
+                            href={`/api/translation-studio/jobs/${job.id}/tasks/${task.id}/download?format=pdf`}
+                            download
+                            className="text-xs text-indigo-600 hover:text-indigo-800 underline font-medium"
+                          >
+                            .pdf
+                          </a>
+                        </>
                       )}
                       {task.status === "failed" && (
                         <button

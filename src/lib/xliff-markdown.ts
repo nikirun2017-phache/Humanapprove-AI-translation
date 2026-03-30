@@ -11,7 +11,8 @@ const MARKDOWN_BATCH_CHARS = 12_000
 export interface MarkdownBatch {
   /** The markdown document to send to the AI */
   markdown: string
-  /** Maps the numeric index string ("0", "1", …) back to the real unit ID */
+  /** Maps the numeric index string ("0", "1", …) back to the real unit ID.
+   *  For tagged units, the real ID is the sub-unit ID (e.g. "unitId__t0"). */
   indexToId: Map<string, string>
 }
 
@@ -29,6 +30,13 @@ export interface MarkdownBatch {
  *
  *   ## §1§
  *   source text 2
+ *
+ * TAG-PRESERVING TRANSLATION:
+ * Units that contain inline XML tags (e.g. <g ctype="x-html-LI">) carry a
+ * `textNodes` array of their leaf text content. Each node is sent as an
+ * independent sub-unit with a synthetic ID of the form `${unitId}__t${i}`.
+ * After translation, mergeTranslationsIntoXliff detects these sub-translations
+ * and reconstructs the full <g> tag skeleton in the <target> element.
  */
 export function buildMarkdownBatches(units: SourceUnit[]): MarkdownBatch[] {
   const batches: MarkdownBatch[] = []
@@ -36,14 +44,7 @@ export function buildMarkdownBatches(units: SourceUnit[]): MarkdownBatch[] {
   let indexToId = new Map<string, string>()
   let batchIndex = 0
 
-  for (const unit of units) {
-    // Strip residual XML tags (safety net for units saved before the redesign)
-    const text = unit.sourceText
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s{2,}/g, " ")
-      .trim()
-    if (!text) continue
-
+  const pushBlock = (id: string, text: string) => {
     const block = `## §${batchIndex}§\n${text}\n\n`
     if (current.length > 0 && current.length + block.length > MARKDOWN_BATCH_CHARS) {
       batches.push({ markdown: current.trimEnd(), indexToId })
@@ -51,9 +52,30 @@ export function buildMarkdownBatches(units: SourceUnit[]): MarkdownBatch[] {
       indexToId = new Map()
       batchIndex = 0
     }
-    indexToId.set(String(batchIndex), unit.id)
+    indexToId.set(String(batchIndex), id)
     batchIndex++
     current += block
+  }
+
+  for (const unit of units) {
+    if (unit.textNodes && unit.textNodes.length > 0) {
+      // Tagged unit: expand into per-text-node sub-units (id__t0, id__t1, …)
+      // Each sub-unit is translated independently so we can stitch translations
+      // back into the original <g> tag structure in mergeTranslationsIntoXliff.
+      for (let ti = 0; ti < unit.textNodes.length; ti++) {
+        const text = unit.textNodes[ti]
+        if (!text) continue
+        pushBlock(`${unit.id}__t${ti}`, text)
+      }
+    } else {
+      // Plain text unit (no inline tags) — existing behaviour
+      const text = unit.sourceText
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s{2,}/g, " ")
+        .trim()
+      if (!text) continue
+      pushBlock(unit.id, text)
+    }
   }
 
   if (current.trim()) batches.push({ markdown: current.trimEnd(), indexToId })

@@ -547,7 +547,7 @@ function RequesterView({
             </p>
             <p className="text-xs text-gray-500 mt-0.5">
               {hasCard
-                ? "You will be invoiced monthly for your AI translation usage."
+                ? "You're charged per job when it completes."
                 : "Add a card to enable AI translations."}
             </p>
           </div>

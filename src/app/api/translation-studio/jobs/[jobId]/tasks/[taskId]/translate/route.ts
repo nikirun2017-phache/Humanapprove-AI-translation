@@ -11,6 +11,7 @@ import { chunkUnits } from "@/lib/translation-batcher"
 import { buildXliffFromTranslations, mergeTranslationsIntoXliff } from "@/lib/xliff-builder"
 import type { SourceUnit } from "@/lib/source-parser"
 import type { ProviderName, GlossaryTerm } from "@/lib/ai-providers/types"
+import { sendJobCompleteEmail } from "@/lib/email"
 
 export const maxDuration = 300 // 5 min timeout for long translation jobs
 
@@ -40,6 +41,8 @@ export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ jobId: string; taskId: string }> }
 ) {
+  const taskStartTime = Date.now()
+
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
@@ -103,6 +106,13 @@ export async function POST(
       // This eliminates every JSON/XML escaping conflict that plagued the previous
       // JSON-array approach (XML attribute quotes breaking JSON string delimiters).
 
+      // Count how many source units are covered by the translationMap.
+      // Tagged units expand into __t0/__t1/… sub-entries, so we count by source unit.
+      const countTranslated = () => units.filter((u: (typeof units)[number]) =>
+        translationMap.has(u.id) ||
+        (u.textNodes && u.textNodes.length > 0 && translationMap.has(`${u.id}__t0`))
+      ).length
+
       const markdownBatches = buildMarkdownBatches(units)
       const translationMap = new Map<string, string>()
 
@@ -126,14 +136,20 @@ export async function POST(
 
         await db.translationTask.update({
           where: { id: taskId },
-          data: { completedUnits: translationMap.size },
+          data: { completedUnits: countTranslated() },
         })
       }
 
       // ── Gap-fill pass ────────────────────────────────────────────────────────
       // The AI occasionally skips units it deems "untranslatable" (dates, codes,
       // captions, etc.). Detect any missed units and send them in a second pass.
-      const missingUnits = units.filter((u: (typeof units)[number]) => !translationMap.has(u.id))
+      // Tagged units (with textNodes) are considered "translated" when __t0 exists.
+      const missingUnits = units.filter((u: (typeof units)[number]) => {
+        if (translationMap.has(u.id)) return false
+        // Tagged unit: at least the first sub-unit was translated → fully covered
+        if (u.textNodes && u.textNodes.length > 0 && translationMap.has(`${u.id}__t0`)) return false
+        return true
+      })
       if (missingUnits.length > 0) {
         const gapBatches = buildMarkdownBatches(missingUnits)
         for (const { markdown: gapMarkdown, indexToId: gapIndexToId } of gapBatches) {
@@ -160,7 +176,7 @@ export async function POST(
         }
         await db.translationTask.update({
           where: { id: taskId },
-          data: { completedUnits: translationMap.size },
+          data: { completedUnits: countTranslated() },
         })
       }
 
@@ -179,6 +195,8 @@ export async function POST(
         const structuralMissing: SourceUnit[] = []
         for (const [id, rawXml] of allRawUnits) {
           if (translationMap.has(id)) continue
+          // Tagged unit already covered by sub-translations (__t0, __t1, …)
+          if (translationMap.has(`${id}__t0`)) continue
           const plainText = rawXml.replace(/<[^>]+>/g, " ").replace(/\s{2,}/g, " ").trim()
           if (plainText) structuralMissing.push({ id, sourceText: plainText })
         }
@@ -198,7 +216,7 @@ export async function POST(
           }
           await db.translationTask.update({
             where: { id: taskId },
-            data: { completedUnits: translationMap.size },
+            data: { completedUnits: countTranslated() },
           })
         }
       }
@@ -322,6 +340,33 @@ export async function POST(
     if (remaining === 0) {
       await db.translationJob.update({ where: { id: jobId }, data: { status: "completed" } })
       await db.systemSetting.deleteMany({ where: { key: `ai_job_key_${jobId}` } })
+
+      // Notify job creator — fire-and-forget, email failure must not break the response
+      try {
+        const allTasks = await db.translationTask.findMany({
+          where: { jobId },
+          select: { targetLanguage: true },
+        })
+        const creator = await db.user.findUnique({
+          where: { id: job.createdById },
+          select: { email: true, name: true },
+        })
+        if (creator) {
+          const durationSecs = Math.round((Date.now() - taskStartTime) / 1000)
+          if (durationSecs >= 60) {
+            void sendJobCompleteEmail(
+              creator.name,
+              creator.email,
+              job.name,
+              allTasks.map((t: { targetLanguage: string }) => t.targetLanguage),
+              jobId,
+              durationSecs
+            )
+          }
+        }
+      } catch {
+        // Email errors are non-fatal
+      }
     }
 
     return NextResponse.json({ status: "completed", completedUnits: units.length, totalUnits: units.length })

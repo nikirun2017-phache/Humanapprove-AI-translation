@@ -23,6 +23,7 @@ interface PdfProbe {
   isScanned: boolean
   wordCount: number
   estimatedUnits: number
+  cacheKey: string | null
 }
 
 interface XliffMeta {
@@ -180,7 +181,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
   const [submitError, setSubmitError] = useState("")
   const [cardError, setCardError] = useState("")
   const [promoInput, setPromoInput] = useState("")
-  const [promoState, setPromoState] = useState<{ valid: boolean; discountPct: number; code: string; error?: string } | null>(null)
+  const [promoState, setPromoState] = useState<{ valid: boolean; discountPct: number; code: string; maxWordsPerJob?: number | null; error?: string } | null>(null)
   const [promoLoading, setPromoLoading] = useState(false)
 
   // Restore wizard config after returning from Stripe card setup
@@ -253,7 +254,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
           if (f.name.endsWith(".xliff") || f.name.endsWith(".xlf")) {
             const meta = parseXliffMeta(content)
             if (meta.emptyUnitCount === 0) {
-              resolve({ key, file: f, preview: [], parseError: "No untranslated units found — all <target> elements are already filled.", xliffMeta: meta })
+              resolve({ key, file: f, preview: [], parseError: "Nothing to translate — all segments are already filled.", xliffMeta: meta })
             } else {
               // Build a simple preview from <source> elements
               const sourceTexts: SourceUnit[] = []
@@ -277,7 +278,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             resolve({ key, file: f, preview: units, parseError: "" })
           }
         } catch {
-          resolve({ key, file: f, preview: [], parseError: "Could not parse file — check that it is valid JSON, CSV, Markdown, TXT, or XLIFF." })
+          resolve({ key, file: f, preview: [], parseError: "Couldn't read this file. Check that it's a valid JSON, CSV, MD, TXT, or XLIFF." })
         }
       }
       reader.readAsText(f)
@@ -448,24 +449,32 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     let lastJobId: string | null = null
     const errors: string[] = []
 
-    for (const entry of validEntries) {
-      const fd = new FormData()
-      fd.append("file", entry.file)
-      fd.append("name", validEntries.length === 1 ? jobName : `${jobName} — ${entry.file.name.replace(/\.(json|csv|md|pdf|xliff)$/i, "")}`)
-      fd.append("provider", provider)
-      fd.append("model", model)
-      fd.append("targetLanguages", langs)
-      fd.append("sourceLanguage", entry.xliffMeta?.sourceLanguage ?? sourceLanguage)
-      if (promoState?.valid) fd.append("promoCode", promoState.code)
-      if (Object.keys(glossary).length > 0) fd.append("glossaryData", JSON.stringify(glossary))
+    try {
+      for (const entry of validEntries) {
+        const fd = new FormData()
+        fd.append("file", entry.file)
+        fd.append("name", validEntries.length === 1 ? jobName : `${jobName} — ${entry.file.name.replace(/\.(json|csv|md|pdf|xliff)$/i, "")}`)
+        fd.append("provider", provider)
+        fd.append("model", model)
+        fd.append("targetLanguages", langs)
+        fd.append("sourceLanguage", entry.xliffMeta?.sourceLanguage ?? sourceLanguage)
+        if (promoState?.valid) fd.append("promoCode", promoState.code)
+        if (Object.keys(glossary).length > 0) fd.append("glossaryData", JSON.stringify(glossary))
+        // Pass probe cache key so job creation can skip re-parsing the PDF
+        if (entry.pdfProbe?.cacheKey) fd.append("pdfCacheKey", entry.pdfProbe.cacheKey)
 
-      const res = await fetch("/api/translation-studio/jobs", { method: "POST", body: fd })
-      const data = await res.json() as { jobId?: string; error?: string }
-      if (!res.ok) {
-        errors.push(`${entry.file.name}: ${data.error ?? "Failed to create job"}`)
-      } else {
-        lastJobId = data.jobId ?? null
+        const res = await fetch("/api/translation-studio/jobs", { method: "POST", body: fd })
+        const data = await res.json() as { jobId?: string; error?: string }
+        if (!res.ok) {
+          errors.push(`${entry.file.name}: ${data.error ?? "Failed to create job"}`)
+        } else {
+          lastJobId = data.jobId ?? null
+        }
       }
+    } catch (err) {
+      setSubmitError(`Unexpected error: ${(err as Error).message ?? "Please try again."}`)
+      setSubmitting(false)
+      return
     }
 
     setSubmitting(false)
@@ -604,7 +613,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
                   />
                   <p className="text-xs text-gray-400 mt-1">
-                    Token needs <code>repo</code> read scope. Also used to push translations back to the branch.
+                    Requires <code>repo</code> read scope. Used to read files and push translated content back to your branch.
                   </p>
                 </div>
                 <button
@@ -718,9 +727,9 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
               onChange={handleInputChange}
             />
             <p className="text-gray-500">
-              Drop <strong>.json</strong>, <strong>.csv</strong>, <strong>.md</strong>, <strong>.txt</strong>, <strong>.pdf</strong>, <strong>.xliff</strong>, or <strong>.xlf</strong> files here, or click to browse
+              Drop files here or click to browse
             </p>
-            <p className="text-xs text-gray-400 mt-1">Multiple files supported — each becomes a separate translation job. XLIFF files must have empty &lt;target&gt; elements. .txt files over 500 KB will show a size warning.</p>
+            <p className="text-xs text-gray-400 mt-1">JSON, CSV, Markdown, TXT, PDF, XLIFF · Multiple files OK — each runs as its own job</p>
           </div>
 
           {/* File list */}
@@ -788,11 +797,11 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                         <>
                           <p className={`text-xs mt-0.5 ${probe.isScanned ? "text-amber-600" : "text-green-600"}`}>
                             {probe.isScanned
-                              ? "Scanned PDF — Claude Vision will extract text (Anthropic key required)"
-                              : `Text-based PDF — extracted directly (${probe.wordCount.toLocaleString()} words, no Vision API cost)`}
+                              ? "Scanned PDF — text extracted via AI vision"
+                              : `Text PDF — ${probe.wordCount.toLocaleString()} words detected`}
                           </p>
                           <p className="text-xs text-gray-400 mt-0.5">
-                            Download: plain text (.xliff) only — no PDF layout or formatting reconstruction
+                            Delivers .xliff + .txt — original layout is not preserved
                           </p>
                         </>
                       )}
@@ -863,7 +872,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
           <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
             <div>
               <h2 className="font-medium text-gray-900">Job details</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Give this job a name so you can find it later. Your downloaded files will use this name.</p>
+              <p className="text-xs text-gray-400 mt-0.5">Name this job so you can find it later. Your downloaded files will use this name.</p>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -888,7 +897,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                     <option key={l.code} value={l.code}>{l.name} ({l.code})</option>
                   ))}
                 </select>
-                <p className="text-xs text-gray-400 mt-1">The language your file is written in.</p>
+                <p className="text-xs text-gray-400 mt-1">The original language of your content.</p>
               </div>
             )}
           </div>
@@ -918,8 +927,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                   )}
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Pick the language(s) you want your content translated into. Use the preset buttons for common markets or search below.
-                  Each language is translated separately — you will get one file per language.
+                  Choose your target languages. You'll get one translated file per language.
                 </p>
               </div>
               <button onClick={clearAll} className="text-xs text-gray-400 hover:underline shrink-0 ml-4">Clear</button>
@@ -1190,7 +1198,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                       )}
 
                       <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2.5 leading-relaxed">
-                        These translations are applied consistently across your entire document. Leave a field blank for terms you want the AI to handle automatically.
+                        Listed terms are always translated exactly as specified. Leave a row blank to let AI decide.
                       </p>
                     </>
                   )
@@ -1384,7 +1392,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                   )}
                   {fileRows.some((r: (typeof fileRows)[number]) => r.isPdf) && (
                     <p className="text-xs text-gray-400">
-                      PDF output: delivered as .xliff (for human review) and .txt (ready to use). Original PDF layout is not reconstructed.
+                      PDF: delivered as .xliff for review and .txt for immediate use. Original layout is not preserved.
                     </p>
                   )}
                 </div>
@@ -1414,9 +1422,9 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ code: promoInput.trim() }),
                       })
-                      const data = await res.json() as { valid: boolean; discountPct?: number; code?: string; error?: string }
+                      const data = await res.json() as { valid: boolean; discountPct?: number; code?: string; maxWordsPerJob?: number | null; error?: string }
                       if (data.valid) {
-                        setPromoState({ valid: true, discountPct: data.discountPct!, code: data.code! })
+                        setPromoState({ valid: true, discountPct: data.discountPct!, code: data.code!, maxWordsPerJob: data.maxWordsPerJob })
                       } else {
                         setPromoState({ valid: false, discountPct: 0, code: "", error: data.error })
                       }
@@ -1431,16 +1439,29 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                 </button>
               </div>
               {promoState && (
-                <p className={`text-xs mt-1.5 ${promoState.valid ? "text-green-600" : "text-red-500"}`}>
-                  {promoState.valid
-                    ? `✓ ${promoState.discountPct}% discount applied!`
-                    : `✕ ${promoState.error}`}
-                </p>
+                <div className="mt-1.5 space-y-1">
+                  <p className={`text-xs ${promoState.valid ? "text-green-600" : "text-red-500"}`}>
+                    {promoState.valid
+                      ? `✓ ${promoState.discountPct}% discount applied!`
+                      : `✕ ${promoState.error}`}
+                  </p>
+                  {promoState.valid && promoState.maxWordsPerJob != null && totalWords > promoState.maxWordsPerJob && (
+                    <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                      ⚠ This code only applies to jobs up to {promoState.maxWordsPerJob.toLocaleString()} words. Your current selection ({totalWords.toLocaleString()} words) exceeds that limit — the discount will not be applied.
+                    </p>
+                  )}
+                </div>
               )}
             </div>
 
             {submitError && (
-              <pre className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2 whitespace-pre-wrap">{submitError}</pre>
+              <div className="space-y-2">
+                <pre className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2 whitespace-pre-wrap">{submitError}</pre>
+                <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  Your card has not been charged — the error occurred before any translation began.
+                </p>
+              </div>
             )}
 
             {!hasCard ? (
@@ -1449,10 +1470,9 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">💳</span>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">Add a payment method to continue</p>
+                    <p className="text-sm font-semibold text-gray-900">Add a card to get started</p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Your card is charged only after translation completes — nothing is billed now.
-                      You will receive an invoice at the end of each month.
+                      You're only charged when your translation job completes — nothing is billed today.
                     </p>
                   </div>
                 </div>
@@ -1482,7 +1502,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
                   <span>✓</span>
-                  <span>Payment method on file — you will be billed after translation completes, invoiced monthly.</span>
+                  <span>Payment method on file — you will be charged when this job completes.</span>
                 </div>
                 <div className="flex justify-between">
                   <button onClick={() => setStep(2)} className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">

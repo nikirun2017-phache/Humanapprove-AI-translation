@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
+import { db } from "@/lib/db"
+import { parsePdfSource, type PdfParseResult } from "@/lib/source-parser"
 
 const MIN_WORDS_PER_PAGE = 15
 const MIN_CHARS_PER_PAGE = 75 // CJK fallback — ~15 words × 5 chars
@@ -45,9 +47,14 @@ function countPagesFromRaw(buffer: Buffer): number {
  *   - isScanned: true if the PDF has no embedded text (needs Claude Vision)
  *   - wordCount: total embedded word count (0 for scanned PDFs)
  *   - estimatedUnits: rough number of translation units we'd extract
+ *   - cacheKey: opaque key — pass back to job creation to skip re-parsing
  *
  * Used by the Translation Wizard to show accurate cost estimates before
  * the user commits to a translation job.
+ *
+ * Runs the full parsePdfSource pipeline (including Claude Vision for scanned PDFs)
+ * and caches the resulting units to a temp file so the job creation route can
+ * reuse them without re-parsing.
  */
 export async function POST(req: NextRequest) {
   const session = await auth()
@@ -76,10 +83,13 @@ export async function POST(req: NextRequest) {
   const tmpTxt = join(tmpdir(), `jendee_probe_${id}.txt`)
   const tmpPy  = join(tmpdir(), `jendee_probe_${id}.py`)
   const tmpOut = join(tmpdir(), `jendee_probe_${id}.json`)
+  const cacheFile = join(tmpdir(), `jendee_units_${id}.json`)
+
   const cleanup = () => {
     for (const p of [tmpPdf, tmpTxt, tmpPy, tmpOut]) {
       try { if (existsSync(p)) unlinkSync(p) } catch { /* ignore */ }
     }
+    // cacheFile is intentionally NOT deleted here — job creation reads it
   }
 
   try {
@@ -98,37 +108,54 @@ export async function POST(req: NextRequest) {
     // Strategy 2: pdfplumber (Python) — if pdftotext not available or returned empty
     if (!text.trim()) {
       const script2 = `
-import json, pdfplumber
+import pdfplumber
 with pdfplumber.open(${JSON.stringify(tmpPdf)}) as pdf:
     pages = [page.extract_text() or "" for page in pdf.pages]
-    result = {"numPages": len(pdf.pages), "text": "\\f".join(pages)}
-with open(${JSON.stringify(tmpOut)}, "w", encoding="utf-8") as f:
-    json.dump(result, f)
+    num_pages = len(pdf.pages)
+    text = "\\f".join(pages)
+with open(${JSON.stringify(tmpOut)}, "w", encoding="utf-8", errors="replace") as f:
+    f.write("PAGES:" + str(num_pages) + "\\n")
+    f.write("---TEXT---\\n")
+    f.write(text)
 `
       writeFileSync(tmpPy, script2, "utf8")
       const r2 = spawnSync("python3", [tmpPy], { timeout: 60_000, encoding: "utf8" })
       if (r2.status === 0 && !r2.error) {
-        const d = JSON.parse(readFileSync(tmpOut, "utf8")) as { text: string; numPages: number }
-        text = d.text; numPages = d.numPages
+        try {
+          const raw2 = readFileSync(tmpOut, "utf8")
+          const sep2 = raw2.indexOf("\n---TEXT---\n")
+          if (sep2 !== -1) {
+            numPages = parseInt(raw2.slice("PAGES:".length, sep2), 10) || numPages
+            text = raw2.slice(sep2 + "\n---TEXT---\n".length)
+          }
+        } catch { /* fall through */ }
       }
     }
 
     // Strategy 3: pypdf (Python lightweight fallback)
     if (!text.trim()) {
       const script3 = `
-import json
 from pypdf import PdfReader
 reader = PdfReader(${JSON.stringify(tmpPdf)})
 pages = [page.extract_text() or "" for page in reader.pages]
-result = {"numPages": len(reader.pages), "text": "\\f".join(pages)}
-with open(${JSON.stringify(tmpOut)}, "w", encoding="utf-8") as f:
-    json.dump(result, f)
+num_pages = len(reader.pages)
+text = "\\f".join(pages)
+with open(${JSON.stringify(tmpOut)}, "w", encoding="utf-8", errors="replace") as f:
+    f.write("PAGES:" + str(num_pages) + "\\n")
+    f.write("---TEXT---\\n")
+    f.write(text)
 `
       writeFileSync(tmpPy, script3, "utf8")
       const r3 = spawnSync("python3", [tmpPy], { timeout: 60_000, encoding: "utf8" })
       if (r3.status === 0 && !r3.error) {
-        const d = JSON.parse(readFileSync(tmpOut, "utf8")) as { text: string; numPages: number }
-        text = d.text; numPages = d.numPages
+        try {
+          const raw3 = readFileSync(tmpOut, "utf8")
+          const sep3 = raw3.indexOf("\n---TEXT---\n")
+          if (sep3 !== -1) {
+            numPages = parseInt(raw3.slice("PAGES:".length, sep3), 10) || numPages
+            text = raw3.slice(sep3 + "\n---TEXT---\n".length)
+          }
+        } catch { /* fall through */ }
       }
     }
 
@@ -152,10 +179,27 @@ with open(${JSON.stringify(tmpOut)}, "w", encoding="utf-8") as f:
         ? Math.max(1, Math.ceil(charCount / 400)) // CJK
         : Math.max(1, Math.ceil(wordCount / 80))  // Latin
 
-    return NextResponse.json({ numPages, isScanned, wordCount, estimatedUnits })
+    // Run the full parsePdfSource pipeline (including Claude Vision for scanned PDFs)
+    // and cache the resulting units so job creation can skip re-parsing.
+    let cacheKey: string | null = null
+    try {
+      let anthropicKey = ""
+      const systemKey = await db.systemSetting.findUnique({ where: { key: "ai_anthropic_key" } })
+      anthropicKey = systemKey?.value ?? ""
+
+      const pdfResult = await parsePdfSource(buffer, anthropicKey || undefined)
+      const cacheData: PdfParseResult = { units: pdfResult.units, sourceMarkdown: pdfResult.sourceMarkdown }
+      writeFileSync(cacheFile, JSON.stringify(cacheData), "utf8")
+      cacheKey = id
+    } catch {
+      // Cache population failed (e.g. no API key for scanned PDF) — job creation
+      // will fall back to parsing again and show a meaningful error to the user.
+    }
+
+    return NextResponse.json({ numPages, isScanned, wordCount, estimatedUnits, cacheKey })
   } catch {
     const approxPages = Math.max(1, Math.ceil(buffer.byteLength / (150 * 1024)))
-    return NextResponse.json({ numPages: approxPages, isScanned: true, wordCount: 0, estimatedUnits: approxPages * 40 })
+    return NextResponse.json({ numPages: approxPages, isScanned: true, wordCount: 0, estimatedUnits: approxPages * 40, cacheKey: null })
   } finally {
     cleanup()
   }

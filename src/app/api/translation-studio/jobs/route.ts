@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { parseJsonSource, parseCsvSource, parseMarkdownSource, parseTxtSource, parsePdfSource, parseXliffSource } from "@/lib/source-parser"
+import { parseJsonSource, parseCsvSource, parseMarkdownSource, parseTxtSource, parsePdfSource, parseXliffSource, type SourceUnit, type PdfParseResult } from "@/lib/source-parser"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
 
@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
   const apiKey = formData.get("apiKey") as string | null
   const promoCodeInput = ((formData.get("promoCode") as string) || "").trim().toUpperCase()
   const glossaryRaw = (formData.get("glossaryData") as string | null) || null
+  const pdfCacheKey = (formData.get("pdfCacheKey") as string | null) || null
   let sourceLanguage = (formData.get("sourceLanguage") as string) || "en-US"
 
   if (!file || !name || !provider || !model || !targetLanguagesRaw) {
@@ -90,20 +91,55 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "targetLanguages must be a non-empty JSON array" }, { status: 400 })
   }
 
-  let units
+  let units: SourceUnit[] = []
+  let pdfSourceMarkdown: string | null = null
   try {
     if (ext === "pdf") {
-      // Resolve Anthropic API key — only needed as fallback for scanned PDFs.
-      // Text-based PDFs are extracted directly (free, no API key required).
-      let anthropicKey = apiKey?.trim() || ""
-      if (!anthropicKey) {
-        const systemKey = await db.systemSetting.findUnique({ where: { key: "ai_anthropic_key" } })
-        anthropicKey = systemKey?.value ?? ""
+      // Check for cached units from the probe step to avoid re-parsing.
+      // The probe-pdf route runs parsePdfSource (including Claude Vision for scanned PDFs)
+      // and caches the result to a temp file identified by pdfCacheKey.
+      let loadedFromCache = false
+      if (pdfCacheKey && /^[0-9a-f]{16}$/.test(pdfCacheKey)) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const { join } = require("path") as typeof import("path")
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const { tmpdir } = require("os") as typeof import("os")
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const { readFileSync, existsSync, unlinkSync } = require("fs") as typeof import("fs")
+          const cacheFile = join(tmpdir(), `jendee_units_${pdfCacheKey}.json`)
+          if (existsSync(cacheFile)) {
+            const cacheData = JSON.parse(readFileSync(cacheFile, "utf8")) as PdfParseResult | SourceUnit[]
+            // Handle both old format (array) and new format (object with units/sourceMarkdown)
+            if (Array.isArray(cacheData)) {
+              units = cacheData
+            } else {
+              units = cacheData.units
+              pdfSourceMarkdown = cacheData.sourceMarkdown
+            }
+            try { unlinkSync(cacheFile) } catch { /* ignore */ }
+            loadedFromCache = true
+          }
+        } catch {
+          // Cache read failed — fall through to re-parse
+        }
       }
-      const buffer = Buffer.from(await file.arrayBuffer())
-      // anthropicKey may be empty string — parsePdfSource will throw a clear error
-      // only if the PDF is scanned and no key is available.
-      units = await parsePdfSource(buffer, anthropicKey || undefined)
+
+      if (!loadedFromCache) {
+        // Resolve Anthropic API key — only needed as fallback for scanned PDFs.
+        // Text-based PDFs are extracted directly (free, no API key required).
+        let anthropicKey = apiKey?.trim() || ""
+        if (!anthropicKey) {
+          const systemKey = await db.systemSetting.findUnique({ where: { key: "ai_anthropic_key" } })
+          anthropicKey = systemKey?.value ?? ""
+        }
+        const buffer = Buffer.from(await file.arrayBuffer())
+        // anthropicKey may be empty string — parsePdfSource will throw a clear error
+        // only if the PDF is scanned and no key is available.
+        const pdfResult = await parsePdfSource(buffer, anthropicKey || undefined)
+        units = pdfResult.units
+        pdfSourceMarkdown = pdfResult.sourceMarkdown
+      }
     } else if (ext === "xliff") {
       const content = await file.text()
       const result = parseXliffSource(content)
@@ -149,13 +185,34 @@ export async function POST(req: NextRequest) {
   // Validate promo code if provided
   let appliedPromoCode: string | null = null
   let discountPct = 0
+
+  // Compute total source word count across all units (needed for word-capped promo validation)
+  const totalSourceWords = (units as Array<{ source?: string }>).reduce(
+    (sum, u) => sum + (u.source?.split(/\s+/).filter(Boolean).length ?? 0), 0
+  )
+
   if (promoCodeInput) {
     const promo = await db.promoCode.findUnique({ where: { code: promoCodeInput } })
     if (promo && promo.active &&
         (!promo.expiresAt || promo.expiresAt > new Date()) &&
         (promo.maxUses === null || promo.usedCount < promo.maxUses)) {
-      appliedPromoCode = promo.code
-      discountPct = promo.discountPct
+
+      // Per-user limit check
+      let perUserOk = true
+      if (promo.perUserMax !== null) {
+        const userUseCount = await db.translationJob.count({
+          where: { createdById: session.user.id, promoCode: promo.code },
+        })
+        if (userUseCount >= promo.perUserMax) perUserOk = false
+      }
+
+      // Word count limit check
+      const wordLimitOk = promo.maxWordsPerJob === null || totalSourceWords <= promo.maxWordsPerJob
+
+      if (perUserOk && wordLimitOk) {
+        appliedPromoCode = promo.code
+        discountPct = promo.discountPct
+      }
     }
   }
 
@@ -169,7 +226,8 @@ export async function POST(req: NextRequest) {
         unitsFileUrl: unitsFilePath,
         unitsData: JSON.stringify(units),
         // Store text-based source content in DB for serverless access (XLIFF, markdown, etc.)
-        sourceData: ext !== "pdf" ? sourceFileContent.toString("utf-8") : null,
+        // For scanned PDFs (Claude Vision path), store the extracted Markdown for formatted reconstruction.
+        sourceData: ext !== "pdf" ? sourceFileContent.toString("utf-8") : pdfSourceMarkdown,
         sourceFormat: ext,
         sourceLanguage,
         provider,

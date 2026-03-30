@@ -1,6 +1,18 @@
 export interface SourceUnit {
   id: string
+  /** Plain text (all XML tags stripped). Used for non-XLIFF files and as a
+   *  fallback display string. For XLIFF units that contain inline tags, the
+   *  AI receives individual text nodes via textNodes instead. */
   sourceText: string
+  /** Verbatim inner XML of the <source> element, including inline <g>/<ph>/
+   *  <bpt>/<ept> elements. Present only for XLIFF units that contain tags.
+   *  Used by mergeTranslationsIntoXliff to reconstruct the tag structure in
+   *  the <target> element after translation. */
+  rawSourceXml?: string
+  /** Decoded leaf text nodes extracted from rawSourceXml, in document order.
+   *  Each entry is sent to the AI as a separate sub-unit (id__t0, id__t1, …)
+   *  so translations can be stitched back into the tag skeleton. */
+  textNodes?: string[]
 }
 
 /**
@@ -16,6 +28,8 @@ export function parseXliffSource(content: string): {
   // Lazy-import to avoid circular dependency issues at module load time
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { parseXliff, extractRawSourceUnits } = require("@/lib/xliff-parser") as typeof import("@/lib/xliff-parser")
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { hasInlineXmlTags, extractXmlTextNodes } = require("@/lib/xml-utils") as typeof import("@/lib/xml-utils")
   const parsed = parseXliff(content)
 
   // extractRawSourceUnits uses regex to pull the verbatim inner XML of every
@@ -47,7 +61,23 @@ export function parseXliffSource(content: string): {
       .replace(/<[^>]+>/g, " ")
       .replace(/\s{2,}/g, " ")
       .trim()
-    if (plainText) units.push({ id, sourceText: plainText })
+    if (!plainText) continue
+
+    const unit: SourceUnit = { id, sourceText: plainText }
+
+    // For units with inline XML tags (e.g. <g ctype="x-html-LI">), store the
+    // raw source XML and extract individual text nodes. These are used during
+    // translation (as __t0, __t1, … sub-units) and during XLIFF merge to
+    // reconstruct the full tag structure in the <target> element.
+    if (hasInlineXmlTags(rawXml)) {
+      const nodes = extractXmlTextNodes(rawXml)
+      if (nodes.length > 0) {
+        unit.rawSourceXml = rawXml
+        unit.textNodes = nodes
+      }
+    }
+
+    units.push(unit)
   }
 
   return {
@@ -112,6 +142,11 @@ function cleanupFiles(...paths: string[]): void {
   }
 }
 
+export interface PdfParseResult {
+  units: SourceUnit[]
+  sourceMarkdown: string | null
+}
+
 /**
  * Extract translatable text from a PDF using a 4-strategy cascade:
  *
@@ -132,8 +167,9 @@ function cleanupFiles(...paths: string[]): void {
  *   Used only when all text-extraction strategies fail or yield fewer than
  *   MIN_WORDS_PER_PAGE words per page (indicating a scanned / image PDF).
  *   Requires an Anthropic API key.
+ *   Returns structured Markdown with headings/lists preserved.
  */
-export async function parsePdfSource(buffer: Buffer, anthropicApiKey?: string): Promise<SourceUnit[]> {
+export async function parsePdfSource(buffer: Buffer, anthropicApiKey?: string): Promise<PdfParseResult> {
   const tmpPdf = writeTempFile(buffer, ".pdf")
   const tmpTxt = tmpPdf.replace(".pdf", ".txt")
   const tmpPy  = tmpPdf.replace(".pdf", ".py")
@@ -145,7 +181,7 @@ export async function parsePdfSource(buffer: Buffer, anthropicApiKey?: string): 
     if (s1) {
       const units = segmentPdfText(s1.text)
       if (isTextDense(s1.text, s1.numPages) && units.length > 0) {
-        return units
+        return { units, sourceMarkdown: null }
       }
     }
 
@@ -154,7 +190,7 @@ export async function parsePdfSource(buffer: Buffer, anthropicApiKey?: string): 
     if (s2) {
       const units = segmentPdfText(s2.text)
       if (isTextDense(s2.text, s2.numPages) && units.length > 0) {
-        return units
+        return { units, sourceMarkdown: null }
       }
     }
 
@@ -163,7 +199,7 @@ export async function parsePdfSource(buffer: Buffer, anthropicApiKey?: string): 
     if (s3) {
       const units = segmentPdfText(s3.text)
       if (isTextDense(s3.text, s3.numPages) && units.length > 0) {
-        return units
+        return { units, sourceMarkdown: null }
       }
     }
 
@@ -215,9 +251,11 @@ function tryPdftotext(
 
 /**
  * Strategy 2: pdfplumber via Python subprocess.
- * Writes an inline Python script to a temp file, executes it, reads the JSON
- * result from a second temp file. Returns null if Python or pdfplumber is not
- * available.
+ * Writes an inline Python script to a temp file, executes it, reads the plain-text
+ * result from a second temp file. Uses a simple delimiter protocol instead of JSON
+ * to avoid encoding edge-cases (null bytes, stray U+2028/U+2029, truncation) that
+ * can corrupt JSON output from Chinese/CJK PDFs.
+ * Returns null if Python or pdfplumber is not available.
  */
 function tryPdfplumber(
   pdfPath: string,
@@ -230,23 +268,31 @@ function tryPdfplumber(
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { writeFileSync, readFileSync } = require("fs") as typeof import("fs")
 
+    // Output format: first line is "PAGES:<N>", then "---TEXT---", then raw text.
+    // This sidesteps all JSON encoding risks for CJK / special-character PDFs.
     const script = `
-import sys, json, pdfplumber
+import sys, pdfplumber
 with pdfplumber.open(${JSON.stringify(pdfPath)}) as pdf:
     pages = [page.extract_text() or "" for page in pdf.pages]
+    num_pages = len(pdf.pages)
     text = "\\f".join(pages)
-    result = {"numPages": len(pdf.pages), "text": text}
-with open(${JSON.stringify(outPath)}, "w", encoding="utf-8") as f:
-    json.dump(result, f)
+with open(${JSON.stringify(outPath)}, "w", encoding="utf-8", errors="replace") as f:
+    f.write("PAGES:" + str(num_pages) + "\\n")
+    f.write("---TEXT---\\n")
+    f.write(text)
 `
     writeFileSync(pyPath, script, "utf8")
 
     const result = spawnSync("python3", [pyPath], { timeout: 60_000, encoding: "utf8" })
     if (result.status !== 0 || result.error) return null
 
-    const raw = JSON.parse(readFileSync(outPath, "utf8")) as { text: string; numPages: number }
-    const wordCount = raw.text.trim().split(/\s+/).filter(Boolean).length
-    return { text: raw.text, numPages: raw.numPages, wordCount }
+    const raw = readFileSync(outPath, "utf8")
+    const sep = raw.indexOf("\n---TEXT---\n")
+    if (sep === -1) return null
+    const numPages = parseInt(raw.slice("PAGES:".length, sep), 10) || 1
+    const text = raw.slice(sep + "\n---TEXT---\n".length)
+    const wordCount = text.trim().split(/\s+/).filter(Boolean).length
+    return { text, numPages, wordCount }
   } catch {
     return null
   }
@@ -255,6 +301,8 @@ with open(${JSON.stringify(outPath)}, "w", encoding="utf-8") as f:
 /**
  * Strategy 3: pypdf via Python subprocess.
  * Same pattern as pdfplumber but uses the lighter-weight pypdf library.
+ * Uses the same plain-text delimiter protocol as tryPdfplumber to avoid JSON
+ * encoding issues with CJK/special-character content.
  */
 function tryPypdf(
   pdfPath: string,
@@ -268,23 +316,29 @@ function tryPypdf(
     const { writeFileSync, readFileSync } = require("fs") as typeof import("fs")
 
     const script = `
-import sys, json
+import sys
 from pypdf import PdfReader
 reader = PdfReader(${JSON.stringify(pdfPath)})
 pages = [page.extract_text() or "" for page in reader.pages]
+num_pages = len(reader.pages)
 text = "\\f".join(pages)
-result = {"numPages": len(reader.pages), "text": text}
-with open(${JSON.stringify(outPath)}, "w", encoding="utf-8") as f:
-    json.dump(result, f)
+with open(${JSON.stringify(outPath)}, "w", encoding="utf-8", errors="replace") as f:
+    f.write("PAGES:" + str(num_pages) + "\\n")
+    f.write("---TEXT---\\n")
+    f.write(text)
 `
     writeFileSync(pyPath, script, "utf8")
 
     const result = spawnSync("python3", [pyPath], { timeout: 60_000, encoding: "utf8" })
     if (result.status !== 0 || result.error) return null
 
-    const raw = JSON.parse(readFileSync(outPath, "utf8")) as { text: string; numPages: number }
-    const wordCount = raw.text.trim().split(/\s+/).filter(Boolean).length
-    return { text: raw.text, numPages: raw.numPages, wordCount }
+    const raw = readFileSync(outPath, "utf8")
+    const sep = raw.indexOf("\n---TEXT---\n")
+    if (sep === -1) return null
+    const numPages = parseInt(raw.slice("PAGES:".length, sep), 10) || 1
+    const text = raw.slice(sep + "\n---TEXT---\n".length)
+    const wordCount = text.trim().split(/\s+/).filter(Boolean).length
+    return { text, numPages, wordCount }
   } catch {
     return null
   }
@@ -385,38 +439,39 @@ const PDF_CHUNK_SIZE = 20
  * Use Claude's native document API to extract text from scanned / image PDFs.
  * For large PDFs (> PDF_CHUNK_SIZE pages), the document is processed in chunks
  * of PDF_CHUNK_SIZE pages each to avoid hitting output token limits.
+ * Returns structured Markdown with headings/lists preserved, plus parsed units.
  */
-async function parsePdfWithClaude(buffer: Buffer, anthropicApiKey: string): Promise<SourceUnit[]> {
+async function parsePdfWithClaude(buffer: Buffer, anthropicApiKey: string): Promise<PdfParseResult> {
   // Get total page count from raw bytes (works for scanned PDFs with no text layer).
   const totalPages = Math.max(1, countPagesFromRaw(buffer))
 
   const base64 = buffer.toString("base64")
-  const allUnits: SourceUnit[] = []
-  let globalIndex = 0
+  const chunkMarkdowns: string[] = []
 
   // Build page-range chunks: [[1,20], [21,40], [41,60], [61,62], …]
   for (let startPage = 1; startPage <= totalPages; startPage += PDF_CHUNK_SIZE) {
     const endPage = Math.min(startPage + PDF_CHUNK_SIZE - 1, totalPages)
-    const chunkUnits = await extractPdfChunk(base64, anthropicApiKey, startPage, endPage, globalIndex)
-    allUnits.push(...chunkUnits)
-    globalIndex += chunkUnits.length
+    const chunkMarkdown = await extractPdfChunk(base64, anthropicApiKey, startPage, endPage)
+    chunkMarkdowns.push(chunkMarkdown)
   }
 
-  return allUnits
+  const sourceMarkdown = chunkMarkdowns.join("\n\n")
+  const units = parseMarkdownSource(sourceMarkdown)
+  return { units, sourceMarkdown }
 }
 
 /**
  * Call Claude Vision to extract text from a specific page range of a PDF.
  * The full PDF is sent but Claude is instructed to focus only on the given pages,
  * keeping each chunk's output within max_tokens.
+ * Returns raw Markdown text for that page range.
  */
 async function extractPdfChunk(
   base64: string,
   anthropicApiKey: string,
   startPage: number,
   endPage: number,
-  indexOffset: number
-): Promise<SourceUnit[]> {
+): Promise<string> {
   const pageInstruction = `\nIMPORTANT: Extract text ONLY from pages ${startPage} to ${endPage}. Skip all other pages entirely.`
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -443,15 +498,18 @@ async function extractPdfChunk(
             },
             {
               type: "text",
-              text: `Extract all translatable text from this PDF document.${pageInstruction}
-Return ONLY a valid JSON array where each element is: {"id": "p_N", "sourceText": "..."}
+              text: `Extract all translatable text from this PDF document as a Markdown document.${pageInstruction}
 Rules:
-- Each paragraph, heading, bullet point, list item, table cell, or caption is its own entry
-- Number entries sequentially starting from p_${indexOffset}
+- Use # for main headings (company names, document titles)
+- Use ## for section headings
+- Use ### for sub-section headings
+- Use - for list items and bullet points
+- Tables: use simplified | col1 | col2 | format
+- Regular paragraphs as plain text (no prefix)
 - Skip page numbers, repeating headers/footers, URLs, purely numeric values, and decorative symbols
 - Preserve the original text exactly including punctuation and casing
 - For scanned pages, use your vision to read the text accurately
-- Do not add any explanation or text outside the JSON array`,
+- Return ONLY the markdown text — no JSON, no code fences, no explanation`,
             },
           ],
         },
@@ -467,11 +525,11 @@ Rules:
   const data = await response.json() as { content: { type: string; text: string }[] }
   const text = data.content.find((c: { type: string; text: string }) => c.type === "text")?.text ?? ""
 
-  const jsonMatch = text.match(/\[[\s\S]*\]/)
-  if (!jsonMatch) throw new Error(`Could not extract text from PDF pages ${startPage}–${endPage} — no JSON returned by Claude`)
+  if (!text.trim()) {
+    throw new Error(`Could not extract text from PDF pages ${startPage}–${endPage} — empty response from Claude`)
+  }
 
-  const units = JSON.parse(jsonMatch[0]) as { id: string; sourceText: string }[]
-  return units.filter((u: { id: string; sourceText: string }) => u.id && u.sourceText?.trim())
+  return text
 }
 
 /**

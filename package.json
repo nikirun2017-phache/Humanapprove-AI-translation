@@ -44,6 +44,7 @@
     "next-auth": "^5.0.0-beta.30",
     "next-intl": "^4.8.3",
     "pdf-parse": "^2.4.5",
+    "pdfkit": "^0.18.0",
     "pg": "^8.20.0",
     "prisma": "^7.5.0",
     "react": "19.2.3",
@@ -54,6 +55,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pdfkit": "^0.17.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^17.3.1",

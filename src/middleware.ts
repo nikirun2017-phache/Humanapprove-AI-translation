@@ -59,6 +59,8 @@ function getIp(req: NextRequest): string {
 const RULES: Array<{ prefix: string; limit: number; windowMs: number; label: string }> = [
   { prefix: "/api/auth/signin",             limit: 10,  windowMs: 60_000,  label: "auth" },
   { prefix: "/api/auth/register",           limit: 5,   windowMs: 300_000, label: "register" },
+  { prefix: "/api/auth/forgot-password",    limit: 5,   windowMs: 300_000, label: "forgot-pw" },
+  { prefix: "/api/auth/reset-password",     limit: 10,  windowMs: 300_000, label: "reset-pw" },
   { prefix: "/api/auth/callback",           limit: 20,  windowMs: 60_000,  label: "auth-cb" },
   { prefix: "/api/billing/promo",           limit: 10,  windowMs: 60_000,  label: "promo" },
   { prefix: "/api/billing/portal",          limit: 10,  windowMs: 60_000,  label: "portal" },
@@ -113,6 +115,10 @@ export const config = {
     "/",
     "/login",
     "/vision",
+    "/privacy",
+    "/terms",
+    "/forgot-password",
+    "/reset-password",
     "/(en-US|en-CA|en-GB|en-AU|en-IN|es-ES|es-419|pt-BR|fr-FR|fr-CA|de-DE|it-IT|nl-NL|sv-SE|ja-JP|zh-CN|zh-TW|ko-KR|th-TH)/:path*",
   ],
 }

@@ -3,9 +3,10 @@ import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { readFile } from "fs/promises"
 import { parseXliff } from "@/lib/xliff-parser"
+import { generateTranslatedPdf, generateTranslatedTxt, generatePdfFromMarkdown } from "@/lib/pdf-generator"
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ jobId: string; taskId: string }> }
 ) {
   const session = await auth()
@@ -31,10 +32,66 @@ export async function GET(
 
   const safeName = `${job.name}-${task.targetLanguage}`.replace(/[^a-zA-Z0-9-_]/g, "_")
   const fmt = job.sourceFormat
+  // ?format=xliff|txt|pdf — only meaningful for PDF source jobs
+  const format = req.nextUrl.searchParams.get("format") ?? "xliff"
 
-  // PDF and XLIFF: serve the bilingual XLIFF as-is
-  if (fmt === "pdf" || fmt === "xliff") {
-    // Prefer DB-stored content (works in serverless); fall back to file (local dev)
+  // ── PDF source: support multiple output formats ──────────────────────────
+  if (fmt === "pdf") {
+    const xliff = task.xliffData ?? await readFile(task.xliffFileUrl!, "utf-8")
+
+    if (format === "xliff") {
+      return new NextResponse(xliff, {
+        headers: {
+          "Content-Type": "application/xliff+xml",
+          "Content-Disposition": `attachment; filename="${safeName}.xliff"`,
+        },
+      })
+    }
+
+    // Extract translated paragraphs from the XLIFF
+    const parsed = parseXliff(xliff)
+    const paragraphs = parsed.units
+      .filter((u: (typeof parsed.units)[number]) => u.targetText?.trim())
+      .map((u: (typeof parsed.units)[number]) => u.targetText)
+
+    if (format === "txt") {
+      const txt = generateTranslatedTxt(paragraphs, job.name, task.targetLanguage)
+      return new NextResponse(txt, {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${safeName}.txt"`,
+        },
+      })
+    }
+
+    if (format === "pdf") {
+      let pdfBuffer: Buffer
+
+      // If job has source Markdown (from Claude Vision extraction),
+      // reconstruct translated Markdown and render with proper formatting
+      if (job.sourceData) {
+        const translationMap = new Map<string, string>(
+          parsed.units
+            .filter((u: (typeof parsed.units)[number]) => u.targetText?.trim())
+            .map((u: (typeof parsed.units)[number]) => [u.id, u.targetText])
+        )
+        const translatedMarkdown = reconstructMarkdown(job.sourceData, translationMap)
+        pdfBuffer = await generatePdfFromMarkdown(translatedMarkdown, job.name, task.targetLanguage)
+      } else {
+        pdfBuffer = await generateTranslatedPdf(paragraphs, job.name, task.targetLanguage)
+      }
+
+      return new NextResponse(pdfBuffer as unknown as BodyInit, {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="${safeName}.pdf"`,
+        },
+      })
+    }
+  }
+
+  // XLIFF: serve bilingual XLIFF as-is
+  if (fmt === "xliff") {
     const xliff = task.xliffData ?? await readFile(task.xliffFileUrl!, "utf-8")
     return new NextResponse(xliff, {
       headers: {

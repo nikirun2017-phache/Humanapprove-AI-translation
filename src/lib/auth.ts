@@ -37,6 +37,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!isValid) return null
 
+        // Block login if the user has a pending email verification token.
+        // Existing users (created before this feature) have no token → allowed through.
+        const pendingVerification = await db.verificationToken.findFirst({
+          where: { identifier: user.email },
+        })
+        if (pendingVerification) return null
+
         return {
           id: user.id,
           email: user.email,

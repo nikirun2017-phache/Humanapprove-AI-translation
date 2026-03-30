@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 
 // POST /api/billing/promo — validate a promo code
 // Body: { code: string }
-// Returns: { valid: true, discountPct: number, code: string } or { valid: false, error: string }
+// Returns: { valid: true, discountPct: number, code: string, maxWordsPerJob?: number } or { valid: false, error: string }
 export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -28,5 +28,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ valid: false, error: "This promo code has reached its usage limit" })
   }
 
-  return NextResponse.json({ valid: true, discountPct: promo.discountPct, code: promo.code })
+  // Per-user limit check
+  if (promo.perUserMax !== null) {
+    const userUseCount = await db.translationJob.count({
+      where: { createdById: session.user.id, promoCode: promo.code },
+    })
+    if (userUseCount >= promo.perUserMax) {
+      return NextResponse.json({ valid: false, error: "You have already used this promo code" })
+    }
+  }
+
+  return NextResponse.json({
+    valid: true,
+    discountPct: promo.discountPct,
+    code: promo.code,
+    maxWordsPerJob: promo.maxWordsPerJob ?? null,
+  })
 }

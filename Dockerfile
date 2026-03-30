@@ -26,6 +26,9 @@ ENV NODE_ENV=production
 # Disable Next.js telemetry
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Install fonts for PDF generation (pdfkit needs Unicode fonts for non-Latin scripts)
+RUN apk add --no-cache fontconfig font-noto font-noto-cjk
+
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs

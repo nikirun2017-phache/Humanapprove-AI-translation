@@ -41,9 +41,12 @@ export default async function Home() {
 
       {/* Hero */}
       <section className="max-w-4xl mx-auto px-6 pt-24 pb-20 text-center">
-        <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 text-xs font-medium px-3 py-1.5 rounded-full mb-6">
+        <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 text-xs font-medium px-3 py-1.5 rounded-full mb-4">
           <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
           {t("hero.badge")}
+        </div>
+        <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-6 ml-2">
+          🎁 Translate your first 1,000 words free — use code <span className="font-mono bg-green-100 px-1.5 py-0.5 rounded">1TIME</span>
         </div>
         <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 leading-tight mb-6">
           {t("hero.h1Line1")}<br />
@@ -54,10 +57,10 @@ export default async function Home() {
         </p>
         <div className="flex gap-3 justify-center">
           <Link
-            href="/login"
+            href="/login?mode=signup"
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl text-sm transition-colors shadow-sm"
           >
-            {t("hero.cta1")}
+            Start free — 1,000 words on us
           </Link>
           <a
             href="#how-it-works"
@@ -66,6 +69,7 @@ export default async function Home() {
             {t("hero.cta2")}
           </a>
         </div>
+        <p className="text-xs text-gray-400 mt-3">No credit card required · Cancel anytime</p>
       </section>
 
       {/* Mock UI preview */}
@@ -228,8 +232,11 @@ export default async function Home() {
           </div>
 
           {/* Estimator */}
-          <div className="mb-8">
+          <div className="mb-4">
             <CostEstimator />
+          </div>
+          <div className="flex items-center justify-center gap-2 bg-green-50 border border-green-200 text-green-800 text-sm font-medium px-4 py-3 rounded-xl mb-8">
+            🎁 <span>Your first 1,000 words are free — sign up and enter code <span className="font-mono font-bold">1TIME</span> at checkout</span>
           </div>
 
           {/* Included */}
@@ -250,20 +257,40 @@ export default async function Home() {
       {/* CTA */}
       <section className="max-w-2xl mx-auto px-6 py-24 text-center">
         <h2 className="text-3xl font-bold text-gray-900 mb-4">{t("cta.heading")}</h2>
-        <p className="text-gray-500 mb-8">{t("cta.body")}</p>
-        <Link
-          href="/login"
-          className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 py-3 rounded-xl text-sm transition-colors shadow-sm"
-        >
-          {t("cta.button")}
-        </Link>
+        <p className="text-gray-500 mb-6">{t("cta.body")}</p>
+        <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-800 text-sm font-medium px-4 py-2 rounded-lg mb-6">
+          🎁 Your first 1,000 words are free — no credit card needed
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link
+            href="/login?mode=signup"
+            className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 py-3 rounded-xl text-sm transition-colors shadow-sm"
+          >
+            Start free — use code 1TIME at checkout
+          </Link>
+          <Link
+            href="/login"
+            className="inline-block border border-gray-200 hover:border-gray-300 text-gray-700 font-medium px-8 py-3 rounded-xl text-sm transition-colors"
+          >
+            Sign in
+          </Link>
+        </div>
+        <p className="text-xs text-gray-400 mt-4">Cancel anytime · Pay only for what you translate</p>
       </section>
 
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8">
-        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <span className="font-bold text-indigo-600 tracking-tight">{t("nav.brand")}</span>
-          <p className="text-xs text-gray-400">{t("footer.rights", { year: new Date().getFullYear() })}</p>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+              Terms of Service
+            </Link>
+            <p className="text-xs text-gray-400">{t("footer.rights", { year: new Date().getFullYear() })}</p>
+          </div>
         </div>
       </footer>
     </div>
