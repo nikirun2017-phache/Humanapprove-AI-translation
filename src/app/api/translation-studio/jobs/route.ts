@@ -187,8 +187,8 @@ export async function POST(req: NextRequest) {
   let discountPct = 0
 
   // Compute total source word count across all units (needed for word-capped promo validation)
-  const totalSourceWords = (units as Array<{ source?: string }>).reduce(
-    (sum, u) => sum + (u.source?.split(/\s+/).filter(Boolean).length ?? 0), 0
+  const totalSourceWords = units.reduce(
+    (sum, u) => sum + (u.sourceText?.split(/\s+/).filter(Boolean).length ?? 0), 0
   )
 
   if (promoCodeInput) {
@@ -206,12 +206,15 @@ export async function POST(req: NextRequest) {
         if (userUseCount >= promo.perUserMax) perUserOk = false
       }
 
-      // Word count limit check
-      const wordLimitOk = promo.maxWordsPerJob === null || totalSourceWords <= promo.maxWordsPerJob
-
-      if (perUserOk && wordLimitOk) {
+      if (perUserOk) {
         appliedPromoCode = promo.code
-        discountPct = promo.discountPct
+        // Partial discount: if job exceeds the free-word cap, scale discount proportionally.
+        // e.g. 1TIME gives 100% off first 1,000 words — a 13,000-word job gets 1000/13000 = ~7.7% off.
+        if (promo.maxWordsPerJob !== null && totalSourceWords > promo.maxWordsPerJob) {
+          discountPct = Math.round((promo.maxWordsPerJob / totalSourceWords) * promo.discountPct)
+        } else {
+          discountPct = promo.discountPct
+        }
       }
     }
   }

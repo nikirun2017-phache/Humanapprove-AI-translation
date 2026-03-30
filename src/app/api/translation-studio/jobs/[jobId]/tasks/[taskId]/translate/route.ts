@@ -353,16 +353,14 @@ export async function POST(
         })
         if (creator) {
           const durationSecs = Math.round((Date.now() - taskStartTime) / 1000)
-          if (durationSecs >= 60) {
-            void sendJobCompleteEmail(
-              creator.name,
-              creator.email,
-              job.name,
-              allTasks.map((t: { targetLanguage: string }) => t.targetLanguage),
-              jobId,
-              durationSecs
-            )
-          }
+          void sendJobCompleteEmail(
+            creator.name,
+            creator.email,
+            job.name,
+            allTasks.map((t: { targetLanguage: string }) => t.targetLanguage),
+            jobId,
+            durationSecs >= 60 ? durationSecs : undefined
+          )
         }
       } catch {
         // Email errors are non-fatal

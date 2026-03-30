@@ -1300,10 +1300,19 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
         const grandTotalRaw = fileRows.reduce((s: number, r: (typeof fileRows)[number]) => s + r.totalFileCost, 0)
         // Apply minimum job fee: total must be at least $5
         const grandTotalBeforeDiscount = Math.max(MIN_JOB_FEE, grandTotalRaw)
-        // Apply promo discount on top of the (post-minimum) total
-        const promoDiscount = promoState?.valid ? grandTotalBeforeDiscount * (promoState.discountPct / 100) : 0
-        const grandTotalCharge = grandTotalBeforeDiscount - promoDiscount
+        // Compute effective discount pct — scale down if job words exceed the promo's free-word cap
         const totalWords = fileRows.reduce((s: number, r: (typeof fileRows)[number]) => s + r.estimatedWords, 0)
+        const effectiveDiscountPct = (() => {
+          if (!promoState?.valid) return 0
+          const { discountPct, maxWordsPerJob } = promoState
+          if (maxWordsPerJob != null && totalWords > maxWordsPerJob) {
+            return Math.round((maxWordsPerJob / totalWords) * discountPct)
+          }
+          return discountPct
+        })()
+        // Apply promo discount on top of the (post-minimum) total
+        const promoDiscount = effectiveDiscountPct > 0 ? grandTotalBeforeDiscount * (effectiveDiscountPct / 100) : 0
+        const grandTotalCharge = grandTotalBeforeDiscount - promoDiscount
         // Split into fixed (platform fee) and variable (AI markup) components for transparency
         const totalPlatformFee = fileRows.reduce((s: number, r: (typeof fileRows)[number]) => s + r.estimatedWords * PLATFORM_FEE_PER_WORD * selectedLangs.size, 0)
         const totalAiMarkup = Math.max(0, grandTotalRaw - totalPlatformFee)
@@ -1386,7 +1395,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                   )}
                   {promoState?.valid && (
                     <div className="flex justify-between text-xs text-green-600 font-medium">
-                      <span>Promo code <span className="font-bold">{promoState.code}</span> ({promoState.discountPct}% off)</span>
+                      <span>Promo code <span className="font-bold">{promoState.code}</span> ({effectiveDiscountPct}% off)</span>
                       <span>−{fmt(promoDiscount)}</span>
                     </div>
                   )}
@@ -1442,12 +1451,12 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                 <div className="mt-1.5 space-y-1">
                   <p className={`text-xs ${promoState.valid ? "text-green-600" : "text-red-500"}`}>
                     {promoState.valid
-                      ? `✓ ${promoState.discountPct}% discount applied!`
+                      ? `✓ Code accepted — first 1,000 words free!`
                       : `✕ ${promoState.error}`}
                   </p>
                   {promoState.valid && promoState.maxWordsPerJob != null && totalWords > promoState.maxWordsPerJob && (
                     <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1">
-                      ⚠ This code only applies to jobs up to {promoState.maxWordsPerJob.toLocaleString()} words. Your current selection ({totalWords.toLocaleString()} words) exceeds that limit — the discount will not be applied.
+                      ℹ First {promoState.maxWordsPerJob.toLocaleString()} words are free — you&apos;ll only pay for the remaining {(totalWords - promoState.maxWordsPerJob).toLocaleString()} words.
                     </p>
                   )}
                 </div>
