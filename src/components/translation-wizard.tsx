@@ -795,13 +795,24 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                           {isPdf && probe
                             ? ` · ${probe.numPages} page${probe.numPages !== 1 ? "s" : ""} · ~${probe.estimatedUnits} strings`
                             : isPdf && entry.probePending
-                              ? " · analysing…"
+                              ? null
                               : isXliff && entry.xliffMeta
                                 ? ` · ${entry.xliffMeta.emptyUnitCount} untranslated unit${entry.xliffMeta.emptyUnitCount !== 1 ? "s" : ""}`
                                 : stringCount !== null
                                   ? ` · ${stringCount} string${stringCount !== 1 ? "s" : ""} detected`
                                   : ""}
                         </p>
+                      )}
+                      {isPdf && entry.probePending && (
+                        <div className="mt-1.5">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span className="text-xs text-indigo-600 font-medium animate-pulse">Analysing PDF…</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-indigo-500 rounded-full animate-[progress_1.5s_ease-in-out_infinite]" style={{width: "60%", animation: "indeterminate 1.5s ease-in-out infinite"}} />
+                          </div>
+                          <style>{`@keyframes indeterminate{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}`}</style>
+                        </div>
                       )}
                       {isXliff && entry.xliffMeta && !entry.parseError && (
                         <p className="text-xs text-indigo-600 mt-0.5">

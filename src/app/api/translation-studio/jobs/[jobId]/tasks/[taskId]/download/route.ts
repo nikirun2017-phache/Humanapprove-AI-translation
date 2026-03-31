@@ -65,28 +65,33 @@ export async function GET(
     }
 
     if (format === "pdf") {
-      let pdfBuffer: Buffer
+      try {
+        let pdfBuffer: Buffer
 
-      // If job has source Markdown (from Claude Vision extraction),
-      // reconstruct translated Markdown and render with proper formatting
-      if (job.sourceData) {
-        const translationMap = new Map<string, string>(
-          parsed.units
-            .filter((u: (typeof parsed.units)[number]) => u.targetText?.trim())
-            .map((u: (typeof parsed.units)[number]) => [u.id, u.targetText])
-        )
-        const translatedMarkdown = reconstructMarkdown(job.sourceData, translationMap)
-        pdfBuffer = await generatePdfFromMarkdown(translatedMarkdown, job.name, task.targetLanguage)
-      } else {
-        pdfBuffer = await generateTranslatedPdf(paragraphs, job.name, task.targetLanguage)
+        // If job has source Markdown (from Claude Vision extraction),
+        // reconstruct translated Markdown and render with proper formatting
+        if (job.sourceData) {
+          const translationMap = new Map<string, string>(
+            parsed.units
+              .filter((u: (typeof parsed.units)[number]) => u.targetText?.trim())
+              .map((u: (typeof parsed.units)[number]) => [u.id, u.targetText])
+          )
+          const translatedMarkdown = reconstructMarkdown(job.sourceData, translationMap)
+          pdfBuffer = await generatePdfFromMarkdown(translatedMarkdown, job.name, task.targetLanguage)
+        } else {
+          pdfBuffer = await generateTranslatedPdf(paragraphs, job.name, task.targetLanguage)
+        }
+
+        return new NextResponse(pdfBuffer as unknown as BodyInit, {
+          headers: {
+            "Content-Type": "application/pdf",
+            "Content-Disposition": `attachment; filename="${safeName}.pdf"`,
+          },
+        })
+      } catch (err) {
+        console.error("[download] PDF generation failed:", err)
+        return NextResponse.json({ error: "PDF generation failed. Please download the .txt version instead." }, { status: 500 })
       }
-
-      return new NextResponse(pdfBuffer as unknown as BodyInit, {
-        headers: {
-          "Content-Type": "application/pdf",
-          "Content-Disposition": `attachment; filename="${safeName}.pdf"`,
-        },
-      })
     }
   }
 

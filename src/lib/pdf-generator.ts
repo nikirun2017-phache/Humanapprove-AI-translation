@@ -20,12 +20,15 @@ function findFont(preferCjk: boolean): string | null {
     "/Library/Fonts/Arial Unicode.ttf",
     "/Library/Fonts/Arial.ttf",
   ]
-  const candidates = preferCjk ? [...cjkCandidates, ...latinCandidates] : latinCandidates
-  // Skip TTC files - pdfkit cannot subset them
+  // For CJK, only search CJK candidates — do NOT fall back to Latin fonts.
+  // pdfkit crashes trying to encode CJK codepoints with a Latin-only font.
+  // If no CJK font is found, return null so pdfkit uses built-in Helvetica
+  // which renders missing chars as boxes rather than throwing.
+  const candidates = preferCjk ? cjkCandidates : latinCandidates
+  // Skip TTC files - pdfkit cannot subset collections
   for (const p of candidates) {
     if (!p.endsWith(".ttc") && existsSync(p)) return p
   }
-  // If only TTC found, skip and fall back to built-in Helvetica
   return null
 }
 
