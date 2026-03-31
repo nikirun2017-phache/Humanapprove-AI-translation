@@ -190,12 +190,22 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     try {
       const raw = sessionStorage.getItem(WIZARD_STORAGE_KEY)
       if (!raw) return
-      const saved = JSON.parse(raw) as { jobName: string; provider: string; model: string; selectedLangs: string[] }
+      const saved = JSON.parse(raw) as { jobName: string; provider: string; model: string; selectedLangs: string[]; sourceLanguage?: string }
       sessionStorage.removeItem(WIZARD_STORAGE_KEY)
       setJobName(saved.jobName)
       setSelectedLangs(new Set(saved.selectedLangs))
+      if (saved.sourceLanguage) setSourceLanguage(saved.sourceLanguage)
     } catch { /* ignore */ }
   }, [restoringFromCardSetup])
+
+  // Auto-advance to Configure once files are re-uploaded after card setup
+  useEffect(() => {
+    if (!restoringFromCardSetup) return
+    if (step !== 1) return
+    if (entries.length === 0) return
+    if (entries.some((e: FileEntry) => e.probePending || e.parseError)) return
+    setStep(2)
+  }, [entries, restoringFromCardSetup, step])
 
   async function addCard() {
     setAddingCard(true)
@@ -207,6 +217,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
         provider,
         model,
         selectedLangs: [...selectedLangs],
+        sourceLanguage,
       }))
     } catch { /* ignore */ }
     try {
@@ -570,6 +581,13 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
       {/* ── Step 1 — Upload ── */}
       {step === 1 && (
         <div className="space-y-4">
+          {/* Card-setup return banner */}
+          {restoringFromCardSetup && (
+            <div className="flex items-start gap-2 bg-green-50 border border-green-200 text-green-800 rounded-xl px-4 py-3 text-sm">
+              <span className="mt-0.5">✓</span>
+              <span>Payment method saved! Re-upload your file to continue — your language settings have been restored.</span>
+            </div>
+          )}
           {/* Source mode tabs */}
           <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">
             <button
