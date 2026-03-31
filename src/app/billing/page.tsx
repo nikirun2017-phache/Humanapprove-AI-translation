@@ -360,7 +360,7 @@ function BillingPageInner() {
             <p className="text-sm text-gray-500 mt-1">
               {role === "admin"
                 ? `Platform-wide AI spend vs revenue at ${5}× markup + $0.007/word platform fee.`
-                : "Pay as you go — charged at 5× the AI translation cost plus $0.007/word. No monthly subscription."}
+                : "Pay as you go. No monthly subscription."}
             </p>
           </div>
           {role !== "admin" && (
