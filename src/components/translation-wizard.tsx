@@ -804,14 +804,19 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                         </p>
                       )}
                       {isPdf && entry.probePending && (
-                        <div className="mt-1.5">
-                          <div className="flex items-center gap-1.5 mb-1">
-                            <span className="text-xs text-indigo-600 font-medium animate-pulse">Analysing PDF…</span>
+                        <div className="mt-2 space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-indigo-600">Analysing PDF…</span>
+                            <span className="text-xs text-gray-400">please wait</span>
                           </div>
-                          <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-indigo-500 rounded-full animate-[progress_1.5s_ease-in-out_infinite]" style={{width: "60%", animation: "indeterminate 1.5s ease-in-out infinite"}} />
+                          <div className="relative h-2.5 w-full bg-indigo-100 rounded-full overflow-hidden">
+                            <div
+                              className="absolute inset-y-0 left-0 w-2/5 bg-indigo-500 rounded-full"
+                              style={{animation: "pdf-scan 1.5s ease-in-out infinite"}}
+                            />
                           </div>
-                          <style>{`@keyframes indeterminate{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}`}</style>
+                          <p className="text-xs text-gray-400">Counting pages and extracting text — larger files take longer</p>
+                          <style>{`@keyframes pdf-scan{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}`}</style>
                         </div>
                       )}
                       {isXliff && entry.xliffMeta && !entry.parseError && (
@@ -1344,7 +1349,6 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
         const grandTotalCharge = grandTotalBeforeDiscount - promoDiscount
         // Split into fixed (platform fee) and variable (AI markup) components for transparency
         const totalPlatformFee = fileRows.reduce((s: number, r: (typeof fileRows)[number]) => s + r.estimatedWords * PLATFORM_FEE_PER_WORD * selectedLangs.size, 0)
-        const totalAiMarkup = Math.max(0, grandTotalRaw - totalPlatformFee)
         const minFeeApplied = grandTotalBeforeDiscount > grandTotalRaw
 
         return (
