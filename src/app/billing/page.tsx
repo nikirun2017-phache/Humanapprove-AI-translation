@@ -29,6 +29,8 @@ interface AdminUser {
   email: string
   jobsThisMonth: number
   apiCost: number
+  grossRevenue: number
+  discount: number
   platformRevenue: number
   cardStatus: string
   hasCard: boolean
@@ -38,6 +40,8 @@ interface AdminUsage {
   mode: "admin"
   totalApiCost: number
   totalRevenue: number
+  grossRevenue: number
+  totalDiscount: number
   grossMarginPct: number
   totalJobs: number
   activeCustomers: number
@@ -431,12 +435,20 @@ function AdminView({ usage, monthLabel }: { usage: AdminUsage | null; monthLabel
           bg: "bg-red-50",
         },
         {
-          label: "Platform revenue",
+          label: "Net revenue",
           value: usd(usage.totalRevenue),
-          sub: `${usage.markup}× markup on AI cost`,
+          sub: usage.totalDiscount > 0 ? `${usd(usage.grossRevenue)} gross − ${usd(usage.totalDiscount)} discounts` : `${usage.markup}× markup on AI cost`,
           color: "text-green-700",
           dot: "bg-green-400",
           bg: "bg-green-50",
+        },
+        {
+          label: "Promo discounts",
+          value: usd(usage.totalDiscount),
+          sub: usage.totalDiscount > 0 ? `${usd(usage.grossRevenue)} gross revenue` : "No promos applied",
+          color: usage.totalDiscount > 0 ? "text-amber-700" : "text-gray-400",
+          dot: usage.totalDiscount > 0 ? "bg-amber-400" : "bg-gray-200",
+          bg: usage.totalDiscount > 0 ? "bg-amber-50" : "bg-gray-50",
         },
         {
           label: "Gross margin",
@@ -460,7 +472,7 @@ function AdminView({ usage, monthLabel }: { usage: AdminUsage | null; monthLabel
   return (
     <>
       {/* KPI cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         {kpis.length > 0
           ? kpis.map((k: (typeof kpis)[number]) => (
               <div key={k.label} className={cn("rounded-xl border border-gray-200 p-5", k.bg)}>
@@ -512,7 +524,9 @@ function AdminView({ usage, monthLabel }: { usage: AdminUsage | null; monthLabel
                 <th className="px-5 py-3">Customer</th>
                 <th className="px-4 py-3 text-right">Jobs</th>
                 <th className="px-4 py-3 text-right">API cost</th>
-                <th className="px-4 py-3 text-right">Revenue ({usage.markup}×)</th>
+                <th className="px-4 py-3 text-right">Gross ({usage.markup}×)</th>
+                <th className="px-4 py-3 text-right">Discount</th>
+                <th className="px-4 py-3 text-right">Net revenue</th>
                 <th className="px-4 py-3 text-center">Card</th>
               </tr>
             </thead>
@@ -526,6 +540,12 @@ function AdminView({ usage, monthLabel }: { usage: AdminUsage | null; monthLabel
                   <td className="px-4 py-3 text-right text-gray-700">{u.jobsThisMonth}</td>
                   <td className="px-4 py-3 text-right text-gray-500">
                     {u.apiCost > 0 ? usd(u.apiCost, 4) : <span className="text-gray-300">—</span>}
+                  </td>
+                  <td className="px-4 py-3 text-right text-gray-500">
+                    {u.grossRevenue > 0 ? usd(u.grossRevenue) : <span className="text-gray-300">—</span>}
+                  </td>
+                  <td className="px-4 py-3 text-right text-amber-600">
+                    {u.discount > 0 ? `−${usd(u.discount)}` : <span className="text-gray-300">—</span>}
                   </td>
                   <td className="px-4 py-3 text-right font-semibold text-green-700">
                     {u.platformRevenue > 0 ? usd(u.platformRevenue) : <span className="text-gray-300 font-normal">—</span>}
@@ -552,6 +572,10 @@ function AdminView({ usage, monthLabel }: { usage: AdminUsage | null; monthLabel
                 <td className="px-5 py-3 text-xs font-semibold text-gray-600">Total</td>
                 <td className="px-4 py-3 text-right text-xs font-semibold text-gray-600">{usage.totalJobs}</td>
                 <td className="px-4 py-3 text-right text-xs font-semibold text-gray-600">{usd(usage.totalApiCost, 4)}</td>
+                <td className="px-4 py-3 text-right text-xs font-semibold text-gray-600">{usd(usage.grossRevenue)}</td>
+                <td className="px-4 py-3 text-right text-xs font-semibold text-amber-600">
+                  {usage.totalDiscount > 0 ? `−${usd(usage.totalDiscount)}` : <span className="text-gray-300">—</span>}
+                </td>
                 <td className="px-4 py-3 text-right text-xs font-bold text-green-700">{usd(usage.totalRevenue)}</td>
                 <td />
               </tr>

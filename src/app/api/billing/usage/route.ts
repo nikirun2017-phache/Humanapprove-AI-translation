@@ -54,10 +54,20 @@ export async function GET() {
 
   // ── ADMIN: platform-wide revenue view ────────────────────────────────────────
   if (role === "admin") {
-    const [allTasksThisMonth, totalJobs, allRequesters] = await Promise.all([
-      db.translationTask.findMany({
-        where: { createdAt: { gte: startOfMonth }, status: { in: ["completed", "imported"] } },
-        include: { job: { select: { model: true, createdById: true } } },
+    const [allJobsThisMonth, totalJobs, allRequesters] = await Promise.all([
+      // Load jobs with their tasks + discount fields so we can apply promo discounts
+      db.translationJob.findMany({
+        where: { createdAt: { gte: startOfMonth } },
+        select: {
+          id: true,
+          createdById: true,
+          discountPct: true,
+          promoCode: true,
+          tasks: {
+            where: { status: { in: ["completed", "imported"] } },
+            select: { id: true, totalUnits: true, wordCount: true, jobId: true, job: { select: { model: true } } },
+          },
+        },
       }),
       db.translationJob.count({ where: { createdAt: { gte: startOfMonth } } }),
       db.user.findMany({
@@ -73,33 +83,51 @@ export async function GET() {
       }),
     ])
 
-    // Aggregate tasks per user, then compute charge (API×markup + platform fee)
-    const tasksByUser = new Map<string, typeof allTasksThisMonth>()
-    for (const task of allTasksThisMonth) {
-      const uid = task.job.createdById
-      const arr = tasksByUser.get(uid) ?? []
-      arr.push(task)
-      tasksByUser.set(uid, arr)
+    // Compute charge per job applying per-job discount, then group by user
+    type JobRow = (typeof allJobsThisMonth)[number]
+    type TaskRow = JobRow["tasks"][number]
+
+    function jobCharge(job: JobRow): { apiCost: number; gross: number; discount: number; net: number } {
+      const tasks = job.tasks as BillingTask[]
+      const apiCost = estimateApiCost(tasks)
+      const gross = estimateCharge(tasks)
+      const discount = job.discountPct > 0 ? gross * (job.discountPct / 100) : 0
+      return { apiCost, gross, discount, net: gross - discount }
+    }
+
+    type UserRevenue = { apiCost: number; gross: number; discount: number; net: number }
+    const revenueByUser = new Map<string, UserRevenue>()
+    for (const job of allJobsThisMonth) {
+      const c = jobCharge(job)
+      const prev = revenueByUser.get(job.createdById) ?? { apiCost: 0, gross: 0, discount: 0, net: 0 }
+      revenueByUser.set(job.createdById, {
+        apiCost: prev.apiCost + c.apiCost,
+        gross: prev.gross + c.gross,
+        discount: prev.discount + c.discount,
+        net: prev.net + c.net,
+      })
     }
 
     let totalApiCost = 0
     let totalRevenue = 0
+    let totalDiscount = 0
     type Requester = (typeof allRequesters)[number]
     const activeCustomers = allRequesters.filter((u: Requester) => u.subscriptionStatus === "active").length
 
     const users = allRequesters.map((u: Requester) => {
-      const tasks = tasksByUser.get(u.id) ?? []
-      const apiCost = estimateApiCost(tasks)
-      const charge = estimateCharge(tasks)
-      totalApiCost += apiCost
-      totalRevenue += charge
+      const rev = revenueByUser.get(u.id) ?? { apiCost: 0, gross: 0, discount: 0, net: 0 }
+      totalApiCost += rev.apiCost
+      totalRevenue += rev.net
+      totalDiscount += rev.discount
       return {
         id: u.id,
         name: u.name,
         email: u.email,
         jobsThisMonth: u.translationJobs.length,
-        apiCost: Math.round(apiCost * 10000) / 10000,
-        platformRevenue: Math.round(charge * 100) / 100,
+        apiCost: Math.round(rev.apiCost * 10000) / 10000,
+        grossRevenue: Math.round(rev.gross * 100) / 100,
+        discount: Math.round(rev.discount * 100) / 100,
+        platformRevenue: Math.round(rev.net * 100) / 100,
         cardStatus: u.subscriptionStatus,
         hasCard: u.subscriptionStatus === "active",
       }
@@ -109,6 +137,8 @@ export async function GET() {
       mode: "admin",
       totalApiCost: Math.round(totalApiCost * 100) / 100,
       totalRevenue: Math.round(totalRevenue * 100) / 100,
+      totalDiscount: Math.round(totalDiscount * 100) / 100,
+      grossRevenue: Math.round((totalRevenue + totalDiscount) * 100) / 100,
       grossMarginPct: totalRevenue > 0 ? Math.round(((totalRevenue - totalApiCost) / totalRevenue) * 100) : 0,
       totalJobs,
       activeCustomers,
