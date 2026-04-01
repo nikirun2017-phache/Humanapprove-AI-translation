@@ -198,23 +198,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "File contains no translatable strings" }, { status: 400 })
   }
 
-  // Save files
+  // Attempt to save files to disk as a local backup.
+  // All critical data (source content + units) is also stored in the DB below,
+  // so disk write failures are non-fatal — they just skip the local backup.
   const uploadDir = path.join(process.env.NODE_ENV === "production" ? "/tmp" : process.cwd(), "uploads", "studio")
-  await mkdir(uploadDir, { recursive: true })
-
   const safeBase = `${Date.now()}-${name.replace(/[^a-zA-Z0-9._-]/g, "_")}`
-  const sourceFileName = `${safeBase}-source.${ext}`
-  const unitsFileName = `${safeBase}-units.json`
-
-  const sourceFilePath = path.join(uploadDir, sourceFileName)
-  const unitsFilePath = path.join(uploadDir, unitsFileName)
+  const sourceFilePath = path.join(uploadDir, `${safeBase}-source.${ext}`)
+  const unitsFilePath = path.join(uploadDir, `${safeBase}-units.json`)
 
   const sourceFileContent = Buffer.from(await file.arrayBuffer())
 
-  await Promise.all([
-    writeFile(sourceFilePath, sourceFileContent),
-    writeFile(unitsFilePath, JSON.stringify(units), "utf-8"),
-  ])
+  try {
+    await mkdir(uploadDir, { recursive: true })
+    await Promise.all([
+      writeFile(sourceFilePath, sourceFileContent),
+      writeFile(unitsFilePath, JSON.stringify(units), "utf-8"),
+    ])
+  } catch {
+    // Disk write failed (e.g. read-only filesystem on some Cloud Run instances).
+    // Data is in the DB — this is safe to ignore.
+    console.warn("[jobs] Disk backup write failed — continuing without local file backup")
+  }
 
   // Validate promo code if provided
   let appliedPromoCode: string | null = null

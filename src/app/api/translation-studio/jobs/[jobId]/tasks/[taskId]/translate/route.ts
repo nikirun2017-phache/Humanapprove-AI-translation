@@ -72,6 +72,25 @@ export async function POST(
   if (task.status === "completed" || task.status === "imported") {
     return NextResponse.json({ error: "Task already completed" }, { status: 409 })
   }
+
+  // Per-user concurrency limit: max 3 tasks running simultaneously across all jobs.
+  // Admins are exempt. This prevents a single user from overwhelming AI API rate limits.
+  const MAX_CONCURRENT_PER_USER = 3
+  if (role !== "admin") {
+    const runningCount = await db.translationTask.count({
+      where: {
+        status: "running",
+        job: { createdById: userId },
+      },
+    })
+    if (runningCount >= MAX_CONCURRENT_PER_USER) {
+      return NextResponse.json(
+        { error: `You already have ${runningCount} translations running. Please wait for one to finish before starting another.` },
+        { status: 429 }
+      )
+    }
+  }
+
   if (task.status === "failed") {
     await db.translationTask.update({
       where: { id: taskId },
@@ -329,20 +348,25 @@ export async function POST(
       )
     }
 
-    // Save XLIFF file (local dev only; on Vercel /tmp is ephemeral so we store content in DB)
-    const xliffDir = path.join(process.env.NODE_ENV === "production" ? "/tmp" : process.cwd(), "uploads", "studio")
-    await mkdir(xliffDir, { recursive: true })
-    const xliffFileName = `${jobId}-${task.targetLanguage.replace(/[^a-zA-Z0-9-]/g, "_")}.xliff`
-    const xliffPath = path.join(xliffDir, xliffFileName)
-    await writeFile(xliffPath, xliff, "utf-8")
+    // Attempt to save XLIFF to disk as a local backup.
+    // xliffData in the DB is the authoritative source — disk write failure is non-fatal.
+    let xliffPath = ""
+    try {
+      const xliffDir = path.join(process.env.NODE_ENV === "production" ? "/tmp" : process.cwd(), "uploads", "studio")
+      await mkdir(xliffDir, { recursive: true })
+      xliffPath = path.join(xliffDir, `${jobId}-${task.targetLanguage.replace(/[^a-zA-Z0-9-]/g, "_")}.xliff`)
+      await writeFile(xliffPath, xliff, "utf-8")
+    } catch {
+      console.warn("[translate] Disk XLIFF backup write failed — data is safe in DB")
+    }
 
     await db.translationTask.update({
       where: { id: taskId },
       data: {
         status: "completed",
         completedUnits: units.length,
-        xliffFileUrl: xliffPath,
-        xliffData: xliff, // stored in DB for serverless environments where /tmp is ephemeral
+        xliffFileUrl: xliffPath || null,
+        xliffData: xliff, // always stored in DB — primary source for downloads
       },
     })
 

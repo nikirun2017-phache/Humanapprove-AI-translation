@@ -1403,10 +1403,8 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
         })
 
         const grandTotalRaw = fileRows.reduce((s: number, r: (typeof fileRows)[number]) => s + r.totalFileCost, 0)
-        // Apply minimum job fee: total must be at least $5
-        const grandTotalBeforeDiscount = Math.max(MIN_JOB_FEE, grandTotalRaw)
-        // Compute effective discount pct — scale down if job words exceed the promo's free-word cap
         const totalWords = fileRows.reduce((s: number, r: (typeof fileRows)[number]) => s + r.estimatedWords, 0)
+        // Compute effective discount pct — scale down if job words exceed the promo's free-word cap
         const effectiveDiscountPct = (() => {
           if (!promoState?.valid) return 0
           const { discountPct, maxWordsPerJob } = promoState
@@ -1415,12 +1413,16 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
           }
           return discountPct
         })()
+        // Waive the minimum fee when the promo covers 100% of the variable cost so users
+        // don't pay $5 on a $2 job that was supposed to be "free" with their promo code.
+        const promoCoversAll = effectiveDiscountPct === 100
+        const grandTotalBeforeDiscount = promoCoversAll ? grandTotalRaw : Math.max(MIN_JOB_FEE, grandTotalRaw)
         // Apply promo discount on top of the (post-minimum) total
         const promoDiscount = effectiveDiscountPct > 0 ? grandTotalBeforeDiscount * (effectiveDiscountPct / 100) : 0
-        const grandTotalCharge = grandTotalBeforeDiscount - promoDiscount
+        const grandTotalCharge = Math.max(0, grandTotalBeforeDiscount - promoDiscount)
         // Split into fixed (platform fee) and variable (AI markup) components for transparency
         const totalPlatformFee = fileRows.reduce((s: number, r: (typeof fileRows)[number]) => s + r.estimatedWords * PLATFORM_FEE_PER_WORD * selectedLangs.size, 0)
-        const minFeeApplied = grandTotalBeforeDiscount > grandTotalRaw
+        const minFeeApplied = !promoCoversAll && grandTotalBeforeDiscount > grandTotalRaw
 
         return (
           <div className="space-y-4">
@@ -1494,7 +1496,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                   {minFeeApplied && (
                     <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
                       <span className="shrink-0 mt-0.5">ⓘ</span>
-                      <span>A minimum job fee of {fmt(MIN_JOB_FEE)} applies to this order. Removing files or languages will not reduce the total below this amount.</span>
+                      <span>A {fmt(MIN_JOB_FEE)} minimum applies — your content is small so the minimum job fee is charged instead of the per-word rate. Add more languages or files to get more value from this job.</span>
                     </div>
                   )}
                   {promoState?.valid && (
