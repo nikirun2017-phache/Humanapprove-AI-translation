@@ -1446,7 +1446,15 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-gray-900">{fmt(grandTotalCharge)}</p>
-                  <p className="text-xs text-gray-400">total estimate</p>
+                  {(() => {
+                    const agencyLow  = Math.round(totalWords * selectedLangs.size * 0.10)
+                    const agencyHigh = Math.round(totalWords * selectedLangs.size * 0.15)
+                    return agencyLow >= 10 ? (
+                      <p className="text-xs text-green-600 mt-0.5">
+                        vs. ${agencyLow}–${agencyHigh} with a human agency
+                      </p>
+                    ) : null
+                  })()}
                 </div>
               </div>
 
