@@ -636,6 +636,12 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
 
   return (
     <div>
+      {/* Promo banner — always visible across all steps */}
+      <div className="mb-5 flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3 text-sm text-indigo-800">
+        <span className="shrink-0">🎉</span>
+        <span>Use code <strong className="font-semibold tracking-wide">SPRINT</strong> at checkout for <strong>50% off</strong> your first translation.</span>
+      </div>
+
       {/* Step indicator */}
       <div className="flex items-center gap-2 mb-8">
         {([1, 2, 3] as Step[]).map((s, i) => (

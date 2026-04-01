@@ -56,16 +56,7 @@ export default async function TranslationStudioPage({
           </p>
         </div>
 
-        {/* Promo banner */}
-        <div className="mb-4 flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3 text-sm text-indigo-800">
-          <span className="text-base shrink-0">🎉</span>
-          <span>
-            Use code <strong className="font-semibold tracking-wide">SPRINT</strong> at checkout for{" "}
-            <strong>50% off</strong> your first translation.
-          </span>
-        </div>
-
-        {card_added === "true" && (
+{card_added === "true" && (
           <div className="mb-4 flex gap-2 bg-green-50 border border-green-200 text-green-800 rounded-xl px-4 py-3 text-sm">
             <span>✓</span>
             <span>Payment method saved. You can now start translations.</span>
