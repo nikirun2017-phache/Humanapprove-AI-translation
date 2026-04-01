@@ -26,8 +26,9 @@ ENV NODE_ENV=production
 # Disable Next.js telemetry
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Install fonts for PDF generation (pdfkit needs Unicode fonts for non-Latin scripts)
-RUN apk add --no-cache fontconfig font-noto font-noto-cjk
+# Install Chromium (for Puppeteer PDF generation) and fonts for CJK/Unicode support
+RUN apk add --no-cache chromium fontconfig font-noto font-noto-cjk
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs && \

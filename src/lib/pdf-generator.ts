@@ -1,197 +1,213 @@
-import PDFDocument from "pdfkit"
 import { existsSync } from "fs"
 
-// Find a Unicode-capable TTF font (no TTC — pdfkit cannot subset collections).
-function findFont(preferCjk: boolean): string | null {
-  const cjkCandidates = [
-    // Alpine Linux (after `apk add font-noto-cjk`)
-    "/usr/share/fonts/noto-cjk/NotoSansCJKsc-Regular.otf",
-    "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
-    // macOS
-    "/Library/Fonts/Arial Unicode.ttf",
-    "/System/Library/Fonts/STHeiti Light.ttc",
-  ]
-  const latinCandidates = [
-    // Alpine Linux (after `apk add font-noto`)
-    "/usr/share/fonts/noto/NotoSans-Regular.ttf",
-    "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    // macOS — TTF only, not TTC
-    "/Library/Fonts/Arial Unicode.ttf",
-    "/Library/Fonts/Arial.ttf",
-  ]
-  // For CJK, only search CJK candidates — do NOT fall back to Latin fonts.
-  // pdfkit crashes trying to encode CJK codepoints with a Latin-only font.
-  // If no CJK font is found, return null so pdfkit uses built-in Helvetica
-  // which renders missing chars as boxes rather than throwing.
-  const candidates = preferCjk ? cjkCandidates : latinCandidates
-  // Skip TTC files - pdfkit cannot subset collections
+const IMAGE_PLACEHOLDER = "__IMAGE_PLACEHOLDER__"
+
+function findChromium(): string {
+  const candidates = [
+    process.env.PUPPETEER_EXECUTABLE_PATH,
+    "/usr/bin/chromium-browser",  // Alpine (apk add chromium)
+    "/usr/bin/chromium",
+    "/usr/bin/google-chrome-stable",
+    "/usr/bin/google-chrome",
+  ].filter(Boolean) as string[]
   for (const p of candidates) {
-    if (!p.endsWith(".ttc") && existsSync(p)) return p
+    if (existsSync(p)) return p
   }
-  return null
+  throw new Error(
+    "Chromium not found. Install chromium or set PUPPETEER_EXECUTABLE_PATH."
+  )
 }
 
-// Parse a simplified Markdown string and render it to a PDFDocument.
-// Supports: # h1, ## h2, ### h3, - list items, blank lines between paragraphs.
-function renderMarkdownToPdf(doc: PDFKit.PDFDocument, markdown: string): void {
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+}
+
+/**
+ * Convert a simplified Markdown string to HTML.
+ * Handles: # headings, - lists, | tables, __IMAGE_PLACEHOLDER__ markers.
+ */
+function markdownToHtml(markdown: string): string {
   const lines = markdown.split(/\r?\n/)
-  let i = 0
+  let html = ""
+  let inList = false
 
-  while (i < lines.length) {
-    const line = lines[i]
+  for (const line of lines) {
+    const h3 = line.match(/^### (.+)$/)
+    const h2 = line.match(/^## (.+)$/)
+    const h1 = line.match(/^# (.+)$/)
+    const li = line.match(/^(?:[-*+]|\d+\.)\s+(.+)$/)
 
-    // Headings
-    const h1Match = line.match(/^#\s+(.+)$/)
-    const h2Match = line.match(/^##\s+(.+)$/)
-    const h3Match = line.match(/^###\s+(.+)$/)
-    if (h1Match) {
-      doc.moveDown(0.5).fontSize(16).text(h1Match[1].trim(), { lineGap: 2 })
-      doc.moveDown(0.4)
-      i++; continue
-    }
-    if (h2Match) {
-      doc.moveDown(0.4).fontSize(13).text(h2Match[1].trim(), { lineGap: 2 })
-      doc.moveDown(0.3)
-      i++; continue
-    }
-    if (h3Match) {
-      doc.moveDown(0.3).fontSize(11).text(h3Match[1].trim(), { lineGap: 2 })
-      doc.moveDown(0.2)
-      i++; continue
-    }
-
-    // List item
-    const listMatch = line.match(/^(\s*[-*+]|\s*\d+\.)\s+(.+)$/)
-    if (listMatch) {
-      doc.fontSize(11).text(`• ${listMatch[2].trim()}`, {
-        indent: 12,
-        lineGap: 2,
-        paragraphGap: 3,
-      })
-      i++; continue
-    }
-
-    // Blank line
-    if (!line.trim()) {
-      doc.moveDown(0.4)
-      i++; continue
-    }
-
-    // Table row — render as plain text (simplified)
-    if (line.startsWith("|")) {
+    if (h3) {
+      if (inList) { html += "</ul>\n"; inList = false }
+      html += `<h3>${escapeHtml(h3[1].trim())}</h3>\n`
+    } else if (h2) {
+      if (inList) { html += "</ul>\n"; inList = false }
+      html += `<h2>${escapeHtml(h2[1].trim())}</h2>\n`
+    } else if (h1) {
+      if (inList) { html += "</ul>\n"; inList = false }
+      html += `<h1>${escapeHtml(h1[1].trim())}</h1>\n`
+    } else if (li) {
+      if (!inList) { html += "<ul>\n"; inList = true }
+      html += `<li>${escapeHtml(li[1].trim())}</li>\n`
+    } else if (line.startsWith("|")) {
+      if (inList) { html += "</ul>\n"; inList = false }
       const cells = line.split("|").filter((c) => c.trim() && !c.match(/^[-\s]+$/))
       if (cells.length > 0) {
-        doc.fontSize(10).text(cells.map((c) => c.trim()).join("   "), { lineGap: 2 })
+        html += `<p class="table-row">${cells.map((c) => escapeHtml(c.trim())).join(" &nbsp;·&nbsp; ")}</p>\n`
       }
-      i++; continue
+    } else if (line.trim() === IMAGE_PLACEHOLDER) {
+      if (inList) { html += "</ul>\n"; inList = false }
+      html += `<div class="img-placeholder">📷 Image</div>\n`
+    } else if (!line.trim()) {
+      if (inList) { html += "</ul>\n"; inList = false }
+    } else {
+      if (inList) { html += "</ul>\n"; inList = false }
+      html += `<p>${escapeHtml(line.trim())}</p>\n`
     }
+  }
+  if (inList) html += "</ul>\n"
+  return html
+}
 
-    // Regular paragraph (collect consecutive non-blank, non-special lines)
-    const paraLines: string[] = []
-    while (
-      i < lines.length &&
-      lines[i].trim() !== "" &&
-      !lines[i].match(/^#{1,6}\s/) &&
-      !lines[i].match(/^[-*+]\s/) &&
-      !lines[i].startsWith("|")
-    ) {
-      paraLines.push(lines[i])
-      i++
-    }
-    if (paraLines.length > 0) {
-      doc.fontSize(11).text(paraLines.join(" ").trim(), { lineGap: 3, paragraphGap: 8 })
-    }
+function buildHtml(bodyHtml: string, title: string, targetLanguage: string): string {
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: system-ui, -apple-system, "Noto Sans", "Noto Sans CJK SC",
+               "Noto Sans CJK TC", "Noto Sans CJK JP", "Noto Sans CJK KR",
+               Arial, sans-serif;
+  font-size: 11pt;
+  line-height: 1.65;
+  color: #111827;
+}
+.page { padding: 72px; }
+.doc-header {
+  text-align: center;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.doc-title { font-size: 16pt; font-weight: 600; margin-bottom: 4px; }
+.doc-lang  { font-size: 9pt; color: #6b7280; }
+p  { margin-bottom: 10px; }
+h1 { font-size: 14pt; font-weight: 600; margin: 20px 0 8px; }
+h2 { font-size: 13pt; font-weight: 600; margin: 16px 0 6px; }
+h3 { font-size: 11pt; font-weight: 600; margin: 12px 0 4px; }
+ul { margin: 4px 0 10px 0; padding-left: 20px; }
+li { margin-bottom: 3px; }
+.table-row { font-size: 10pt; margin-bottom: 4px; color: #374151; }
+.img-placeholder {
+  background: #f9fafb;
+  border: 1.5px dashed #d1d5db;
+  border-radius: 6px;
+  padding: 22px 16px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 10pt;
+  margin: 14px 0;
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="doc-header">
+    <div class="doc-title">${escapeHtml(title)}</div>
+    <div class="doc-lang">${escapeHtml(targetLanguage)}</div>
+  </div>
+  ${bodyHtml}
+</div>
+</body>
+</html>`
+}
+
+async function renderHtmlToPdf(html: string): Promise<Buffer> {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const puppeteer = require("puppeteer-core") as typeof import("puppeteer-core")
+  const executablePath = findChromium()
+
+  const browser = await puppeteer.launch({
+    executablePath,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--font-render-hinting=none",
+    ],
+    headless: true,
+  })
+
+  try {
+    const page = await browser.newPage()
+    await page.setContent(html, { waitUntil: "networkidle0", timeout: 30_000 })
+    const pdf = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      // Padding is handled inside the HTML template
+      margin: { top: "0", right: "0", bottom: "0", left: "0" },
+    })
+    return Buffer.from(pdf)
+  } finally {
+    await browser.close()
   }
 }
 
-export function generateTranslatedPdf(
+/**
+ * Generate a translated PDF from a list of paragraphs.
+ * Paragraphs equal to "__IMAGE_PLACEHOLDER__" are rendered as gray image boxes.
+ */
+export async function generateTranslatedPdf(
   paragraphs: string[],
   title: string,
   targetLanguage: string
 ): Promise<Buffer> {
-  const isCjk = /^(zh|ja|ko)/.test(targetLanguage)
-  const fontPath = findFont(isCjk)
-  return buildPdf(fontPath, title, targetLanguage, (doc) => {
-    doc.fontSize(11).fillColor("#111827")
-    for (const para of paragraphs) {
-      if (para.trim()) {
-        doc.text(para, { lineGap: 3, paragraphGap: 8 })
-      }
-    }
-  })
+  const bodyHtml = paragraphs
+    .filter((p) => p.trim())
+    .map((p) =>
+      p === IMAGE_PLACEHOLDER
+        ? `<div class="img-placeholder">📷 Image</div>`
+        : `<p>${escapeHtml(p)}</p>`
+    )
+    .join("\n")
+
+  return renderHtmlToPdf(buildHtml(bodyHtml, title, targetLanguage))
 }
 
-export function generatePdfFromMarkdown(
+/**
+ * Generate a translated PDF from a Markdown string (Claude Vision output).
+ * Handles headings, lists, tables, and __IMAGE_PLACEHOLDER__ markers.
+ */
+export async function generatePdfFromMarkdown(
   markdown: string,
   title: string,
   targetLanguage: string
 ): Promise<Buffer> {
-  const isCjk = /^(zh|ja|ko)/.test(targetLanguage)
-  const fontPath = findFont(isCjk)
-  return buildPdf(fontPath, title, targetLanguage, (doc) => {
-    doc.fillColor("#111827")
-    renderMarkdownToPdf(doc, markdown)
-  })
+  return renderHtmlToPdf(buildHtml(markdownToHtml(markdown), title, targetLanguage))
 }
 
-function buildPdf(
-  fontPath: string | null,
-  title: string,
-  targetLanguage: string,
-  render: (doc: PDFKit.PDFDocument) => void
-): Promise<Buffer> {
-  return buildPdfWithFont(fontPath, title, targetLanguage, render)
-    .catch(() => {
-      // Font failed (e.g. OTF not supported by pdfkit) — retry with built-in Helvetica
-      return buildPdfWithFont(null, title, targetLanguage, render)
-    })
-}
-
-function buildPdfWithFont(
-  fontPath: string | null,
-  title: string,
-  targetLanguage: string,
-  render: (doc: PDFKit.PDFDocument) => void
-): Promise<Buffer> {
-  const doc = new PDFDocument({ size: "A4", margin: 72, info: { Title: title } })
-  const chunks: Buffer[] = []
-  doc.on("data", (c: Buffer) => chunks.push(c))
-
-  const finished = new Promise<Buffer>((resolve, reject) => {
-    doc.on("end", () => resolve(Buffer.concat(chunks)))
-    doc.on("error", reject)
-  })
-
-  try {
-    if (fontPath) {
-      doc.registerFont("body", fontPath)
-      doc.font("body")
-    } else {
-      doc.font("Helvetica")
-    }
-
-    // Document header
-    doc.fontSize(16).text(title, { align: "center" })
-    doc.moveDown(0.4)
-    doc.fontSize(9).fillColor("#6b7280").text(targetLanguage, { align: "center" })
-    doc.moveDown(1.5)
-    doc.moveTo(72, doc.y).lineTo(doc.page.width - 72, doc.y).strokeColor("#e5e7eb").stroke()
-    doc.moveDown(1)
-
-    render(doc)
-  } finally {
-    doc.end()
-  }
-
-  return finished
-}
-
+/**
+ * Generate a plain-text version of the translated content.
+ * Image placeholders are omitted from the .txt output.
+ */
 export function generateTranslatedTxt(
   paragraphs: string[],
   title: string,
   targetLanguage: string
 ): string {
   const header = `${title}\nLanguage: ${targetLanguage}\n${"─".repeat(40)}\n`
-  return header + "\n" + paragraphs.filter((p) => p.trim()).join("\n\n")
+  return (
+    header +
+    "\n" +
+    paragraphs
+      .filter((p) => p.trim() && p !== IMAGE_PLACEHOLDER)
+      .join("\n\n")
+  )
 }

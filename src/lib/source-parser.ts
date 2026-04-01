@@ -13,6 +13,10 @@ export interface SourceUnit {
    *  Each entry is sent to the AI as a separate sub-unit (id__t0, id__t1, …)
    *  so translations can be stitched back into the tag skeleton. */
   textNodes?: string[]
+  /** True for units that represent an image in the source PDF. These are
+   *  never sent to the AI — they are rendered as gray placeholder boxes in
+   *  the translated PDF to indicate where an image appeared in the original. */
+  isImagePlaceholder?: boolean
 }
 
 /**
@@ -269,17 +273,37 @@ function tryPdfplumber(
     const { writeFileSync, readFileSync } = require("fs") as typeof import("fs")
 
     // Output format: first line is "PAGES:<N>", then "---TEXT---", then raw text.
-    // This sidesteps all JSON encoding risks for CJK / special-character PDFs.
+    // Images detected on each page are inserted as __IMAGE_PLACEHOLDER__ markers
+    // at their approximate vertical position (top-half vs bottom-half of page).
     const script = `
 import sys, pdfplumber
+IMAGE_MARKER = "__IMAGE_PLACEHOLDER__"
 with pdfplumber.open(${JSON.stringify(pdfPath)}) as pdf:
-    pages = [page.extract_text() or "" for page in pdf.pages]
+    page_chunks = []
+    for page in pdf.pages:
+        text = page.extract_text() or ""
+        images = [img for img in (page.images or [])
+                  if img.get("width", 0) > 20 and img.get("height", 0) > 20]
+        if not images:
+            page_chunks.append(text)
+            continue
+        # Split images into top-half and bottom-half by vertical position
+        top_imgs = [img for img in images if (img.get("top", 0) / max(page.height, 1)) < 0.5]
+        bot_imgs = [img for img in images if (img.get("top", 0) / max(page.height, 1)) >= 0.5]
+        parts = []
+        for _ in top_imgs:
+            parts.append(IMAGE_MARKER)
+        if text.strip():
+            parts.append(text)
+        for _ in bot_imgs:
+            parts.append(IMAGE_MARKER)
+        page_chunks.append("\\n\\n".join(parts))
     num_pages = len(pdf.pages)
-    text = "\\f".join(pages)
+    full_text = "\\f".join(page_chunks)
 with open(${JSON.stringify(outPath)}, "w", encoding="utf-8", errors="replace") as f:
     f.write("PAGES:" + str(num_pages) + "\\n")
     f.write("---TEXT---\\n")
-    f.write(text)
+    f.write(full_text)
 `
     writeFileSync(pyPath, script, "utf8")
 
@@ -376,6 +400,11 @@ function segmentPdfText(rawText: string): SourceUnit[] {
     .filter(Boolean)
 
   for (const block of blocks) {
+    // Image placeholder — preserve as a special non-translatable unit
+    if (block === "__IMAGE_PLACEHOLDER__") {
+      units.push({ id: `p_${index++}`, sourceText: "__IMAGE_PLACEHOLDER__", isImagePlaceholder: true })
+      continue
+    }
     // Skip pure page numbers (isolated digit(s))
     if (/^\d{1,4}$/.test(block)) continue
     // Skip URLs

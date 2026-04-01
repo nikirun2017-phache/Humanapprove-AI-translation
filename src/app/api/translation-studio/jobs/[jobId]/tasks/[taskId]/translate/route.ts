@@ -229,7 +229,9 @@ export async function POST(
       // dollar signs and other characters that break JSON string escaping.
       // Markdown batches handle these safely — same approach as XLIFF, but the
       // output is built fresh via buildXliffFromTranslations (no source XLIFF to merge into).
-      const pdfMarkdownBatches = buildMarkdownBatches(units)
+      // Skip image placeholder units — they are never sent to the AI
+      const translatableUnits = units.filter((u: (typeof units)[number]) => !u.isImagePlaceholder)
+      const pdfMarkdownBatches = buildMarkdownBatches(translatableUnits)
       const pdfTranslationMap = new Map<string, string>()
 
       for (const { markdown, indexToId } of pdfMarkdownBatches) {
@@ -255,8 +257,8 @@ export async function POST(
         })
       }
 
-      // Gap-fill: re-send any units the AI skipped
-      const pdfMissingUnits = units.filter((u: (typeof units)[number]) => !pdfTranslationMap.has(u.id))
+      // Gap-fill: re-send any translatable units the AI skipped (never placeholders)
+      const pdfMissingUnits = units.filter((u: (typeof units)[number]) => !u.isImagePlaceholder && !pdfTranslationMap.has(u.id))
       if (pdfMissingUnits.length > 0) {
         const gapBatches = buildMarkdownBatches(pdfMissingUnits)
         for (const { markdown: gapMd, indexToId: gapIdx } of gapBatches) {
@@ -279,7 +281,9 @@ export async function POST(
 
       const allTranslatedPdf = units.map((u: (typeof units)[number]) => ({
         id: u.id,
-        translatedText: pdfTranslationMap.get(u.id) ?? "",
+        // Placeholder units carry their marker through as targetText so the
+        // download route can render them as image boxes in the translated PDF.
+        translatedText: u.isImagePlaceholder ? "__IMAGE_PLACEHOLDER__" : pdfTranslationMap.get(u.id) ?? "",
       }))
       xliff = buildXliffFromTranslations(units, allTranslatedPdf, job.sourceLanguage, task.targetLanguage, job.name)
 

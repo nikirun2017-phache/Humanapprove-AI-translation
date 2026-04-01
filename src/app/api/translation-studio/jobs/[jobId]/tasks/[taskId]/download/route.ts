@@ -48,11 +48,14 @@ export async function GET(
       })
     }
 
-    // Extract translated paragraphs from the XLIFF
+    // Extract translated paragraphs from the XLIFF, preserving image placeholders
     const parsed = parseXliff(xliff)
     const paragraphs = parsed.units
-      .filter((u: (typeof parsed.units)[number]) => u.targetText?.trim())
-      .map((u: (typeof parsed.units)[number]) => u.targetText)
+      .map((u: (typeof parsed.units)[number]) => {
+        if (u.targetText === "__IMAGE_PLACEHOLDER__") return "__IMAGE_PLACEHOLDER__"
+        return u.targetText?.trim() ? u.targetText : null
+      })
+      .filter(Boolean) as string[]
 
     if (format === "txt") {
       const txt = generateTranslatedTxt(paragraphs, job.name, task.targetLanguage)
