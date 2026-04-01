@@ -13,25 +13,34 @@ import type { SourceUnit } from "@/lib/source-parser"
 import type { ProviderName, GlossaryTerm } from "@/lib/ai-providers/types"
 import { sendJobCompleteEmail } from "@/lib/email"
 
-export const maxDuration = 300 // 5 min timeout for long translation jobs
+export const maxDuration = 600 // 10 min timeout — large jobs + rate-limit retries
 
 const RETRYABLE_STATUSES = [429, 500, 503, 529]
-const RETRY_DELAYS_MS = [3000, 8000, 20000] // 3 attempts after first failure
+// Rate-limit delays: 429 / "rate limit" / "overload" get a 65s pause (Claude
+// quota windows are typically 60 s). Other transient errors (500/503) get a
+// shorter exponential back-off. Total max wait: ~3 attempts × 65 s = ~3 min.
+const RATE_LIMIT_DELAYS_MS = [15000, 40000, 65000]
+const TRANSIENT_DELAYS_MS  = [3000,  8000,  20000]
 
 async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   let lastError: Error = new Error("Unknown error")
-  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+  for (let attempt = 0; attempt <= RATE_LIMIT_DELAYS_MS.length; attempt++) {
     try {
       return await fn()
     } catch (err) {
       lastError = err as Error
       const statusMatch = lastError.message.match(/error (\d{3})/)
       const status = statusMatch ? parseInt(statusMatch[1]) : 0
-      const isRetryable = RETRYABLE_STATUSES.includes(status) ||
-        lastError.message.toLowerCase().includes("overload") ||
-        lastError.message.toLowerCase().includes("rate limit")
-      if (!isRetryable || attempt === RETRY_DELAYS_MS.length) break
-      await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]))
+      const isRateLimit = status === 429 ||
+        lastError.message.toLowerCase().includes("rate limit") ||
+        lastError.message.toLowerCase().includes("overload")
+      const isTransient = RETRYABLE_STATUSES.includes(status) || isRateLimit
+      if (!isTransient || attempt === RATE_LIMIT_DELAYS_MS.length) break
+      const delay = isRateLimit
+        ? RATE_LIMIT_DELAYS_MS[attempt]
+        : TRANSIENT_DELAYS_MS[attempt]
+      console.warn(`[translate] retry ${attempt + 1} after ${delay}ms — ${lastError.message.slice(0, 120)}`)
+      await new Promise((r) => setTimeout(r, delay))
     }
   }
   throw lastError
