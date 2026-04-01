@@ -141,6 +141,19 @@ function buildPdf(
   targetLanguage: string,
   render: (doc: PDFKit.PDFDocument) => void
 ): Promise<Buffer> {
+  return buildPdfWithFont(fontPath, title, targetLanguage, render)
+    .catch(() => {
+      // Font failed (e.g. OTF not supported by pdfkit) — retry with built-in Helvetica
+      return buildPdfWithFont(null, title, targetLanguage, render)
+    })
+}
+
+function buildPdfWithFont(
+  fontPath: string | null,
+  title: string,
+  targetLanguage: string,
+  render: (doc: PDFKit.PDFDocument) => void
+): Promise<Buffer> {
   const doc = new PDFDocument({ size: "A4", margin: 72, info: { Title: title } })
   const chunks: Buffer[] = []
   doc.on("data", (c: Buffer) => chunks.push(c))

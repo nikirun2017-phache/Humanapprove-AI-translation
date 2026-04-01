@@ -180,7 +180,9 @@ with open(${JSON.stringify(tmpOut)}, "w", encoding="utf-8", errors="replace") as
         : Math.max(1, Math.ceil(wordCount / 80))  // Latin
 
     // Run the full parsePdfSource pipeline (including Claude Vision for scanned PDFs)
-    // and cache the resulting units so job creation can skip re-parsing.
+    // and cache the resulting units in the DB so job creation can skip re-parsing.
+    // DB cache is instance-agnostic — works even when Cloud Run routes requests to
+    // different container instances (filesystem /tmp is not shared across instances).
     let cacheKey: string | null = null
     try {
       let anthropicKey = ""
@@ -189,7 +191,14 @@ with open(${JSON.stringify(tmpOut)}, "w", encoding="utf-8", errors="replace") as
 
       const pdfResult = await parsePdfSource(buffer, anthropicKey || undefined)
       const cacheData: PdfParseResult = { units: pdfResult.units, sourceMarkdown: pdfResult.sourceMarkdown }
-      writeFileSync(cacheFile, JSON.stringify(cacheData), "utf8")
+      // Store in DB (falls back to filesystem for local dev)
+      await db.systemSetting.upsert({
+        where: { key: `pdf_probe_${id}` },
+        create: { key: `pdf_probe_${id}`, value: JSON.stringify(cacheData) },
+        update: { value: JSON.stringify(cacheData) },
+      })
+      // Also write to filesystem as fallback for local dev
+      try { writeFileSync(cacheFile, JSON.stringify(cacheData), "utf8") } catch { /* ignore */ }
       cacheKey = id
     } catch {
       // Cache population failed (e.g. no API key for scanned PDF) — job creation

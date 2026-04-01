@@ -125,6 +125,27 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // Filesystem cache miss — try DB cache (works across Cloud Run instances)
+      if (!loadedFromCache && pdfCacheKey && /^[0-9a-f]{16}$/.test(pdfCacheKey)) {
+        try {
+          const dbCache = await db.systemSetting.findUnique({ where: { key: `pdf_probe_${pdfCacheKey}` } })
+          if (dbCache) {
+            const cacheData = JSON.parse(dbCache.value) as PdfParseResult | SourceUnit[]
+            if (Array.isArray(cacheData)) {
+              units = cacheData
+            } else {
+              units = cacheData.units
+              pdfSourceMarkdown = cacheData.sourceMarkdown
+            }
+            // Clean up after reading
+            await db.systemSetting.deleteMany({ where: { key: `pdf_probe_${pdfCacheKey}` } }).catch(() => {})
+            loadedFromCache = true
+          }
+        } catch {
+          // DB cache read failed — fall through to re-parse
+        }
+      }
+
       if (!loadedFromCache) {
         // Resolve Anthropic API key — only needed as fallback for scanned PDFs.
         // Text-based PDFs are extracted directly (free, no API key required).
