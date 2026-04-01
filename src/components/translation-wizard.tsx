@@ -197,6 +197,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
   const [prAnalyzing, setPrAnalyzing] = useState(false)
   const [prAnalysis, setPrAnalysis] = useState<GithubPrAnalysis | null>(null)
   const [prError, setPrError] = useState("")
+  const [selectedPrFiles, setSelectedPrFiles] = useState<Set<string>>(new Set())
   // Stored for write-back: keyed by synthetic file key → original GH path
   const [githubFileMeta, setGithubFileMeta] = useState<Map<string, { prUrl: string; branch: string; sourcePath: string }>>(new Map())
 
@@ -478,6 +479,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
         return
       }
       setPrAnalysis(data)
+      setSelectedPrFiles(new Set(data.files.map((f: GithubPrFile) => f.path)))
       if (data.message) setPrError(data.message)
     } catch {
       setPrError("Network error — could not reach GitHub API.")
@@ -491,7 +493,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     const newFiles: File[] = []
     const newMeta = new Map(githubFileMeta)
 
-    for (const f of prAnalysis.files) {
+    for (const f of prAnalysis.files.filter((f: GithubPrFile) => selectedPrFiles.has(f.path))) {
       const blob = new Blob([f.content], { type: "text/plain" })
       const filename = f.path.split("/").pop() ?? f.path
       const file = new File([blob], filename, { type: "text/plain" })
@@ -741,19 +743,40 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                   </div>
 
                   {/* File table */}
-                  {prAnalysis.files.length > 0 && (
+                  {prAnalysis.files.length > 0 && (() => {
+                    const selFiles = prAnalysis.files.filter((f: GithubPrFile) => selectedPrFiles.has(f.path))
+                    const selUnits = selFiles.reduce((s: number, f: GithubPrFile) => s + f.unitCount, 0)
+                    const selWords = selFiles.reduce((s: number, f: GithubPrFile) => s + f.wordCount, 0)
+                    const allChecked = prAnalysis.files.every((f: GithubPrFile) => selectedPrFiles.has(f.path))
+                    return (
                     <div className="border border-gray-200 rounded-lg overflow-hidden">
                       <table className="w-full text-sm">
                         <thead className="bg-gray-50 border-b border-gray-200">
                           <tr>
+                            <th className="px-3 py-2">
+                              <input type="checkbox" checked={allChecked}
+                                onChange={() => setSelectedPrFiles(allChecked ? new Set() : new Set(prAnalysis.files.map((f: GithubPrFile) => f.path)))}
+                                className="rounded border-gray-300 text-indigo-600 cursor-pointer" />
+                            </th>
                             <th className="text-left px-4 py-2 text-xs font-medium text-gray-500">File</th>
                             <th className="text-right px-4 py-2 text-xs font-medium text-gray-500">Strings</th>
                             <th className="text-right px-4 py-2 text-xs font-medium text-gray-500">Words</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                          {prAnalysis.files.map((f: GithubPrFile) => (
-                            <tr key={f.path}>
+                          {prAnalysis.files.map((f: GithubPrFile) => {
+                            const checked = selectedPrFiles.has(f.path)
+                            return (
+                            <tr key={f.path} className={checked ? "" : "opacity-40"}>
+                              <td className="px-3 py-2">
+                                <input type="checkbox" checked={checked}
+                                  onChange={() => {
+                                    const next = new Set(selectedPrFiles)
+                                    checked ? next.delete(f.path) : next.add(f.path)
+                                    setSelectedPrFiles(next)
+                                  }}
+                                  className="rounded border-gray-300 text-indigo-600 cursor-pointer" />
+                              </td>
                               <td className="px-4 py-2 font-mono text-xs text-gray-700 truncate max-w-xs">
                                 <span className="text-gray-400 mr-1.5 bg-gray-100 px-1 rounded">.{f.ext}</span>
                                 {f.path}
@@ -761,16 +784,17 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                               <td className="px-4 py-2 text-right text-gray-600">{f.unitCount.toLocaleString()}</td>
                               <td className="px-4 py-2 text-right text-gray-600">{f.wordCount.toLocaleString()}</td>
                             </tr>
-                          ))}
+                          )})}
                           <tr className="bg-gray-50 font-medium">
-                            <td className="px-4 py-2 text-xs text-gray-700">Total</td>
-                            <td className="px-4 py-2 text-right text-gray-900">{prAnalysis.totalUnits.toLocaleString()}</td>
-                            <td className="px-4 py-2 text-right text-gray-900">{prAnalysis.totalWordCount.toLocaleString()}</td>
+                            <td className="px-3 py-2" />
+                            <td className="px-4 py-2 text-xs text-gray-700">Selected</td>
+                            <td className="px-4 py-2 text-right text-gray-900">{selUnits.toLocaleString()}</td>
+                            <td className="px-4 py-2 text-right text-gray-900">{selWords.toLocaleString()}</td>
                           </tr>
                         </tbody>
                       </table>
                     </div>
-                  )}
+                  )})()}
 
                   {/* Skipped files */}
                   {prAnalysis.skippedFiles.length > 0 && (
@@ -792,12 +816,24 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                   )}
 
                   {prAnalysis.files.length > 0 && (
-                    <button
-                      onClick={usePrFiles}
-                      className="w-full px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-                    >
-                      Use these {prAnalysis.files.length} file{prAnalysis.files.length !== 1 ? "s" : ""} →
-                    </button>
+                    <>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-xs text-blue-800 space-y-1">
+                        <p className="font-medium">What happens next</p>
+                        <ol className="list-decimal pl-4 space-y-1 text-blue-700">
+                          <li>Select the files you want to translate using the checkboxes above.</li>
+                          <li>Click the button below — selected files load into the wizard.</li>
+                          <li>Pick your target languages and confirm the job.</li>
+                          <li>Once complete, translated files are pushed back to the PR branch automatically.</li>
+                        </ol>
+                      </div>
+                      <button
+                        onClick={usePrFiles}
+                        disabled={selectedPrFiles.size === 0}
+                        className="w-full px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+                      >
+                        Use {selectedPrFiles.size} selected file{selectedPrFiles.size !== 1 ? "s" : ""} →
+                      </button>
+                    </>
                   )}
                 </div>
               )}
@@ -1456,7 +1492,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                     const agencyLow  = Math.round(totalWords * selectedLangs.size * 0.10)
                     const agencyHigh = Math.round(totalWords * selectedLangs.size * 0.15)
                     return agencyLow >= 10 ? (
-                      <p className="text-xs text-green-600 mt-0.5">
+                      <p className="text-xs text-gray-400 mt-0.5">
                         vs. ${agencyLow}–${agencyHigh} with a human agency
                       </p>
                     ) : null

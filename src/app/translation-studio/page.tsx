@@ -52,7 +52,7 @@ export default async function TranslationStudioPage({
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Translation Studio</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            Upload a file, pick your languages, and get AI-translated files ready to download or review.
+            Upload a file, pick your languages, and get AI-translated files ready to download.
           </p>
         </div>
 
