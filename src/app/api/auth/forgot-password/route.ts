@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 
   await db.passwordResetToken.create({ data: { email: normalised, token, expires } })
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.jendee.ai"
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL ?? "https://app.jendee.ai"
   const resetUrl = `${appUrl}/reset-password?token=${token}`
   await sendPasswordResetEmail(normalised, resetUrl)
 

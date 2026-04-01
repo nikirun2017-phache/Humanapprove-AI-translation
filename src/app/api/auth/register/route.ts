@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   await db.verificationToken.create({ data: { identifier: cleanEmail, token, expires } })
 
   // Send verification email (fire-and-forget — failure must not block registration)
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.jendee.ai"
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL ?? "https://app.jendee.ai"
   void sendVerificationEmail(cleanEmail, `${appUrl}/api/auth/verify-email?token=${token}`)
 
   return NextResponse.json({ ok: true, requiresVerification: true }, { status: 201 })

@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   const expires = new Date(Date.now() + 24 * 60 * 60 * 1000)
   await db.verificationToken.create({ data: { identifier: normalised, token, expires } })
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.jendee.ai"
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL ?? "https://app.jendee.ai"
   await sendVerificationEmail(normalised, `${appUrl}/api/auth/verify-email?token=${token}`)
 
   return NextResponse.json({ ok: true })

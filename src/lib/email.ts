@@ -11,7 +11,7 @@
  */
 
 const RESEND_API = "https://api.resend.com/emails"
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.jendee.ai"
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL ?? "https://app.jendee.ai"
 
 function from(): string {
   return process.env.RESEND_FROM ?? "Jendee AI <noreply@jendee.ai>"
