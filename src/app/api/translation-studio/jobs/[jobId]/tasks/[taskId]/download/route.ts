@@ -4,6 +4,11 @@ import { db } from "@/lib/db"
 import { readFile } from "fs/promises"
 import { parseXliff } from "@/lib/xliff-parser"
 import { generateTranslatedPdf, generateTranslatedTxt, generatePdfFromMarkdown } from "@/lib/pdf-generator"
+import {
+  exportAsStrings, exportAsStringsDict, exportAsXcstrings,
+  exportAsPo, exportAsAndroidXml, exportAsArb, exportAsProperties,
+  formatMimeType,
+} from "@/lib/original-format-exporter"
 
 export async function GET(
   req: NextRequest,
@@ -159,6 +164,43 @@ export async function GET(
       headers: {
         "Content-Type": "text/markdown; charset=utf-8",
         "Content-Disposition": `attachment; filename="${safeName}.md"`,
+      },
+    })
+  }
+
+  // ── Localisation resource formats ────────────────────────────────────────────
+  const RESOURCE_FORMATS = new Set(["strings","stringsdict","xcstrings","po","xml","arb","properties"])
+  if (RESOURCE_FORMATS.has(fmt)) {
+    const [xliffContent, sourceContent] = await Promise.all([
+      task.xliffData ? Promise.resolve(task.xliffData) : readFile(task.xliffFileUrl!, "utf-8"),
+      job.sourceData ? Promise.resolve(job.sourceData) : readFile(job.sourceFileUrl, "utf-8"),
+    ])
+    const parsedXliff = parseXliff(xliffContent)
+    const units = parsedXliff.units
+      .filter((u: (typeof parsedXliff.units)[number]) => u.targetText?.trim())
+      .map((u: (typeof parsedXliff.units)[number]) => ({
+        id: u.id,
+        sourceText: u.sourceText ?? "",
+        translatedText: u.targetText,
+      }))
+
+    let body: string
+    switch (fmt) {
+      case "strings":     body = exportAsStrings(units); break
+      case "stringsdict": body = exportAsStringsDict(units); break
+      case "xcstrings":   body = exportAsXcstrings(units, sourceContent, task.targetLanguage); break
+      case "po":          body = exportAsPo(units, task.targetLanguage); break
+      case "xml":         body = exportAsAndroidXml(units); break
+      case "arb":         body = exportAsArb(units, sourceContent, task.targetLanguage); break
+      case "properties":  body = exportAsProperties(units); break
+      default:            body = units.map(u => u.translatedText).join("\n")
+    }
+
+    const mime = formatMimeType(fmt)
+    return new NextResponse(body, {
+      headers: {
+        "Content-Type": `${mime}; charset=utf-8`,
+        "Content-Disposition": `attachment; filename="${safeName}.${fmt}"`,
       },
     })
   }

@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { parseJsonSource, parseCsvSource, parseMarkdownSource } from "@/lib/source-parser"
-import { parseXliffSource } from "@/lib/source-parser"
+import { parseJsonSource, parseCsvSource, parseMarkdownSource, parseXliffSource, parseStringsSource, parseStringsDictSource, parseXcstringsSource, parsePoSource, parseAndroidXmlSource, parseArbSource, parsePropertiesSource } from "@/lib/source-parser"
 
-const SUPPORTED_EXTS = new Set(["json", "csv", "md", "xliff", "xlf"])
+const SUPPORTED_EXTS = new Set(["json","csv","md","xliff","xlf","strings","stringsdict","xcstrings","po","xml","arb","properties"])
 
 /** Parse a GitHub PR URL and return owner, repo, prNumber */
 function parsePrUrl(url: string): { owner: string; repo: string; prNumber: number } | null {
@@ -155,16 +154,34 @@ export async function POST(req: NextRequest) {
 
         if (ext === "json") {
           const units = parseJsonSource(content)
-          unitCount = units.length
-          wordCount = countWords(units)
+          unitCount = units.length; wordCount = countWords(units)
         } else if (ext === "csv") {
           const units = parseCsvSource(content)
-          unitCount = units.length
-          wordCount = countWords(units)
+          unitCount = units.length; wordCount = countWords(units)
         } else if (ext === "md") {
           const units = parseMarkdownSource(content)
-          unitCount = units.length
-          wordCount = countWords(units)
+          unitCount = units.length; wordCount = countWords(units)
+        } else if (ext === "strings") {
+          const units = parseStringsSource(content)
+          unitCount = units.length; wordCount = countWords(units)
+        } else if (ext === "stringsdict") {
+          const units = parseStringsDictSource(content)
+          unitCount = units.length; wordCount = countWords(units)
+        } else if (ext === "xcstrings") {
+          const units = parseXcstringsSource(content)
+          unitCount = units.length; wordCount = countWords(units)
+        } else if (ext === "po") {
+          const units = parsePoSource(content)
+          unitCount = units.length; wordCount = countWords(units)
+        } else if (ext === "xml") {
+          const units = parseAndroidXmlSource(content)
+          unitCount = units.length; wordCount = countWords(units)
+        } else if (ext === "arb") {
+          const units = parseArbSource(content)
+          unitCount = units.length; wordCount = countWords(units)
+        } else if (ext === "properties") {
+          const units = parsePropertiesSource(content)
+          unitCount = units.length; wordCount = countWords(units)
         } else if (ext === "xliff" || ext === "xlf") {
           const result = parseXliffSource(content)
           unitCount = result.units.length

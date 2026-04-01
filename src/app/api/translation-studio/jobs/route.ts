@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { parseJsonSource, parseCsvSource, parseMarkdownSource, parseTxtSource, parsePdfSource, parseXliffSource, type SourceUnit, type PdfParseResult } from "@/lib/source-parser"
+import { parseJsonSource, parseCsvSource, parseMarkdownSource, parseTxtSource, parsePdfSource, parseXliffSource, parseStringsSource, parseStringsDictSource, parseXcstringsSource, parsePoSource, parseAndroidXmlSource, parseArbSource, parsePropertiesSource, type SourceUnit, type PdfParseResult } from "@/lib/source-parser"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
 
@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
   const MAX_TEXT_BYTES = 5 * 1024 * 1024
   const rawExtCheck = file.name.split(".").pop()?.toLowerCase()
   const maxBytes = rawExtCheck === "pdf" ? MAX_PDF_BYTES : MAX_TEXT_BYTES
+
   if (file.size > maxBytes) {
     const limitMb = maxBytes / 1024 / 1024
     return NextResponse.json({ error: `File exceeds the ${limitMb} MB size limit` }, { status: 413 })
@@ -77,8 +78,9 @@ export async function POST(req: NextRequest) {
   }
 
   const rawExt = file.name.split(".").pop()?.toLowerCase()
-  if (rawExt !== "json" && rawExt !== "csv" && rawExt !== "md" && rawExt !== "txt" && rawExt !== "pdf" && rawExt !== "xliff" && rawExt !== "xlf") {
-    return NextResponse.json({ error: "Only .json, .csv, .md, .txt, .pdf, .xliff, or .xlf files are accepted" }, { status: 400 })
+  const ALLOWED_EXTS = new Set(["json","csv","md","txt","pdf","xliff","xlf","strings","stringsdict","xcstrings","po","xml","arb","properties"])
+  if (!rawExt || !ALLOWED_EXTS.has(rawExt)) {
+    return NextResponse.json({ error: "Unsupported file type. Accepted: .json, .csv, .md, .txt, .pdf, .xliff, .xlf, .strings, .stringsdict, .xcstrings, .po, .xml, .arb, .properties" }, { status: 400 })
   }
   // Normalise .xlf → xliff so sourceFormat is consistent throughout
   const ext = rawExt === "xlf" ? "xliff" : rawExt
@@ -172,10 +174,20 @@ export async function POST(req: NextRequest) {
       }
     } else {
       const content = await file.text()
-      units = ext === "json" ? parseJsonSource(content)
-            : ext === "md"   ? parseMarkdownSource(content)
-            : ext === "txt"  ? parseTxtSource(content)
-            : parseCsvSource(content)
+      switch (ext) {
+        case "json":        units = parseJsonSource(content); break
+        case "md":          units = parseMarkdownSource(content); break
+        case "txt":         units = parseTxtSource(content); break
+        case "csv":         units = parseCsvSource(content); break
+        case "strings":     units = parseStringsSource(content); break
+        case "stringsdict": units = parseStringsDictSource(content); break
+        case "xcstrings":   units = parseXcstringsSource(content); break
+        case "po":          units = parsePoSource(content); break
+        case "xml":         units = parseAndroidXmlSource(content); break
+        case "arb":         units = parseArbSource(content); break
+        case "properties":  units = parsePropertiesSource(content); break
+        default:            units = parseCsvSource(content)
+      }
     }
   } catch (err) {
     return NextResponse.json({ error: `Failed to parse file: ${(err as Error).message}` }, { status: 400 })
@@ -251,7 +263,7 @@ export async function POST(req: NextRequest) {
         unitsData: JSON.stringify(units),
         // Store text-based source content in DB for serverless access (XLIFF, markdown, etc.)
         // For scanned PDFs (Claude Vision path), store the extracted Markdown for formatted reconstruction.
-        sourceData: ext !== "pdf" ? sourceFileContent.toString("utf-8") : pdfSourceMarkdown,
+        sourceData: ext === "pdf" ? pdfSourceMarkdown : sourceFileContent.toString("utf-8"),
         sourceFormat: ext,
         sourceLanguage,
         provider,

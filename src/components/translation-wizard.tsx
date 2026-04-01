@@ -55,7 +55,68 @@ function fileTypeLabel(name: string) {
   if (name.endsWith(".md")) return "MD"
   if (name.endsWith(".txt")) return "TXT"
   if (name.endsWith(".xliff") || name.endsWith(".xlf")) return "XLIFF"
+  if (name.endsWith(".strings")) return ".strings"
+  if (name.endsWith(".stringsdict")) return ".stringsdict"
+  if (name.endsWith(".xcstrings")) return ".xcstrings"
+  if (name.endsWith(".po")) return ".po"
+  if (name.endsWith(".xml")) return "Android XML"
+  if (name.endsWith(".arb")) return ".arb"
+  if (name.endsWith(".properties")) return ".properties"
   return "file"
+}
+
+/** Returns true for file types that are localisation resource formats (key=value pairs) */
+function isResourceFormat(name: string): boolean {
+  return /\.(strings|stringsdict|xcstrings|po|xml|arb|properties)$/i.test(name)
+}
+
+/** Quick client-side preview parser for resource formats — extracts first 10 translatable strings */
+function parseResourcePreview(content: string, filename: string): SourceUnit[] {
+  const units: SourceUnit[] = []
+  try {
+    if (filename.endsWith(".strings")) {
+      const re = /"((?:[^"\\]|\\.)*)"\s*=\s*"((?:[^"\\]|\\.)*)"\s*;/g
+      let m: RegExpExecArray | null
+      while ((m = re.exec(content)) !== null && units.length < 10) {
+        const text = m[2].replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\"/g, '"')
+        if (text.trim()) units.push({ id: m[1], sourceText: text })
+      }
+    } else if (filename.endsWith(".stringsdict") || filename.endsWith(".xml")) {
+      // Show value content between tags as preview
+      const re = /<string[^>]*>([^<]{3,})<\/string>|<item[^>]*>([^<]{3,})<\/item>/g
+      let m: RegExpExecArray | null
+      while ((m = re.exec(content)) !== null && units.length < 10) {
+        const text = (m[1] ?? m[2]).trim()
+        if (text) units.push({ id: `preview_${units.length}`, sourceText: text })
+      }
+    } else if (filename.endsWith(".xcstrings") || filename.endsWith(".arb")) {
+      const parsed = JSON.parse(content) as Record<string, unknown>
+      for (const [key, val] of Object.entries(parsed)) {
+        if (key.startsWith("@")) continue
+        if (typeof val === "string" && val.trim()) {
+          units.push({ id: key, sourceText: val })
+          if (units.length >= 10) break
+        }
+      }
+    } else if (filename.endsWith(".po")) {
+      const re = /msgid\s+"((?:[^"\\]|\\.)*)"/g
+      let m: RegExpExecArray | null
+      while ((m = re.exec(content)) !== null && units.length < 10) {
+        const text = m[1].replace(/\\n/g, "\n").replace(/\\"/g, '"')
+        if (text.trim()) units.push({ id: `po_${units.length}`, sourceText: text })
+      }
+    } else if (filename.endsWith(".properties")) {
+      for (const line of content.split(/\r?\n/)) {
+        if (!line.trim() || /^\s*[#!]/.test(line)) continue
+        const match = line.match(/^\s*([\w.\-/\\]+)\s*[=:]\s*(.+)$/)
+        if (match && match[2].trim()) {
+          units.push({ id: match[1], sourceText: match[2].replace(/\\n/g, "\n") })
+          if (units.length >= 10) break
+        }
+      }
+    }
+  } catch { /* ignore parse errors in preview */ }
+  return units
 }
 
 /** Client-side XLIFF metadata extraction — regex-based, no full parse needed */
@@ -277,6 +338,9 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
               }
               resolve({ key, file: f, preview: sourceTexts, parseError: "", xliffMeta: meta })
             }
+          } else if (isResourceFormat(f.name)) {
+            const units = parseResourcePreview(content, f.name)
+            resolve({ key, file: f, preview: units, parseError: "" })
           } else {
             let units: SourceUnit[]
             if (f.name.endsWith(".json")) {
@@ -289,7 +353,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             resolve({ key, file: f, preview: units, parseError: "" })
           }
         } catch {
-          resolve({ key, file: f, preview: [], parseError: "Couldn't read this file. Check that it's a valid JSON, CSV, MD, TXT, or XLIFF." })
+          resolve({ key, file: f, preview: [], parseError: "Couldn't read this file. Check that it's a valid format." })
         }
       }
       reader.readAsText(f)
@@ -309,13 +373,20 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
   }
 
   const FILE_SIZE_LIMITS: Record<string, number> = {
-    pdf:   50 * 1024 * 1024,  // 50 MB — scanned/image PDFs are large
-    json:   5 * 1024 * 1024,  // 5 MB
-    csv:    5 * 1024 * 1024,
-    md:     5 * 1024 * 1024,
-    txt:    5 * 1024 * 1024,
-    xliff:  5 * 1024 * 1024,
-    xlf:    5 * 1024 * 1024,
+    pdf:         50 * 1024 * 1024,  // 50 MB — scanned/image PDFs are large
+    json:         5 * 1024 * 1024,
+    csv:          5 * 1024 * 1024,
+    md:           5 * 1024 * 1024,
+    txt:          5 * 1024 * 1024,
+    xliff:        5 * 1024 * 1024,
+    xlf:          5 * 1024 * 1024,
+    strings:      5 * 1024 * 1024,
+    stringsdict:  5 * 1024 * 1024,
+    xcstrings:    5 * 1024 * 1024,
+    po:           5 * 1024 * 1024,
+    xml:          5 * 1024 * 1024,
+    arb:          5 * 1024 * 1024,
+    properties:   5 * 1024 * 1024,
   }
 
   function fileSizeError(f: File): string | null {
@@ -349,7 +420,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     setEntries((prev) => {
       const next = [...prev, ...parsed]
       if (!jobName && next.length > 0) {
-        setJobName(next[0].file.name.replace(/\.(json|csv|md|txt|pdf|xliff)$/i, ""))
+        setJobName(next[0].file.name.replace(/\.(json|csv|md|txt|pdf|xliff|xlf|strings|stringsdict|xcstrings|po|xml|arb|properties)$/i, ""))
       }
       return next
     })
@@ -739,7 +810,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             <input
               id="file-input"
               type="file"
-              accept=".json,.csv,.md,.txt,.pdf,.xliff,.xlf"
+              accept=".json,.csv,.md,.txt,.pdf,.xliff,.xlf,.strings,.stringsdict,.xcstrings,.po,.xml,.arb,.properties"
               multiple
               className="hidden"
               onChange={handleInputChange}
@@ -747,7 +818,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             <p className="text-gray-500">
               Drop files here or click to browse
             </p>
-            <p className="text-xs text-gray-400 mt-1">JSON, CSV, Markdown, TXT, PDF, XLIFF · Multiple files OK — each runs as its own job</p>
+            <p className="text-xs text-gray-400 mt-1">JSON · CSV · Markdown · TXT · PDF · XLIFF · .strings · .po · Android XML · .arb · .properties · Multiple files OK</p>
           </div>
 
           {/* File list */}
@@ -835,7 +906,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                               : `Text PDF — ${probe.wordCount.toLocaleString()} words detected`}
                           </p>
                           <p className="text-xs text-gray-400 mt-0.5">
-                            Delivers .xliff + .txt — original layout is not preserved
+                            Delivers .xliff · .txt · .pdf — original layout is approximated
                           </p>
                         </>
                       )}
@@ -1434,7 +1505,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                   )}
                   {fileRows.some((r: (typeof fileRows)[number]) => r.isPdf) && (
                     <p className="text-xs text-gray-400">
-                      PDF: delivered as .xliff for review and .txt for immediate use. Original layout is not preserved.
+                      PDF: delivered as .xliff (bilingual), .txt, and .pdf. Original layout is approximated.
                     </p>
                   )}
                 </div>

@@ -728,6 +728,297 @@ export function parseTxtSource(content: string): SourceUnit[] {
   return units
 }
 
+// ── .strings (Apple iOS / macOS) ─────────────────────────────────────────────
+
+/**
+ * Parse a .strings file into translation units.
+ * Format: "key" = "value"; — supports escaped quotes and standard escape sequences.
+ * Comments (/* ... *\/ and // ...) and blank lines are ignored.
+ */
+export function parseStringsSource(content: string): SourceUnit[] {
+  const units: SourceUnit[] = []
+  // Strip block and line comments, then match "key" = "value"; pairs
+  const stripped = content
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/[^\n]*/g, "")
+  const re = /"((?:[^"\\]|\\.)*)"\s*=\s*"((?:[^"\\]|\\.)*)"\s*;/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(stripped)) !== null) {
+    const id = m[1]
+    const sourceText = m[2]
+      .replace(/\\n/g, "\n")
+      .replace(/\\t/g, "\t")
+      .replace(/\\"/g, '"')
+      .replace(/\\\\/g, "\\")
+    if (sourceText.trim()) units.push({ id, sourceText })
+  }
+  return units
+}
+
+// ── .stringsdict (Apple plist XML plurals) ────────────────────────────────────
+
+/**
+ * Parse an Apple .stringsdict plist XML file.
+ * Extracts user-facing plural form strings (zero/one/two/few/many/other).
+ * Keys like NSStringLocalizedFormatKey and format specifiers are skipped.
+ * Unit IDs: "{entryKey}__{pluralForm}" e.g. "home.tasks_count__one"
+ */
+export function parseStringsDictSource(content: string): SourceUnit[] {
+  const PLURAL_FORMS = new Set(["zero", "one", "two", "few", "many", "other"])
+  const units: SourceUnit[] = []
+
+  // Strip XML/plist comments before tokenizing
+  const stripped = content.replace(/<!--[\s\S]*?-->/g, "")
+
+  // Tokenize into: open dict, close dict, <key>...</key>, <string>...</string>
+  type Token = { type: "open" | "close" | "key" | "string"; value: string }
+  const tokens: Token[] = []
+  const tokenRe = /<dict\b[^>]*>|<\/dict>|<key>([\s\S]*?)<\/key>|<string>([\s\S]*?)<\/string>/g
+  let m: RegExpExecArray | null
+  while ((m = tokenRe.exec(stripped)) !== null) {
+    if (m[0].startsWith("<dict")) tokens.push({ type: "open", value: "" })
+    else if (m[0] === "</dict>") tokens.push({ type: "close", value: "" })
+    else if (m[1] !== undefined) tokens.push({ type: "key", value: m[1] })
+    else if (m[2] !== undefined) tokens.push({ type: "string", value: m[2] })
+  }
+
+  // Walk tokens tracking depth:
+  //   depth 1 = inside root dict → entry keys
+  //   depth 2 = inside entry dict → NSStringLocalizedFormatKey, var names
+  //   depth 3 = inside var dict → NSStringFormat* keys + plural form keys
+  let depth = 0
+  let entryKey = ""
+  let lastKey = ""
+
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i]
+    if (t.type === "open") { depth++; continue }
+    if (t.type === "close") { depth--; continue }
+    if (t.type === "key") {
+      if (depth === 1) entryKey = t.value
+      lastKey = t.value
+      continue
+    }
+    if (t.type === "string" && depth === 3 && PLURAL_FORMS.has(lastKey) && entryKey) {
+      const sourceText = t.value
+        .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/&apos;/g, "'").replace(/&quot;/g, '"')
+      if (sourceText.trim()) units.push({ id: `${entryKey}__${lastKey}`, sourceText })
+    }
+  }
+
+  return units
+}
+
+// ── .xcstrings (Xcode Strings Catalog JSON) ──────────────────────────────────
+
+/**
+ * Parse an Xcode Strings Catalog (.xcstrings) file.
+ * Extracts source-language string values for translation.
+ * IDs: "{key}" for simple strings, "{key}____plural__{form}" for plural variations.
+ */
+export function parseXcstringsSource(content: string): SourceUnit[] {
+  type StringUnit = { state?: string; value?: string }
+  type Variation = { stringUnit?: StringUnit }
+  type Localization = {
+    stringUnit?: StringUnit
+    variations?: { plural?: Record<string, Variation> }
+  }
+  type XcstringsFile = {
+    sourceLanguage?: string
+    strings?: Record<string, { localizations?: Record<string, Localization> }>
+  }
+
+  const parsed = JSON.parse(content) as XcstringsFile
+  const sourceLang = parsed.sourceLanguage ?? "en"
+  const units: SourceUnit[] = []
+
+  for (const [key, entry] of Object.entries(parsed.strings ?? {})) {
+    const loc = entry.localizations?.[sourceLang]
+    if (!loc) continue
+    if (loc.stringUnit?.value?.trim()) {
+      units.push({ id: key, sourceText: loc.stringUnit.value })
+    } else if (loc.variations?.plural) {
+      for (const [form, variation] of Object.entries(loc.variations.plural)) {
+        const text = variation.stringUnit?.value
+        if (text?.trim()) units.push({ id: `${key}____plural__${form}`, sourceText: text })
+      }
+    }
+  }
+
+  return units
+}
+
+// ── .po (GNU gettext) ─────────────────────────────────────────────────────────
+
+/**
+ * Parse a GNU gettext .po file into translation units.
+ * Each msgid becomes one unit (simple) or two units per plural form (msgid + msgid_plural).
+ * The header entry (msgid "") is skipped.
+ * IDs: "po_{index}" for simple entries, "po_{index}__pl_0" / "po_{index}__pl_1" for plural.
+ */
+export function parsePoSource(content: string): SourceUnit[] {
+  const units: SourceUnit[] = []
+  let index = 0
+
+  function unescape(s: string): string {
+    return s.replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\"/g, '"').replace(/\\\\/g, "\\")
+  }
+
+  // Split on blank lines to get entry blocks
+  const blocks = content.split(/\n(?=\s*\n)/)
+  for (const block of blocks) {
+    const lines = block.split("\n")
+    let msgid = ""
+    let msgidPlural = ""
+    let current: "none" | "msgid" | "msgid_plural" = "none"
+
+    for (const line of lines) {
+      if (line.startsWith("#")) continue
+      const idMatch = line.match(/^msgid\s+"((?:[^"\\]|\\.)*)"/)
+      const idPluralMatch = line.match(/^msgid_plural\s+"((?:[^"\\]|\\.)*)"/)
+      const contMatch = line.match(/^"((?:[^"\\]|\\.)*)"/)
+
+      if (idMatch) { msgid = idMatch[1]; current = "msgid" }
+      else if (idPluralMatch) { msgidPlural = idPluralMatch[1]; current = "msgid_plural" }
+      else if (line.startsWith("msgstr")) { current = "none" }
+      else if (contMatch && current === "msgid") msgid += contMatch[1]
+      else if (contMatch && current === "msgid_plural") msgidPlural += contMatch[1]
+    }
+
+    // Skip header entry
+    if (!unescape(msgid).trim()) continue
+
+    if (msgidPlural) {
+      units.push({ id: `po_${index}__pl_0`, sourceText: unescape(msgid) })
+      units.push({ id: `po_${index}__pl_1`, sourceText: unescape(msgidPlural) })
+    } else {
+      units.push({ id: `po_${index}`, sourceText: unescape(msgid) })
+    }
+    index++
+  }
+
+  return units
+}
+
+// ── .xml (Android strings.xml) ───────────────────────────────────────────────
+
+/**
+ * Parse an Android strings.xml resource file.
+ * Handles <string>, <plurals><item quantity="...">, and <string-array><item>.
+ * IDs: "{name}" for simple strings, "{name}__qty__{quantity}" for plurals,
+ *      "{name}__arr__{index}" for string arrays.
+ * Throws if the root element is not <resources>.
+ */
+export function parseAndroidXmlSource(content: string): SourceUnit[] {
+  if (!/<resources[\s>]/.test(content)) {
+    throw new Error("Not an Android strings XML file — expected <resources> root element")
+  }
+
+  function unescape(s: string): string {
+    return s
+      .replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\\n/g, "\n")
+      .replace(/\\t/g, "\t").replace(/\\\\/g, "\\")
+      .replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+      .replace(/&amp;/g, "&").replace(/&apos;/g, "'").replace(/&quot;/g, '"')
+      .trim()
+  }
+
+  const units: SourceUnit[] = []
+
+  // <string name="...">value</string>
+  const stringRe = /<string\s+name="([^"]+)"[^>]*>([\s\S]*?)<\/string>/g
+  let m: RegExpExecArray | null
+  while ((m = stringRe.exec(content)) !== null) {
+    const text = unescape(m[2])
+    if (text) units.push({ id: m[1], sourceText: text })
+  }
+
+  // <plurals name="..."><item quantity="...">value</item></plurals>
+  const pluralsRe = /<plurals\s+name="([^"]+)"[^>]*>([\s\S]*?)<\/plurals>/g
+  while ((m = pluralsRe.exec(content)) !== null) {
+    const pluralName = m[1]
+    const inner = m[2]
+    const itemRe = /<item\s+quantity="([^"]+)"[^>]*>([\s\S]*?)<\/item>/g
+    let im: RegExpExecArray | null
+    while ((im = itemRe.exec(inner)) !== null) {
+      const text = unescape(im[2])
+      if (text) units.push({ id: `${pluralName}__qty__${im[1]}`, sourceText: text })
+    }
+  }
+
+  // <string-array name="..."><item>value</item></string-array>
+  const arrayRe = /<string-array\s+name="([^"]+)"[^>]*>([\s\S]*?)<\/string-array>/g
+  while ((m = arrayRe.exec(content)) !== null) {
+    const arrayName = m[1]
+    const inner = m[2]
+    const itemRe = /<item[^>]*>([\s\S]*?)<\/item>/g
+    let im: RegExpExecArray | null
+    let idx = 0
+    while ((im = itemRe.exec(inner)) !== null) {
+      const text = unescape(im[1])
+      if (text) units.push({ id: `${arrayName}__arr__${idx}`, sourceText: text })
+      idx++
+    }
+  }
+
+  return units
+}
+
+// ── .arb (Flutter ARB) ───────────────────────────────────────────────────────
+
+/**
+ * Parse a Flutter ARB (Application Resource Bundle) file.
+ * Keys starting with "@" are metadata — skipped.
+ * ID = the ARB key, sourceText = the string value.
+ */
+export function parseArbSource(content: string): SourceUnit[] {
+  const parsed = JSON.parse(content) as Record<string, unknown>
+  const units: SourceUnit[] = []
+  for (const [key, value] of Object.entries(parsed)) {
+    if (key.startsWith("@")) continue
+    if (typeof value === "string" && value.trim()) {
+      units.push({ id: key, sourceText: value })
+    }
+  }
+  return units
+}
+
+// ── .properties (Java / Spring) ──────────────────────────────────────────────
+
+/**
+ * Parse a Java .properties file into translation units.
+ * Supports key=value, key: value, and multi-line values (trailing \).
+ * Comments (# and !) and blank lines are skipped.
+ * Standard backslash escapes (\n \t \\ etc.) are decoded.
+ */
+export function parsePropertiesSource(content: string): SourceUnit[] {
+  const units: SourceUnit[] = []
+  const lines = content.split(/\r?\n/)
+
+  let i = 0
+  while (i < lines.length) {
+    const line = lines[i]
+    // Skip blank lines and comments
+    if (!line.trim() || /^\s*[#!]/.test(line)) { i++; continue }
+
+    // Collect multi-line values
+    let full = line
+    while (full.trimEnd().endsWith("\\")) {
+      full = full.trimEnd().slice(0, -1) + (lines[++i] ?? "").replace(/^\s+/, "")
+    }
+
+    const match = full.match(/^\s*([\w.\-/\\]+)\s*[=:]\s*(.*)$/)
+    if (!match) { i++; continue }
+
+    const id = match[1]
+    const sourceText = match[2]
+      .replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\r/g, "\r").replace(/\\\\/g, "\\")
+    if (sourceText.trim()) units.push({ id, sourceText })
+    i++
+  }
+  return units
+}
+
 function parseCsvLine(line: string): string[] {
   const cols: string[] = []
   let current = ""
