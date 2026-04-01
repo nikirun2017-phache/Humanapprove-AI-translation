@@ -1,37 +1,77 @@
 /**
- * Email utility — powered by Resend (https://resend.com).
- * Uses the Resend REST API directly so no extra package is needed.
+ * Email utility — supports two providers in priority order:
+ *   1. Resend (RESEND_API_KEY) — preferred for custom domains
+ *   2. Gmail SMTP (GMAIL_USER + GMAIL_APP_PASSWORD) — fallback, works with any Gmail
  *
- * Required env vars:
- *   RESEND_API_KEY  — your Resend API key (re_...)
- *   RESEND_FROM     — verified sender address (e.g. "Jendee AI <noreply@jendee.ai>")
- *                     defaults to "Jendee AI <noreply@jendee.ai>" if not set
+ * Required env vars (at least one set):
+ *   RESEND_API_KEY        — Resend API key (re_...)
+ *   RESEND_FROM           — sender address, defaults to "Jendee AI <noreply@jendee.ai>"
+ *   GMAIL_USER            — Gmail address (e.g. you@gmail.com)
+ *   GMAIL_APP_PASSWORD    — Gmail App Password (16 chars, no spaces)
  *
- * If RESEND_API_KEY is absent, all functions silently return — safe for local dev.
+ * If neither is configured, all functions silently return — safe for local dev.
  */
 
 const RESEND_API = "https://api.resend.com/emails"
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL ?? "https://app.jendee.ai"
 
 function from(): string {
-  return process.env.RESEND_FROM ?? "Jendee AI <noreply@jendee.ai>"
+  return process.env.RESEND_FROM ?? process.env.GMAIL_USER ?? "Jendee AI <noreply@jendee.ai>"
+}
+
+async function sendViaGmail(to: string, subject: string, html: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const nodemailer = require("nodemailer") as typeof import("nodemailer")
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD?.replace(/\s/g, ""),
+    },
+  })
+  await transporter.sendMail({
+    from: `Jendee AI <${process.env.GMAIL_USER}>`,
+    to,
+    subject,
+    html,
+  })
 }
 
 async function send(to: string, subject: string, html: string): Promise<void> {
-  const key = process.env.RESEND_API_KEY
-  if (!key) return // gracefully skip in local dev / unconfigured deployments
-  try {
-    const res = await fetch(RESEND_API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-      body: JSON.stringify({ from: from(), to, subject, html }),
-    })
-    if (!res.ok) {
-      console.error("[email] Resend error", res.status, await res.text())
+  const resendKey = process.env.RESEND_API_KEY
+  const gmailUser = process.env.GMAIL_USER
+  const gmailPass = process.env.GMAIL_APP_PASSWORD
+
+  // Try Resend first
+  if (resendKey) {
+    try {
+      const res = await fetch(RESEND_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${resendKey}` },
+        body: JSON.stringify({ from: from(), to, subject, html }),
+      })
+      if (!res.ok) {
+        console.error("[email] Resend error", res.status, await res.text())
+      }
+      return
+    } catch (err) {
+      console.error("[email] Resend failed, trying Gmail fallback:", err)
     }
-  } catch (err) {
-    console.error("[email] Failed to send to", to, err)
   }
+
+  // Fall back to Gmail SMTP
+  if (gmailUser && gmailPass) {
+    try {
+      await sendViaGmail(to, subject, html)
+      return
+    } catch (err) {
+      console.error("[email] Gmail SMTP failed to send to", to, err)
+    }
+    return
+  }
+
+  // Neither configured — skip silently (local dev)
+  console.warn("[email] No email provider configured — skipping send to", to)
 }
 
 // ---------------------------------------------------------------------------
