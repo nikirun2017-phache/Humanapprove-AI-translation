@@ -141,6 +141,17 @@ model ReviewSession {
   reviewer User    @relation(fields: [reviewerId], references: [id])
 }
 
+// Password reset tokens (1-hour expiry, single-use)
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
 // Key-value store for system-wide admin settings (e.g. AI provider API keys)
 model SystemSetting {
   key       String   @id
@@ -169,8 +180,27 @@ model TranslationJob {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  promoCode    String?  // coupon code applied at job creation
+  discountPct  Int      @default(0)  // 0-100, e.g. 50 = 50% off
+  glossaryData String?  // JSON: { [langCode]: { source: string; target: string }[] }
+
   createdBy User              @relation(fields: [createdById], references: [id])
   tasks     TranslationTask[]
+}
+
+// Promotion / coupon codes
+model PromoCode {
+  id             String    @id @default(cuid())
+  code           String    @unique  // e.g. "SPRINT"
+  discountPct    Int       // percentage off, 1-100
+  maxUses        Int?      // null = unlimited total uses
+  usedCount      Int       @default(0)
+  expiresAt      DateTime? // null = never expires
+  active         Boolean   @default(true)
+  description    String?   // internal note
+  perUserMax     Int?      // null = unlimited per user; 1 = one-time per user
+  maxWordsPerJob Int?      // null = no limit; e.g. 1000 = only applies to jobs ≤ 1000 source words
+  createdAt      DateTime  @default(now())
 }
 
 // Immutable log of reviewer actions: approve, reject, revise, submit
@@ -197,6 +227,7 @@ model TranslationTask {
   status         String   @default("pending")
   // pending | running | completed | failed | imported
   totalUnits     Int      @default(0)
+  wordCount      Int      @default(0)  // actual source word count, populated at task creation
   completedUnits Int      @default(0)
   errorMessage   String?
   xliffFileUrl   String?

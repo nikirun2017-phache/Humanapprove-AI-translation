@@ -4,7 +4,9 @@ import { useState, useMemo } from "react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 
-const MARKUP = 30
+const PAYG_MARKUP = 5           // matches src/lib/pricing.ts
+const PLATFORM_FEE_PER_WORD = 0.007
+const MIN_JOB_FEE = 5.00
 const WORDS_PER_PAGE = 800      // average marketing/doc page
 const CHARS_PER_WORD = 5
 const CHARS_PER_STRING = 200    // average segment length
@@ -28,7 +30,8 @@ function estimate(words: number, languages: number, modelId: string): number {
   const inputTok = Math.ceil(chars / 4) + batches * BATCH_OVERHEAD_TOKENS
   const outputTok = Math.ceil(inputTok * 1.1)
   const aiCost = (inputTok * model.inputPricePer1M + outputTok * model.outputPricePer1M) / 1_000_000
-  return aiCost * MARKUP * languages
+  const raw = aiCost * PAYG_MARKUP * languages + words * PLATFORM_FEE_PER_WORD * languages
+  return Math.max(MIN_JOB_FEE, raw)
 }
 
 function fmt(n: number): string {
@@ -40,10 +43,10 @@ function fmt(n: number): string {
 
 export function CostEstimator() {
   const t = useTranslations("estimator")
-  const [mode, setMode] = useState<"pages" | "words">("pages")
-  const [pages, setPages] = useState(10)
-  const [words, setWords] = useState(8000)
-  const [languages, setLanguages] = useState(5)
+  const [mode, setMode] = useState<"pages" | "words">("words")
+  const [pages, setPages] = useState(4)
+  const [words, setWords] = useState(3000)
+  const [languages, setLanguages] = useState(1)
   const [modelId, setModelId] = useState(MODELS[0].id)
 
   const totalWords = mode === "pages" ? pages * WORDS_PER_PAGE : words
@@ -87,7 +90,7 @@ export function CostEstimator() {
             <p className="text-3xl font-extrabold text-indigo-600 text-center mb-2">{pages.toLocaleString()}</p>
             <input
               type="range"
-              min={1} max={500} step={1}
+              min={1} max={38} step={1}
               value={pages}
               onChange={(e) => setPages(Number(e.target.value))}
               className="w-full accent-indigo-600"
@@ -95,7 +98,7 @@ export function CostEstimator() {
             <div className="flex justify-between text-xs text-gray-400 mt-1">
               <span>1 page</span>
               <span className="text-gray-500 italic">≈ {(pages * WORDS_PER_PAGE).toLocaleString()} words</span>
-              <span>500 pages</span>
+              <span>38 pages</span>
             </div>
           </div>
         ) : (
@@ -104,15 +107,15 @@ export function CostEstimator() {
             <p className="text-3xl font-extrabold text-indigo-600 text-center mb-2">{words.toLocaleString()}</p>
             <input
               type="range"
-              min={500} max={500000} step={500}
+              min={100} max={30000} step={100}
               value={words}
               onChange={(e) => setWords(Number(e.target.value))}
               className="w-full accent-indigo-600"
             />
             <div className="flex justify-between text-xs text-gray-400 mt-1">
-              <span>500</span>
+              <span>100</span>
               <span className="text-gray-500 italic">≈ {Math.round(words / WORDS_PER_PAGE)} pages</span>
-              <span>500k</span>
+              <span>30,000</span>
             </div>
           </div>
         )}
@@ -160,7 +163,7 @@ export function CostEstimator() {
             </p>
           </div>
           <Link
-            href="/login"
+            href="/login?mode=signup"
             className="shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
           >
             {t("startFree")}

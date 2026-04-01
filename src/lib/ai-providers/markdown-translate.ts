@@ -1,4 +1,5 @@
-import type { ProviderName } from "./types"
+import type { ProviderName, GlossaryTerm } from "./types"
+import { buildGlossaryPromptSection } from "./anthropic"
 
 /**
  * System prompt for markdown-format translation.
@@ -36,11 +37,17 @@ export async function translateMarkdownBatch(
   targetLanguage: string,
   provider: ProviderName,
   apiKey: string,
-  model: string
+  model: string,
+  glossaryTerms?: GlossaryTerm[]
 ): Promise<string> {
-  const systemPrompt = SYSTEM_PROMPT
+  const glossarySection = glossaryTerms ? buildGlossaryPromptSection(glossaryTerms) : ""
+  // Inject glossary BEFORE "Rules:" so it outranks the default abbreviation-handling rule
+  const basePrompt = SYSTEM_PROMPT
     .replace("{SOURCE}", sourceLanguage)
     .replace("{TARGET}", targetLanguage)
+  const systemPrompt = glossarySection
+    ? basePrompt.replace("Rules:\n", `${glossarySection}\nRules:\n`)
+    : basePrompt
 
   switch (provider) {
     case "anthropic":

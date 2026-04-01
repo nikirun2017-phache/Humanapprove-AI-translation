@@ -1,4 +1,9 @@
 import type { SourceUnit } from "./source-parser"
+import {
+  extractXmlTextNodes,
+  templateizeXmlTextNodes,
+  fillXmlTemplate,
+} from "./xml-utils"
 
 export interface TranslatedUnit {
   id: string
@@ -20,7 +25,7 @@ export function buildXliffFromTranslations(
   const translationMap = new Map(translatedUnits.map((u: TranslatedUnit) => [u.id, u.translatedText]))
 
   const transUnits = sourceUnits
-    .map((unit, i) => {
+    .map((unit) => {
       const target = translationMap.get(unit.id) ?? ""
       const escapedSource = escapeXml(unit.sourceText)
       const escapedTarget = escapeXml(target)
@@ -55,6 +60,15 @@ export function buildXliffFromTranslations(
  *   1. Adds target-language="..." to each <file> element
  *   2. Injects <target state="needs-review-translation">...</target> after <source>
  *
+ * TAG-PRESERVING MODE (for units with inline XML):
+ * When a unit was translated as sub-units (id__t0, id__t1, …), the translations
+ * are stitched back into the original <g>/<ph> tag skeleton extracted from the
+ * <source> element. This ensures authoring tools like Articulate Rise 360 can
+ * re-import the file with all HTML formatting (bullet lists, paragraphs, etc.) intact.
+ *
+ * PLAIN TEXT MODE (for units without inline XML):
+ * The translated string is XML-escaped and inserted directly as <target> text.
+ *
  * Required for XLIFF files from authoring tools like Articulate Rise 360 that
  * need to re-import the translated file and rely on the original tag structure.
  */
@@ -81,23 +95,54 @@ export function mergeTranslationsIntoXliff(
     (match, attrs, body) => {
       const idMatch = attrs.match(/\bid="([^"]*)"/)
       if (!idMatch) return match
+
       const rawId = idMatch[1]
       const count = seenIds.get(rawId) ?? 0
       seenIds.set(rawId, count + 1)
       const id = count === 0 ? rawId : `${rawId}__dup${count + 1}`
+
+      // Skip if <target> already exists in this unit
+      if (/<target/.test(body)) return match
+
+      // Compute indentation to align <target> with </source>
+      const indentMatch = body.match(/([ \t]*)<\/source>/)
+      const indent = indentMatch ? indentMatch[1] : "        "
+
+      // ── TAG-PRESERVING PATH ──────────────────────────────────────────────
+      // This unit was translated as sub-units (__t0, __t1, …). Collect the
+      // sub-translations, extract the <source> inner XML template, fill the
+      // placeholders, and insert the reconstructed XML as the <target> content.
+      if (translations.has(`${id}__t0`)) {
+        const sourceInnerMatch = body.match(/<source[^>]*>([\s\S]*?)<\/source>/)
+        if (sourceInnerMatch) {
+          const sourceInner = sourceInnerMatch[1]
+          const { template } = templateizeXmlTextNodes(sourceInner)
+          const originals = extractXmlTextNodes(sourceInner)
+
+          // Collect sub-translations in index order
+          const subTranslations: string[] = []
+          for (let ti = 0; translations.has(`${id}__t${ti}`); ti++) {
+            subTranslations.push(translations.get(`${id}__t${ti}`)!)
+          }
+
+          const targetContent = fillXmlTemplate(template, subTranslations, originals)
+          const newBody = body.replace(
+            /<\/source>/,
+            `</source>\n${indent}<target state="needs-review-translation">${targetContent}</target>`
+          )
+          return `<trans-unit${attrs}>${newBody}</trans-unit>`
+        }
+      }
+
+      // ── PLAIN TEXT PATH ──────────────────────────────────────────────────
+      // Unit has no inline tags (or tag-preserving path failed). Insert the
+      // translation as escaped plain text, decoding any AI-echoed entities first.
       const translation = translations.get(id)
       if (!translation) return match
-      // Skip if <target> already exists
-      if (/<target/.test(body)) return match
-      // Strip any residual XML tags, then properly escape for XML element content.
-      // The AI may echo back HTML entities from the source (e.g. &amp;) or return
-      // bare & < > characters — both must result in valid XML.
+
       const targetContent = escapeXmlContent(
         translation.replace(/<[^>]+>/g, " ").replace(/\s{2,}/g, " ").trim()
       )
-      // Match the indentation of </source> to align <target> consistently
-      const indentMatch = body.match(/([ \t]*)<\/source>/)
-      const indent = indentMatch ? indentMatch[1] : "        "
       const newBody = body.replace(
         /<\/source>/,
         `</source>\n${indent}<target state="needs-review-translation">${targetContent}</target>`

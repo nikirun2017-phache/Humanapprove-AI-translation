@@ -52,11 +52,11 @@ export default async function TranslationStudioPage({
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Translation Studio</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            Convert JSON, CSV, Markdown, or PDF files to XLIFF using AI, then import them for review.
+            Upload a file, pick your languages, and get AI-translated files ready to download or review.
           </p>
         </div>
 
-        {card_added === "true" && (
+{card_added === "true" && (
           <div className="mb-4 flex gap-2 bg-green-50 border border-green-200 text-green-800 rounded-xl px-4 py-3 text-sm">
             <span>✓</span>
             <span>Payment method saved. You can now start translations.</span>

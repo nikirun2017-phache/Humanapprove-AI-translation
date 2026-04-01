@@ -23,6 +23,8 @@ export function exportRevisedXliff(
     trimValues: false,
     cdataPropName: "__cdata",
     preserveOrder: true,
+    // XXE prevention
+    processEntities: false,
   })
 
   const builder = new XMLBuilder({

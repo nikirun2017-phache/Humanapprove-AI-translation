@@ -1,0 +1,15 @@
+.git
+.gitignore
+.next
+node_modules
+uploads
+*.env
+*.env.*
+.env.local
+.env.development
+.env.production
+README.md
+Dockerfile
+.dockerignore
+.vercel
+cloudbuild.yaml

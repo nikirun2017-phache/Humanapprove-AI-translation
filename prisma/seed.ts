@@ -9,7 +9,7 @@ async function main() {
   console.log("Seeding database…")
 
   // Create admin
-  const adminHash = await bcrypt.hash("admin123", 12)
+  const adminHash = await bcrypt.hash("lina888*", 12)
   const admin = await prisma.user.upsert({
     where: { email: "admin@example.com" },
     update: {},
@@ -23,7 +23,7 @@ async function main() {
   })
 
   // Create reviewers
-  const jaHash = await bcrypt.hash("reviewer123", 12)
+  const jaHash = await bcrypt.hash("lina888*", 12)
   const jaReviewer = await prisma.user.upsert({
     where: { email: "keiko@example.com" },
     update: {},
@@ -42,7 +42,7 @@ async function main() {
     create: {
       email: "wei@example.com",
       name: "Wei Chen",
-      hashedPassword: await bcrypt.hash("reviewer123", 12),
+      hashedPassword: await bcrypt.hash("lina888*", 12),
       role: "reviewer",
       languages: JSON.stringify(["zh-CN", "zh"]),
     },
@@ -55,7 +55,7 @@ async function main() {
     create: {
       email: "requester@example.com",
       name: "Product Team",
-      hashedPassword: await bcrypt.hash("requester123", 12),
+      hashedPassword: await bcrypt.hash("lina888*", 12),
       role: "requester",
       languages: JSON.stringify([]),
     },
@@ -209,10 +209,10 @@ async function main() {
   }
 
   console.log("\nSeed complete! Test accounts:")
-  console.log("  Admin:     admin@example.com / admin123")
-  console.log("  Reviewer:  keiko@example.com / reviewer123  (ja-JP)")
-  console.log("  Reviewer:  wei@example.com   / reviewer123  (zh-CN)")
-  console.log("  Requester: requester@example.com / requester123")
+  console.log("  Admin:     admin@example.com / lina888*")
+  console.log("  Reviewer:  keiko@example.com / lina888*  (ja-JP)")
+  console.log("  Reviewer:  wei@example.com   / lina888*  (zh-CN)")
+  console.log("  Requester: requester@example.com / lina888*")
   console.log("  + 19 platform reviewer accounts created (platform-reviewer+<locale>@jendee.ai)")
 }
 

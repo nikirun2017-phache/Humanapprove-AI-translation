@@ -10,10 +10,16 @@ export interface TranslatedUnit {
   translatedText: string
 }
 
+export interface GlossaryTerm {
+  source: string
+  target: string
+}
+
 export interface TranslationBatch {
   units: SourceUnit[]
   sourceLanguage: string
   targetLanguage: string
+  glossaryTerms?: GlossaryTerm[]
 }
 
 export interface TranslationResult {

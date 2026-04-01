@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { STUDIO_LANGUAGES, STUDIO_LANGUAGE_REGIONS, LANGUAGE_PRESETS } from "@/lib/languages"
-import type { ProviderInfo, ProviderName } from "@/lib/ai-providers/types"
+import type { ProviderInfo } from "@/lib/ai-providers/types"
 
 interface Props {
   providers: ProviderInfo[]
@@ -23,6 +23,7 @@ interface PdfProbe {
   isScanned: boolean
   wordCount: number
   estimatedUnits: number
+  cacheKey: string | null
 }
 
 interface XliffMeta {
@@ -40,6 +41,7 @@ interface FileEntry {
   pdfProbe?: PdfProbe  // set after server-side probe for PDF files
   probePending?: boolean
   xliffMeta?: XliffMeta
+  sizeWarning?: string  // shown for large .txt files
 }
 
 function fileKey(f: File) {
@@ -51,8 +53,70 @@ function fileTypeLabel(name: string) {
   if (name.endsWith(".json")) return "JSON"
   if (name.endsWith(".csv")) return "CSV"
   if (name.endsWith(".md")) return "MD"
+  if (name.endsWith(".txt")) return "TXT"
   if (name.endsWith(".xliff") || name.endsWith(".xlf")) return "XLIFF"
+  if (name.endsWith(".strings")) return ".strings"
+  if (name.endsWith(".stringsdict")) return ".stringsdict"
+  if (name.endsWith(".xcstrings")) return ".xcstrings"
+  if (name.endsWith(".po")) return ".po"
+  if (name.endsWith(".xml")) return "Android XML"
+  if (name.endsWith(".arb")) return ".arb"
+  if (name.endsWith(".properties")) return ".properties"
   return "file"
+}
+
+/** Returns true for file types that are localisation resource formats (key=value pairs) */
+function isResourceFormat(name: string): boolean {
+  return /\.(strings|stringsdict|xcstrings|po|xml|arb|properties)$/i.test(name)
+}
+
+/** Quick client-side preview parser for resource formats — extracts first 10 translatable strings */
+function parseResourcePreview(content: string, filename: string): SourceUnit[] {
+  const units: SourceUnit[] = []
+  try {
+    if (filename.endsWith(".strings")) {
+      const re = /"((?:[^"\\]|\\.)*)"\s*=\s*"((?:[^"\\]|\\.)*)"\s*;/g
+      let m: RegExpExecArray | null
+      while ((m = re.exec(content)) !== null && units.length < 10) {
+        const text = m[2].replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\"/g, '"')
+        if (text.trim()) units.push({ id: m[1], sourceText: text })
+      }
+    } else if (filename.endsWith(".stringsdict") || filename.endsWith(".xml")) {
+      // Show value content between tags as preview
+      const re = /<string[^>]*>([^<]{3,})<\/string>|<item[^>]*>([^<]{3,})<\/item>/g
+      let m: RegExpExecArray | null
+      while ((m = re.exec(content)) !== null && units.length < 10) {
+        const text = (m[1] ?? m[2]).trim()
+        if (text) units.push({ id: `preview_${units.length}`, sourceText: text })
+      }
+    } else if (filename.endsWith(".xcstrings") || filename.endsWith(".arb")) {
+      const parsed = JSON.parse(content) as Record<string, unknown>
+      for (const [key, val] of Object.entries(parsed)) {
+        if (key.startsWith("@")) continue
+        if (typeof val === "string" && val.trim()) {
+          units.push({ id: key, sourceText: val })
+          if (units.length >= 10) break
+        }
+      }
+    } else if (filename.endsWith(".po")) {
+      const re = /msgid\s+"((?:[^"\\]|\\.)*)"/g
+      let m: RegExpExecArray | null
+      while ((m = re.exec(content)) !== null && units.length < 10) {
+        const text = m[1].replace(/\\n/g, "\n").replace(/\\"/g, '"')
+        if (text.trim()) units.push({ id: `po_${units.length}`, sourceText: text })
+      }
+    } else if (filename.endsWith(".properties")) {
+      for (const line of content.split(/\r?\n/)) {
+        if (!line.trim() || /^\s*[#!]/.test(line)) continue
+        const match = line.match(/^\s*([\w.\-/\\]+)\s*[=:]\s*(.+)$/)
+        if (match && match[2].trim()) {
+          units.push({ id: match[1], sourceText: match[2].replace(/\\n/g, "\n") })
+          if (units.length >= 10) break
+        }
+      }
+    }
+  } catch { /* ignore parse errors in preview */ }
+  return units
 }
 
 /** Client-side XLIFF metadata extraction — regex-based, no full parse needed */
@@ -138,16 +202,48 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
 
   // Step 2 state
   const [jobName, setJobName] = useState("")
-  const [provider, setProvider] = useState(providers[0].name)
-  const [model, setModel] = useState(providers[0].models[0].id)
+  const [sourceLanguage, setSourceLanguage] = useState("en-US")
+  // MVP: locked to Claude Sonnet 4.6
+  const provider = "anthropic"
+  const model = "claude-sonnet-4-6"
   const [selectedLangs, setSelectedLangs] = useState<Set<string>>(new Set())
   const [langSearch, setLangSearch] = useState("")
   const [regionFilter, setRegionFilter] = useState("")
+
+  // Terminology / glossary state
+  type GlossaryTerm = { source: string; target: string }
+  const [glossary, setGlossary] = useState<Record<string, GlossaryTerm[]>>({})
+  const [glossaryOpen, setGlossaryOpen] = useState(false)
+  const [glossaryTab, setGlossaryTab] = useState<string>("")
+
+  const MAX_TERMS = 5
+
+  function addTerm(lang: string) {
+    setGlossary(prev => ({ ...prev, [lang]: [...(prev[lang] ?? []), { source: "", target: "" }] }))
+  }
+  function removeTerm(lang: string, i: number) {
+    setGlossary(prev => {
+      const terms = (prev[lang] ?? []).filter((_: GlossaryTerm, idx: number) => idx !== i)
+      if (terms.length === 0) { const next = { ...prev }; delete next[lang]; return next }
+      return { ...prev, [lang]: terms }
+    })
+  }
+  function updateTerm(lang: string, i: number, field: "source" | "target", value: string) {
+    setGlossary(prev => {
+      const terms = [...(prev[lang] ?? [])]
+      terms[i] = { ...terms[i], [field]: value }
+      return { ...prev, [lang]: terms }
+    })
+  }
+  const totalGlossaryTerms = Object.values(glossary).reduce((s, t) => s + t.filter((x: GlossaryTerm) => x.source.trim() && x.target.trim()).length, 0)
 
   // Step 3 state
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
   const [cardError, setCardError] = useState("")
+  const [promoInput, setPromoInput] = useState("")
+  const [promoState, setPromoState] = useState<{ valid: boolean; discountPct: number; code: string; maxWordsPerJob?: number | null; error?: string } | null>(null)
+  const [promoLoading, setPromoLoading] = useState(false)
 
   // Restore wizard config after returning from Stripe card setup
   useEffect(() => {
@@ -155,14 +251,22 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     try {
       const raw = sessionStorage.getItem(WIZARD_STORAGE_KEY)
       if (!raw) return
-      const saved = JSON.parse(raw) as { jobName: string; provider: string; model: string; selectedLangs: string[] }
+      const saved = JSON.parse(raw) as { jobName: string; provider: string; model: string; selectedLangs: string[]; sourceLanguage?: string }
       sessionStorage.removeItem(WIZARD_STORAGE_KEY)
       setJobName(saved.jobName)
-      if (providers.some((p: (typeof providers)[number]) => p.name === saved.provider)) setProvider(saved.provider as ProviderName)
-      setModel(saved.model)
       setSelectedLangs(new Set(saved.selectedLangs))
+      if (saved.sourceLanguage) setSourceLanguage(saved.sourceLanguage)
     } catch { /* ignore */ }
   }, [restoringFromCardSetup])
+
+  // Auto-advance to Configure once files are re-uploaded after card setup
+  useEffect(() => {
+    if (!restoringFromCardSetup) return
+    if (step !== 1) return
+    if (entries.length === 0) return
+    if (entries.some((e: FileEntry) => e.probePending || e.parseError)) return
+    setStep(2)
+  }, [entries, restoringFromCardSetup, step])
 
   async function addCard() {
     setAddingCard(true)
@@ -174,6 +278,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
         provider,
         model,
         selectedLangs: [...selectedLangs],
+        sourceLanguage,
       }))
     } catch { /* ignore */ }
     try {
@@ -221,7 +326,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
           if (f.name.endsWith(".xliff") || f.name.endsWith(".xlf")) {
             const meta = parseXliffMeta(content)
             if (meta.emptyUnitCount === 0) {
-              resolve({ key, file: f, preview: [], parseError: "No untranslated units found — all <target> elements are already filled.", xliffMeta: meta })
+              resolve({ key, file: f, preview: [], parseError: "Nothing to translate — all segments are already filled.", xliffMeta: meta })
             } else {
               // Build a simple preview from <source> elements
               const sourceTexts: SourceUnit[] = []
@@ -233,11 +338,14 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
               }
               resolve({ key, file: f, preview: sourceTexts, parseError: "", xliffMeta: meta })
             }
+          } else if (isResourceFormat(f.name)) {
+            const units = parseResourcePreview(content, f.name)
+            resolve({ key, file: f, preview: units, parseError: "" })
           } else {
             let units: SourceUnit[]
             if (f.name.endsWith(".json")) {
               units = flattenForPreview(JSON.parse(content) as unknown)
-            } else if (f.name.endsWith(".md")) {
+            } else if (f.name.endsWith(".md") || f.name.endsWith(".txt")) {
               units = parseMarkdownPreview(content)
             } else {
               units = parseCsvPreview(content)
@@ -245,7 +353,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             resolve({ key, file: f, preview: units, parseError: "" })
           }
         } catch {
-          resolve({ key, file: f, preview: [], parseError: "Could not parse file — check that it is valid JSON, CSV, Markdown, or XLIFF." })
+          resolve({ key, file: f, preview: [], parseError: "Couldn't read this file. Check that it's a valid format." })
         }
       }
       reader.readAsText(f)
@@ -264,6 +372,32 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     }
   }
 
+  const FILE_SIZE_LIMITS: Record<string, number> = {
+    pdf:         50 * 1024 * 1024,  // 50 MB — scanned/image PDFs are large
+    json:         5 * 1024 * 1024,
+    csv:          5 * 1024 * 1024,
+    md:           5 * 1024 * 1024,
+    txt:          5 * 1024 * 1024,
+    xliff:        5 * 1024 * 1024,
+    xlf:          5 * 1024 * 1024,
+    strings:      5 * 1024 * 1024,
+    stringsdict:  5 * 1024 * 1024,
+    xcstrings:    5 * 1024 * 1024,
+    po:           5 * 1024 * 1024,
+    xml:          5 * 1024 * 1024,
+    arb:          5 * 1024 * 1024,
+    properties:   5 * 1024 * 1024,
+  }
+
+  function fileSizeError(f: File): string | null {
+    const ext = f.name.split(".").pop()?.toLowerCase() ?? ""
+    const limit = FILE_SIZE_LIMITS[ext]
+    if (!limit || f.size <= limit) return null
+    const limitMb = limit / 1024 / 1024
+    const sizeMb = (f.size / 1024 / 1024).toFixed(1)
+    return `File is ${sizeMb} MB — exceeds the ${limitMb} MB limit for .${ext} files. Please split or compress it.`
+  }
+
   async function addFiles(newFiles: File[]) {
     const existingKeys = new Set(entries.map((e: FileEntry) => e.key))
     const fresh = newFiles.filter((f: File) => !existingKeys.has(fileKey(f)))
@@ -271,17 +405,22 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
 
     // Parse non-PDF files client-side; PDFs get a probe stub immediately
     const parsed = await Promise.all(
-      fresh.map((f: File) =>
-        f.name.endsWith(".pdf")
-          ? Promise.resolve<FileEntry>({ key: fileKey(f), file: f, preview: [], parseError: "", probePending: true })
-          : parseNonPdfFile(f)
-      )
+      fresh.map((f: File) => {
+        const sizeErr = fileSizeError(f)
+        if (sizeErr) {
+          return Promise.resolve<FileEntry>({ key: fileKey(f), file: f, preview: [], parseError: sizeErr })
+        }
+        if (f.name.endsWith(".pdf")) {
+          return Promise.resolve<FileEntry>({ key: fileKey(f), file: f, preview: [], parseError: "", probePending: true })
+        }
+        return parseNonPdfFile(f)
+      })
     )
 
     setEntries((prev) => {
       const next = [...prev, ...parsed]
       if (!jobName && next.length > 0) {
-        setJobName(next[0].file.name.replace(/\.(json|csv|md|pdf|xliff)$/i, ""))
+        setJobName(next[0].file.name.replace(/\.(json|csv|md|txt|pdf|xliff|xlf|strings|stringsdict|xcstrings|po|xml|arb|properties)$/i, ""))
       }
       return next
     })
@@ -378,6 +517,13 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
   function clearAll() { setSelectedLangs(new Set()) }
 
   async function submit() {
+    // Guard: re-validate before submission in case state drifted
+    const validEntries = entries.filter((e: FileEntry) => !e.parseError)
+    if (validEntries.length === 0) {
+      setSubmitError("No valid files to submit. Please go back and check your files.")
+      return
+    }
+
     setSubmitting(true)
     setSubmitError("")
 
@@ -385,22 +531,32 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     let lastJobId: string | null = null
     const errors: string[] = []
 
-    for (const entry of entries) {
-      const fd = new FormData()
-      fd.append("file", entry.file)
-      fd.append("name", entries.length === 1 ? jobName : `${jobName} — ${entry.file.name.replace(/\.(json|csv|md|pdf|xliff)$/i, "")}`)
-      fd.append("provider", provider)
-      fd.append("model", model)
-      fd.append("targetLanguages", langs)
-      fd.append("sourceLanguage", entry.xliffMeta?.sourceLanguage ?? "en-US")
+    try {
+      for (const entry of validEntries) {
+        const fd = new FormData()
+        fd.append("file", entry.file)
+        fd.append("name", validEntries.length === 1 ? jobName : `${jobName} — ${entry.file.name.replace(/\.(json|csv|md|pdf|xliff)$/i, "")}`)
+        fd.append("provider", provider)
+        fd.append("model", model)
+        fd.append("targetLanguages", langs)
+        fd.append("sourceLanguage", entry.xliffMeta?.sourceLanguage ?? sourceLanguage)
+        if (promoState?.valid) fd.append("promoCode", promoState.code)
+        if (Object.keys(glossary).length > 0) fd.append("glossaryData", JSON.stringify(glossary))
+        // Pass probe cache key so job creation can skip re-parsing the PDF
+        if (entry.pdfProbe?.cacheKey) fd.append("pdfCacheKey", entry.pdfProbe.cacheKey)
 
-      const res = await fetch("/api/translation-studio/jobs", { method: "POST", body: fd })
-      const data = await res.json() as { jobId?: string; error?: string }
-      if (!res.ok) {
-        errors.push(`${entry.file.name}: ${data.error ?? "Failed to create job"}`)
-      } else {
-        lastJobId = data.jobId ?? null
+        const res = await fetch("/api/translation-studio/jobs", { method: "POST", body: fd })
+        const data = await res.json() as { jobId?: string; error?: string }
+        if (!res.ok) {
+          errors.push(`${entry.file.name}: ${data.error ?? "Failed to create job"}`)
+        } else {
+          lastJobId = data.jobId ?? null
+        }
       }
+    } catch (err) {
+      setSubmitError(`Unexpected error: ${(err as Error).message ?? "Please try again."}`)
+      setSubmitting(false)
+      return
     }
 
     setSubmitting(false)
@@ -411,7 +567,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     }
 
     // Single file → go to job detail; multiple → go to studio list
-    if (entries.length === 1 && lastJobId) {
+    if (validEntries.length === 1 && lastJobId) {
       router.push(`/translation-studio/${lastJobId}`)
     } else {
       router.push("/translation-studio")
@@ -480,6 +636,12 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
 
   return (
     <div>
+      {/* Promo banner — always visible across all steps */}
+      <div className="mb-5 flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3 text-sm text-indigo-800">
+        <span className="shrink-0">🎉</span>
+        <span>Use code <strong className="font-semibold tracking-wide">SPRINT</strong> at checkout for <strong>50% off</strong> your first translation.</span>
+      </div>
+
       {/* Step indicator */}
       <div className="flex items-center gap-2 mb-8">
         {([1, 2, 3] as Step[]).map((s, i) => (
@@ -496,6 +658,13 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
       {/* ── Step 1 — Upload ── */}
       {step === 1 && (
         <div className="space-y-4">
+          {/* Card-setup return banner */}
+          {restoringFromCardSetup && (
+            <div className="flex items-start gap-2 bg-green-50 border border-green-200 text-green-800 rounded-xl px-4 py-3 text-sm">
+              <span className="mt-0.5">✓</span>
+              <span>Payment method saved! Re-upload your file to continue — your language settings have been restored.</span>
+            </div>
+          )}
           {/* Source mode tabs */}
           <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">
             <button
@@ -539,7 +708,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
                   />
                   <p className="text-xs text-gray-400 mt-1">
-                    Token needs <code>repo</code> read scope. Also used to push translations back to the branch.
+                    Requires <code>repo</code> read scope. Used to read files and push translated content back to your branch.
                   </p>
                 </div>
                 <button
@@ -647,15 +816,15 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             <input
               id="file-input"
               type="file"
-              accept=".json,.csv,.md,.pdf,.xliff,.xlf"
+              accept=".json,.csv,.md,.txt,.pdf,.xliff,.xlf,.strings,.stringsdict,.xcstrings,.po,.xml,.arb,.properties"
               multiple
               className="hidden"
               onChange={handleInputChange}
             />
             <p className="text-gray-500">
-              Drop <strong>.json</strong>, <strong>.csv</strong>, <strong>.md</strong>, <strong>.pdf</strong>, <strong>.xliff</strong>, or <strong>.xlf</strong> files here, or click to browse
+              Drop files here or click to browse
             </p>
-            <p className="text-xs text-gray-400 mt-1">Multiple files supported — each becomes a separate translation job. XLIFF files must have empty &lt;target&gt; elements.</p>
+            <p className="text-xs text-gray-400 mt-1">JSON · CSV · Markdown · TXT · PDF · XLIFF · .strings · .po · Android XML · .arb · .properties · Multiple files OK</p>
           </div>
 
           {/* File list */}
@@ -695,19 +864,37 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                       <p className="text-sm font-medium text-gray-900 truncate">{entry.file.name}</p>
                       {entry.parseError ? (
                         <p className="text-xs text-red-600 mt-0.5">{entry.parseError}</p>
+                      ) : entry.sizeWarning ? (
+                        <p className="text-xs text-amber-600 mt-0.5">⚠ {entry.sizeWarning}</p>
                       ) : (
                         <p className="text-xs text-gray-400 mt-0.5">
                           {formatBytes(entry.file.size)}
                           {isPdf && probe
                             ? ` · ${probe.numPages} page${probe.numPages !== 1 ? "s" : ""} · ~${probe.estimatedUnits} strings`
                             : isPdf && entry.probePending
-                              ? " · analysing…"
+                              ? null
                               : isXliff && entry.xliffMeta
                                 ? ` · ${entry.xliffMeta.emptyUnitCount} untranslated unit${entry.xliffMeta.emptyUnitCount !== 1 ? "s" : ""}`
                                 : stringCount !== null
                                   ? ` · ${stringCount} string${stringCount !== 1 ? "s" : ""} detected`
                                   : ""}
                         </p>
+                      )}
+                      {isPdf && entry.probePending && (
+                        <div className="mt-2 space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-indigo-600">Analysing PDF…</span>
+                            <span className="text-xs text-gray-400">please wait</span>
+                          </div>
+                          <div className="relative h-2.5 w-full bg-indigo-100 rounded-full overflow-hidden">
+                            <div
+                              className="absolute inset-y-0 left-0 w-2/5 bg-indigo-500 rounded-full"
+                              style={{animation: "pdf-scan 1.5s ease-in-out infinite"}}
+                            />
+                          </div>
+                          <p className="text-xs text-gray-400">Counting pages and extracting text — larger files take longer</p>
+                          <style>{`@keyframes pdf-scan{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}`}</style>
+                        </div>
                       )}
                       {isXliff && entry.xliffMeta && !entry.parseError && (
                         <p className="text-xs text-indigo-600 mt-0.5">
@@ -721,11 +908,11 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                         <>
                           <p className={`text-xs mt-0.5 ${probe.isScanned ? "text-amber-600" : "text-green-600"}`}>
                             {probe.isScanned
-                              ? "Scanned PDF — Claude Vision will extract text (Anthropic key required)"
-                              : `Text-based PDF — extracted directly (${probe.wordCount.toLocaleString()} words, no Vision API cost)`}
+                              ? "Scanned PDF — text extracted via AI vision"
+                              : `Text PDF — ${probe.wordCount.toLocaleString()} words detected`}
                           </p>
                           <p className="text-xs text-gray-400 mt-0.5">
-                            Download: plain text (.xliff) only — no PDF layout or formatting reconstruction
+                            Delivers .xliff · .txt · .pdf — original layout is approximated
                           </p>
                         </>
                       )}
@@ -796,7 +983,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
           <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
             <div>
               <h2 className="font-medium text-gray-900">Job details</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Give this job a name so you can find it later. Your downloaded files will use this name.</p>
+              <p className="text-xs text-gray-400 mt-0.5">Name this job so you can find it later. Your downloaded files will use this name.</p>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -809,41 +996,32 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
+            {entries.some((e: FileEntry) => !e.xliffMeta) && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Source language</label>
+                <select
+                  value={sourceLanguage}
+                  onChange={(e) => setSourceLanguage(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  {STUDIO_LANGUAGES.map((l: (typeof STUDIO_LANGUAGES)[number]) => (
+                    <option key={l.code} value={l.code}>{l.name} ({l.code})</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-400 mt-1">The original language of your content.</p>
+              </div>
+            )}
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+          <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
             <div>
               <h2 className="font-medium text-gray-900">AI provider</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Not sure which to pick? <strong className="text-gray-600">Claude Sonnet</strong> gives the best quality for most content. <strong className="text-gray-600">Haiku</strong> or <strong className="text-gray-600">Flash</strong> are faster and cheaper if you have a large volume.</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-indigo-200 bg-indigo-50">
+              <span className="text-indigo-600 text-lg">✦</span>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Provider</label>
-                <select
-                  value={provider}
-                  onChange={(e) => {
-                    const p = providers.find((x: (typeof providers)[number]) => x.name === e.target.value)!
-                    setProvider(p.name)
-                    setModel(p.models[0].id)
-                  }}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  {providers.map((p: (typeof providers)[number]) => (
-                    <option key={p.name} value={p.name}>{p.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Model</label>
-                <select
-                  value={model}
-                  onChange={(e) => setModel(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  {currentProvider.models.map((m: (typeof currentProvider.models)[number]) => (
-                    <option key={m.id} value={m.id}>{m.label}</option>
-                  ))}
-                </select>
+                <p className="text-sm font-semibold text-indigo-900">Claude Sonnet 4.6 by Anthropic</p>
+                <p className="text-xs text-indigo-600 mt-0.5">Best quality for translation — fixed for this release</p>
               </div>
             </div>
           </div>
@@ -860,8 +1038,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                   )}
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Pick the language(s) you want your content translated into. Use the preset buttons for common markets or search below.
-                  Each language is translated separately — you will get one file per language.
+                  Choose your target languages. You'll get one translated file per language.
                 </p>
               </div>
               <button onClick={clearAll} className="text-xs text-gray-400 hover:underline shrink-0 ml-4">Clear</button>
@@ -1000,6 +1177,147 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             </div>
           </div>
 
+          {/* ── Terminology / Glossary ── */}
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            {/* Header toggle */}
+            <button
+              type="button"
+              onClick={() => setGlossaryOpen(o => !o)}
+              className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-medium text-gray-900">Terminology</h2>
+                  <span className="text-xs text-gray-400 font-normal">optional</span>
+                  {totalGlossaryTerms > 0 && (
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                      {totalGlossaryTerms} term{totalGlossaryTerms !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Pin key phrases so the AI translates them consistently every time.
+                </p>
+              </div>
+              <span className="text-gray-400 text-sm ml-4 shrink-0">{glossaryOpen ? "▲" : "▼"}</span>
+            </button>
+
+            {/* Body */}
+            {glossaryOpen && (
+              <div className="border-t border-gray-100 px-5 pb-5 pt-4 space-y-4">
+                {selectedLangs.size === 0 ? (
+                  <p className="text-sm text-gray-400 text-center py-6">
+                    Select target languages above to add terminology.
+                  </p>
+                ) : (() => {
+                  const langs = STUDIO_LANGUAGES.filter((l: (typeof STUDIO_LANGUAGES)[number]) => selectedLangs.has(l.code))
+                  const activeLang = selectedLangs.size === 1
+                    ? langs[0]?.code ?? ""
+                    : (selectedLangs.has(glossaryTab) ? glossaryTab : "")
+                  const terms = glossary[activeLang] ?? []
+
+                  return (
+                    <>
+                      {/* Language tabs — only shown for multiple languages */}
+                      {selectedLangs.size > 1 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {langs.map((lang: (typeof STUDIO_LANGUAGES)[number]) => {
+                            const count = (glossary[lang.code] ?? []).filter((t: GlossaryTerm) => t.source.trim() && t.target.trim()).length
+                            const isActive = glossaryTab === lang.code
+                            return (
+                              <button
+                                key={lang.code}
+                                type="button"
+                                onClick={() => setGlossaryTab(lang.code)}
+                                className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                                  isActive
+                                    ? "bg-indigo-600 text-white border-indigo-600"
+                                    : "border-gray-200 bg-gray-50 text-gray-600 hover:border-indigo-300 hover:text-indigo-700"
+                                }`}
+                              >
+                                {lang.code}
+                                {count > 0 && (
+                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                                    isActive ? "bg-indigo-500 text-white" : "bg-gray-200 text-gray-600"
+                                  }`}>{count}</span>
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
+
+                      {/* Term editor pane */}
+                      {(!activeLang && selectedLangs.size > 1) ? (
+                        <p className="text-sm text-gray-400 text-center py-4">
+                          Select a language tab to add terms.
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          {/* Column headers */}
+                          {terms.length > 0 && (
+                            <div className="grid grid-cols-[1fr_16px_1fr_24px] gap-2 px-1 pb-0.5">
+                              <p className="text-xs font-medium text-gray-500">Source term</p>
+                              <span />
+                              <p className="text-xs font-medium text-gray-500">
+                                {STUDIO_LANGUAGES.find((l: (typeof STUDIO_LANGUAGES)[number]) => l.code === activeLang)?.name ?? activeLang} translation
+                              </p>
+                              <span />
+                            </div>
+                          )}
+
+                          {/* Term rows */}
+                          {terms.map((term: GlossaryTerm, i: number) => (
+                            <div key={i} className="grid grid-cols-[1fr_16px_1fr_24px] gap-2 items-center">
+                              <input
+                                value={term.source}
+                                onChange={e => updateTerm(activeLang, i, "source", e.target.value)}
+                                placeholder="e.g. l10n"
+                                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-gray-300"
+                              />
+                              <span className="text-gray-300 text-sm text-center">→</span>
+                              <input
+                                value={term.target}
+                                onChange={e => updateTerm(activeLang, i, "target", e.target.value)}
+                                placeholder="e.g. 本地化"
+                                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-gray-300"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeTerm(activeLang, i)}
+                                className="text-gray-300 hover:text-red-400 transition-colors text-xl leading-none flex items-center justify-center"
+                                title="Remove term"
+                              >×</button>
+                            </div>
+                          ))}
+
+                          {/* Add term / counter row */}
+                          <div className="flex items-center justify-between pt-1">
+                            <button
+                              type="button"
+                              disabled={terms.length >= MAX_TERMS}
+                              onClick={() => addTerm(activeLang)}
+                              className="text-xs text-indigo-600 hover:text-indigo-800 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1 transition-colors"
+                            >
+                              <span className="text-base leading-none font-light">+</span> Add term
+                            </button>
+                            <span className={`text-xs tabular-nums ${terms.length >= MAX_TERMS ? "text-amber-500 font-medium" : "text-gray-400"}`}>
+                              {terms.length}/{MAX_TERMS}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2.5 leading-relaxed">
+                        Listed terms are always translated exactly as specified. Leave a row blank to let AI decide.
+                      </p>
+                    </>
+                  )
+                })()}
+              </div>
+            )}
+          </div>
+
           {entries.some((e: FileEntry) => e.probePending) && (
             <p className="text-xs text-amber-600 text-right">
               Analysing PDF… please wait before proceeding.
@@ -1011,7 +1329,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             </button>
             <button
               onClick={() => setStep(3)}
-              disabled={!jobName.trim() || selectedLangs.size === 0 || entries.some((e: FileEntry) => e.probePending)}
+              disabled={!jobName.trim() || selectedLangs.size === 0 || entries.some((e: FileEntry) => e.probePending || e.parseError)}
               className="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-40"
               title={entries.some((e: FileEntry) => e.probePending) ? "Wait for PDF analysis to complete" : undefined}
             >
@@ -1091,13 +1409,26 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
         })
 
         const grandTotalRaw = fileRows.reduce((s: number, r: (typeof fileRows)[number]) => s + r.totalFileCost, 0)
-        // Apply minimum job fee: total must be at least $5
-        const grandTotalCharge = Math.max(MIN_JOB_FEE, grandTotalRaw)
         const totalWords = fileRows.reduce((s: number, r: (typeof fileRows)[number]) => s + r.estimatedWords, 0)
+        // Compute effective discount pct — scale down if job words exceed the promo's free-word cap
+        const effectiveDiscountPct = (() => {
+          if (!promoState?.valid) return 0
+          const { discountPct, maxWordsPerJob } = promoState
+          if (maxWordsPerJob != null && totalWords > maxWordsPerJob) {
+            return Math.round((maxWordsPerJob / totalWords) * discountPct)
+          }
+          return discountPct
+        })()
+        // Waive the minimum fee when the promo covers 100% of the variable cost so users
+        // don't pay $5 on a $2 job that was supposed to be "free" with their promo code.
+        const promoCoversAll = effectiveDiscountPct === 100
+        const grandTotalBeforeDiscount = promoCoversAll ? grandTotalRaw : Math.max(MIN_JOB_FEE, grandTotalRaw)
+        // Apply promo discount on top of the (post-minimum) total
+        const promoDiscount = effectiveDiscountPct > 0 ? grandTotalBeforeDiscount * (effectiveDiscountPct / 100) : 0
+        const grandTotalCharge = Math.max(0, grandTotalBeforeDiscount - promoDiscount)
         // Split into fixed (platform fee) and variable (AI markup) components for transparency
         const totalPlatformFee = fileRows.reduce((s: number, r: (typeof fileRows)[number]) => s + r.estimatedWords * PLATFORM_FEE_PER_WORD * selectedLangs.size, 0)
-        const totalAiMarkup = Math.max(0, grandTotalRaw - totalPlatformFee)
-        const minFeeApplied = grandTotalCharge > grandTotalRaw
+        const minFeeApplied = !promoCoversAll && grandTotalBeforeDiscount > grandTotalRaw
 
         return (
           <div className="space-y-4">
@@ -1121,7 +1452,15 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-gray-900">{fmt(grandTotalCharge)}</p>
-                  <p className="text-xs text-gray-400">total estimate</p>
+                  {(() => {
+                    const agencyLow  = Math.round(totalWords * selectedLangs.size * 0.10)
+                    const agencyHigh = Math.round(totalWords * selectedLangs.size * 0.15)
+                    return agencyLow >= 10 ? (
+                      <p className="text-xs text-green-600 mt-0.5">
+                        vs. ${agencyLow}–${agencyHigh} with a human agency
+                      </p>
+                    ) : null
+                  })()}
                 </div>
               </div>
 
@@ -1147,7 +1486,12 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                       <td className="px-5 py-2.5 text-right text-gray-500">
                         {isPdf ? `~${estimatedWords.toLocaleString()}` : estimatedWords.toLocaleString()}
                       </td>
-                      <td className="px-5 py-2.5 text-right font-medium text-gray-900">{fmt(totalFileCost)}</td>
+                      <td className="px-5 py-2.5 text-right font-medium text-gray-900">
+                        {fmt(minFeeApplied ? grandTotalBeforeDiscount / fileRows.length : totalFileCost)}
+                        {minFeeApplied && (
+                          <span className="block text-xs text-gray-400 font-normal">min. fee</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -1160,36 +1504,93 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                 </tfoot>
               </table>
 
-              {/* Cost breakdown — shows what's fixed vs variable */}
-              <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 space-y-1.5">
-                <p className="text-xs font-medium text-gray-600 mb-2">What makes up this charge:</p>
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>Platform fee <span className="text-gray-400">($0.007 × {totalWords.toLocaleString()} words)</span></span>
-                  <span className="font-medium text-gray-700">{fmt(totalPlatformFee)} <span className="text-green-600 font-normal">fixed</span></span>
+              {/* Cost summary — promo discount only */}
+              {(promoState?.valid || minFeeApplied || fileRows.some((r: (typeof fileRows)[number]) => r.isPdf)) && (
+                <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 space-y-1.5">
+                  {minFeeApplied && (
+                    <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                      <span className="shrink-0 mt-0.5">ⓘ</span>
+                      <span>A {fmt(MIN_JOB_FEE)} minimum applies — your content is small so the minimum job fee is charged instead of the per-word rate. Add more languages or files to get more value from this job.</span>
+                    </div>
+                  )}
+                  {promoState?.valid && (
+                    <div className="flex justify-between text-xs text-green-600 font-medium">
+                      <span>Promo code <span className="font-bold">{promoState.code}</span> ({effectiveDiscountPct}% off)</span>
+                      <span>−{fmt(promoDiscount)}</span>
+                    </div>
+                  )}
+                  {fileRows.some((r: (typeof fileRows)[number]) => r.isPdf) && (
+                    <p className="text-xs text-gray-400">
+                      PDF: delivered as .xliff (bilingual), .txt, and .pdf. Original layout is approximated.
+                    </p>
+                  )}
                 </div>
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>AI translation <span className="text-gray-400">(raw API cost × {PAYG_MARKUP})</span></span>
-                  <span className="font-medium text-gray-700">~{fmt(totalAiMarkup)} <span className="text-amber-600 font-normal">±20%</span></span>
-                </div>
-                {minFeeApplied && (
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>Minimum job fee applied</span>
-                    <span className="font-medium text-gray-700">{fmt(MIN_JOB_FEE)}</span>
-                  </div>
-                )}
-                <p className="text-xs text-gray-400 pt-1 border-t border-gray-200 mt-1">
-                  The platform fee is calculated from the extracted word count and will not change. The AI portion varies slightly based on actual token usage.
-                </p>
-                {fileRows.some((r: (typeof fileRows)[number]) => r.isPdf) && (
-                  <p className="text-xs text-gray-400">
-                    PDF output: delivered as .xliff (for human review) and .txt (ready to use). Original PDF layout is not reconstructed.
-                  </p>
-                )}
+              )}
+            </div>
+
+            {/* Promo code */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <p className="text-xs font-medium text-gray-700 mb-2">Promo code</p>
+              <div className="flex gap-2">
+                <input
+                  value={promoInput}
+                  onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoState(null) }}
+                  placeholder="Enter code"
+                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  disabled={submitting}
+                />
+                <button
+                  type="button"
+                  disabled={!promoInput.trim() || promoLoading || submitting}
+                  onClick={async () => {
+                    setPromoLoading(true)
+                    setPromoState(null)
+                    try {
+                      const res = await fetch("/api/billing/promo", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ code: promoInput.trim() }),
+                      })
+                      const data = await res.json() as { valid: boolean; discountPct?: number; code?: string; maxWordsPerJob?: number | null; error?: string }
+                      if (data.valid) {
+                        setPromoState({ valid: true, discountPct: data.discountPct!, code: data.code!, maxWordsPerJob: data.maxWordsPerJob })
+                      } else {
+                        setPromoState({ valid: false, discountPct: 0, code: "", error: data.error })
+                      }
+                    } catch {
+                      setPromoState({ valid: false, discountPct: 0, code: "", error: "Failed to validate code" })
+                    }
+                    setPromoLoading(false)
+                  }}
+                  className="px-4 py-2 text-sm bg-gray-900 text-white rounded-lg hover:bg-gray-700 disabled:opacity-40 transition-colors"
+                >
+                  {promoLoading ? "…" : "Apply"}
+                </button>
               </div>
+              {promoState && (
+                <div className="mt-1.5 space-y-1">
+                  <p className={`text-xs ${promoState.valid ? "text-green-600" : "text-red-500"}`}>
+                    {promoState.valid
+                      ? `✓ Code accepted — first 1,000 words free!`
+                      : `✕ ${promoState.error}`}
+                  </p>
+                  {promoState.valid && promoState.maxWordsPerJob != null && totalWords > promoState.maxWordsPerJob && (
+                    <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                      ℹ First {promoState.maxWordsPerJob.toLocaleString()} words are free — you&apos;ll only pay for the remaining {(totalWords - promoState.maxWordsPerJob).toLocaleString()} words.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {submitError && (
-              <pre className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2 whitespace-pre-wrap">{submitError}</pre>
+              <div className="space-y-2">
+                <pre className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2 whitespace-pre-wrap">{submitError}</pre>
+                <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  Your card has not been charged — the error occurred before any translation began.
+                </p>
+              </div>
             )}
 
             {!hasCard ? (
@@ -1198,10 +1599,9 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">💳</span>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">Add a payment method to continue</p>
+                    <p className="text-sm font-semibold text-gray-900">Add a card to get started</p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Your card is charged only after translation completes — nothing is billed now.
-                      You will receive an invoice at the end of each month.
+                      You're only charged when your translation job completes — nothing is billed today.
                     </p>
                   </div>
                 </div>
@@ -1231,7 +1631,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
                   <span>✓</span>
-                  <span>Payment method on file — you will be billed after translation completes, invoiced monthly.</span>
+                  <span>Payment method on file — you will be charged when this job completes.</span>
                 </div>
                 <div className="flex justify-between">
                   <button onClick={() => setStep(2)} className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">

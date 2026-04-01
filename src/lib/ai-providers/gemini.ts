@@ -1,4 +1,5 @@
 import type { AIProvider, TranslationBatch, TranslationResult, TranslatedUnit, SourceUnit } from "./types"
+import { buildGlossaryPromptSection } from "./anthropic"
 
 const SYSTEM_PROMPT = `You are a professional translator. Translate the provided JSON array of strings from {SOURCE} to {TARGET}.
 Rules:
@@ -12,9 +13,13 @@ export const geminiProvider: AIProvider = {
   name: "gemini",
 
   async translate(batch: TranslationBatch, apiKey: string, model: string): Promise<TranslationResult> {
-    const systemPrompt = SYSTEM_PROMPT
+    const glossarySection = batch.glossaryTerms ? buildGlossaryPromptSection(batch.glossaryTerms) : ""
+    const basePrompt = SYSTEM_PROMPT
       .replace("{SOURCE}", batch.sourceLanguage)
       .replace("{TARGET}", batch.targetLanguage)
+    const systemPrompt = glossarySection
+      ? basePrompt.replace("Rules:\n", `${glossarySection}\nRules:\n`)
+      : basePrompt
 
     const userContent = JSON.stringify(
       batch.units.map((u: SourceUnit) => ({ id: u.id, text: u.sourceText }))

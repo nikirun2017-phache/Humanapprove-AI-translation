@@ -1,11 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { getStudioLanguageName } from "@/lib/languages"
 import { cn } from "@/lib/utils"
-import { PLATFORM_REVIEW_RATE, OWN_REVIEWER_PLATFORM_FEE, AVG_WORDS_PER_UNIT } from "@/lib/pricing"
 
 interface Task {
   id: string
@@ -37,7 +34,6 @@ const STATUS_STYLES: Record<string, string> = {
   running: "bg-blue-100 text-blue-700",
   completed: "bg-green-100 text-green-700",
   failed: "bg-red-100 text-red-700",
-  imported: "bg-purple-100 text-purple-700",
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -45,18 +41,11 @@ const STATUS_LABELS: Record<string, string> = {
   running: "Translating…",
   completed: "Done",
   failed: "Failed",
-  imported: "In review",
 }
 
 export function JobProgress({ initialJob }: Props) {
-  const router = useRouter()
   const [job, setJob] = useState<Job>(initialJob)
   const [paused, setPaused] = useState(false)
-  const [importing, setImporting] = useState<Record<string, boolean>>({})
-  const [importingAll, setImportingAll] = useState(false)
-  const [importError, setImportError] = useState<string | null>(null)
-  const [reviewModal, setReviewModal] = useState<{ open: boolean; taskId?: string }>({ open: false })
-  const [reviewerType, setReviewerType] = useState<"platform" | "own">("platform")
   const [retrying, setRetrying] = useState<Record<string, boolean>>({})
   const [autoDownloaded, setAutoDownloaded] = useState(false)
   const runningRef = useRef(false)
@@ -67,22 +56,47 @@ export function JobProgress({ initialJob }: Props) {
 
   const tasks = job.tasks
   const totalTasks = tasks.length
-  const doneTasks = tasks.filter((t: Task) => t.status === "completed" || t.status === "imported" || t.status === "failed").length
+  const doneTasks = tasks.filter((t: Task) => t.status === "completed" || t.status === "failed").length
   const overallPct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0
   const allDone = doneTasks === totalTasks
   const completedCount = tasks.filter((t: Task) => t.status === "completed").length
   const failedCount = tasks.filter((t: Task) => t.status === "failed").length
-  const importedCount = tasks.filter((t: Task) => t.status === "imported").length
-  const readyCount = tasks.filter((t: Task) => t.status === "completed" || t.status === "imported").length
+  const readyCount = tasks.filter((t: Task) => t.status === "completed").length
   const runningTask = tasks.find((t: Task) => t.status === "running")
+
+  const isPdf = job.sourceFormat === "pdf"
+
+  function triggerDownload(url: string) {
+    const a = document.createElement("a")
+    a.href = url
+    a.download = ""
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
 
   // Auto-download all completed files as soon as translation finishes
   useEffect(() => {
     if (allDone && completedCount > 0 && !autoDownloadedRef.current) {
       autoDownloadedRef.current = true
       setAutoDownloaded(true)
-      // Small delay so the browser doesn't block multiple simultaneous downloads
-      setTimeout(() => downloadAll(), 500)
+      ;(async () => {
+        for (const task of tasks) {
+          if (task.status === "completed") {
+            const base = `/api/translation-studio/jobs/${job.id}/tasks/${task.id}/download`
+            if (isPdf) {
+              // PDF source: download translated .txt then .pdf
+              triggerDownload(`${base}?format=txt`)
+              await new Promise(r => setTimeout(r, 800))
+              triggerDownload(`${base}?format=pdf`)
+              await new Promise(r => setTimeout(r, 800))
+            } else {
+              triggerDownload(base)
+              await new Promise(r => setTimeout(r, 800))
+            }
+          }
+        }
+      })()
     }
   }, [allDone, completedCount])
 
@@ -129,7 +143,9 @@ export function JobProgress({ initialJob }: Props) {
     const latest = await fetchJob()
     if (!latest) { runningRef.current = false; return }
 
-    const pending = latest.tasks.filter((t: Task) => t.status === "pending")
+    // Include "running" tasks — they may be stale from a dead browser session
+    // The translate API accepts them and resets progress from scratch
+    const pending = latest.tasks.filter((t: Task) => t.status === "pending" || t.status === "running")
 
     for (const task of pending) {
       if (pausedRef.current) break
@@ -140,25 +156,13 @@ export function JobProgress({ initialJob }: Props) {
   }
 
   useEffect(() => {
-    const hasPending = initialJob.tasks.some((t: Task) => t.status === "pending")
-    if (hasPending) runTranslation()
-  }, [])
-
-  async function handleImport(task: Task, type: "platform" | "own" = reviewerType) {
-    setImporting((s) => ({ ...s, [task.id]: true }))
-    setImportError(null)
-    const res = await fetch(
-      `/api/translation-studio/jobs/${job.id}/tasks/${task.id}/import`,
-      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reviewerType: type }) }
+    // Resume if there are pending tasks OR stale "running" tasks from a
+    // previous session that was closed mid-translation
+    const hasActive = initialJob.tasks.some(
+      (t: Task) => t.status === "pending" || t.status === "running"
     )
-    if (res.ok) {
-      await fetchJob()
-    } else {
-      const data = await res.json().catch(() => ({})) as { error?: string }
-      setImportError(data.error ?? `Import failed (HTTP ${res.status})`)
-    }
-    setImporting((s) => ({ ...s, [task.id]: false }))
-  }
+    if (hasActive) runTranslation()
+  }, [])
 
   async function handleRetry(task: Task) {
     setRetrying((s) => ({ ...s, [task.id]: true }))
@@ -174,30 +178,21 @@ export function JobProgress({ initialJob }: Props) {
     }
   }
 
-  async function handleImportAll(type: "platform" | "own" = reviewerType) {
-    setReviewModal({ open: false })
-    setImportingAll(true)
-    const completed = job.tasks.filter((t: Task) => t.status === "completed")
-    for (const task of completed) {
-      await handleImport(task, type)
+  async function downloadTask(task: Task) {
+    const base = `/api/translation-studio/jobs/${job.id}/tasks/${task.id}/download`
+    if (isPdf) {
+      triggerDownload(`${base}?format=txt`)
+      await new Promise(r => setTimeout(r, 600))
+      triggerDownload(`${base}?format=pdf`)
+    } else {
+      triggerDownload(base)
     }
-    setImportingAll(false)
-    router.push("/dashboard")
-  }
-
-  function downloadTask(task: Task) {
-    const a = document.createElement("a")
-    a.href = `/api/translation-studio/jobs/${job.id}/tasks/${task.id}/download`
-    a.download = ""
-    a.click()
   }
 
   async function downloadAll() {
-    const ready = tasks.filter(
-      (t) => t.status === "completed" || t.status === "imported"
-    )
+    const ready = tasks.filter((t) => t.status === "completed")
     for (const task of ready) {
-      downloadTask(task)
+      await downloadTask(task)
       await new Promise((r) => setTimeout(r, 300))
     }
   }
@@ -218,7 +213,7 @@ export function JobProgress({ initialJob }: Props) {
       return {
         icon: "✦",
         color: "bg-indigo-50 border-indigo-200 text-indigo-800",
-        text: `Translating into ${langName} — ${pct}% complete. Your files will download automatically when done. Please keep this tab open — large files may take a few minutes.`,
+        text: `Translating ${langName} — ${pct}% done. Files download automatically when complete. Keep this tab open.`,
       }
     }
     const pendingCount = tasks.filter((t: Task) => t.status === "pending").length
@@ -251,6 +246,9 @@ export function JobProgress({ initialJob }: Props) {
                   setPaused(true)
                 }
               }}
+              title={paused
+                ? "Resume — continue translating remaining languages"
+                : "Pause after the current language finishes. The translation in progress will not be interrupted."}
               className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               {paused ? "Resume" : "Pause"}
@@ -269,7 +267,7 @@ export function JobProgress({ initialJob }: Props) {
               onClick={downloadAll}
               className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
             >
-              Download all ({readyCount})
+              {autoDownloaded ? `Re-download all (${readyCount})` : `Download all (${readyCount})`}
             </button>
           )}
         </div>
@@ -280,7 +278,7 @@ export function JobProgress({ initialJob }: Props) {
         <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-start gap-2">
           <span className="text-blue-500 mt-0.5 shrink-0">ℹ</span>
           <p className="text-sm text-blue-800">
-            <strong>Your translated PDF will be ready in two formats:</strong> an <strong>.xliff</strong> for side-by-side human review, and a clean <strong>.txt</strong> you can copy, paste, or import directly. Both files download automatically when translation completes — no extra steps needed.
+            <strong>Two files download automatically when done:</strong> a <strong>.txt</strong> you can open, copy, or import anywhere, and a <strong>.pdf</strong> with the translated content ready to share. Original layout is not preserved.
           </p>
         </div>
       )}
@@ -309,7 +307,6 @@ export function JobProgress({ initialJob }: Props) {
           <span className="text-sm text-gray-500">
             {doneTasks}/{totalTasks} languages
             {failedCount > 0 && <span className="ml-2 text-red-500">{failedCount} failed</span>}
-            {importedCount > 0 && <span className="ml-2 text-purple-600">{importedCount} in review</span>}
           </span>
         </div>
         <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
@@ -332,73 +329,20 @@ export function JobProgress({ initialJob }: Props) {
         )}
       </div>
 
-      {/* ── Completion banner ── */}
+      {/* Completion banner */}
       {allDone && completedCount > 0 && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-5 space-y-4">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-5">
           <div className="flex items-start gap-3">
             <span className="text-2xl">✅</span>
             <div>
               <p className="text-sm font-semibold text-green-900">
-                {completedCount} translation{completedCount !== 1 ? "s" : ""} ready — files are downloading to your Downloads folder
+                {completedCount} {completedCount !== 1 ? "files" : "file"} ready — downloading to your Downloads folder
               </p>
               <p className="text-xs text-green-700 mt-1">
-                Your translated {completedCount === 1 ? "file has" : "files have"} been saved automatically.
-                You can also re-download them any time using the buttons below.
+                Use the buttons below to re-download any file.
               </p>
             </div>
           </div>
-
-          <div className="border-t border-green-200 pt-4">
-            <p className="text-sm font-medium text-green-900 mb-1">
-              Want a human to check the translation?
-            </p>
-            <p className="text-xs text-gray-600 mb-3">
-              A reviewer will go through each sentence, approve or fix it, and give you a clean, verified file.
-              This is optional — skip it if you are happy with the AI output.
-            </p>
-            <div className="flex items-center gap-3 flex-wrap">
-              <button
-                onClick={() => setReviewModal({ open: true })}
-                disabled={importingAll}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors whitespace-nowrap"
-              >
-                {importingAll
-                  ? "Creating project…"
-                  : completedCount === 1
-                    ? "Yes — create review project"
-                    : `Yes — create ${completedCount} review projects`}
-              </button>
-              <Link
-                href="/dashboard"
-                className="text-sm text-gray-500 hover:text-gray-700 hover:underline"
-              >
-                No thanks, I&apos;m done →
-              </Link>
-            </div>
-            {importError && (
-              <p className="text-xs text-red-600 mt-2">Error: {importError}</p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* All already imported banner */}
-      {allDone && completedCount === 0 && importedCount > 0 && (
-        <div className="bg-purple-50 border border-purple-200 rounded-xl p-5 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold text-purple-900">
-              {importedCount} review project{importedCount !== 1 ? "s" : ""} created
-            </p>
-            <p className="text-xs text-purple-700 mt-0.5">
-              Head to your dashboard to assign reviewers and start the review workflow.
-            </p>
-          </div>
-          <Link
-            href="/dashboard"
-            className="shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors whitespace-nowrap"
-          >
-            Go to Dashboard →
-          </Link>
         </div>
       )}
 
@@ -452,13 +396,31 @@ export function JobProgress({ initialJob }: Props) {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-3">
-                      {(task.status === "completed" || task.status === "imported") && (
+                      {task.status === "completed" && !isPdf && (
                         <button
                           onClick={() => downloadTask(task)}
                           className="text-xs text-gray-500 hover:text-gray-700 underline"
                         >
-                          Re-download
+                          Download
                         </button>
+                      )}
+                      {task.status === "completed" && isPdf && (
+                        <>
+                          <a
+                            href={`/api/translation-studio/jobs/${job.id}/tasks/${task.id}/download?format=txt`}
+                            download
+                            className="text-xs text-gray-500 hover:text-gray-700 underline"
+                          >
+                            .txt
+                          </a>
+                          <a
+                            href={`/api/translation-studio/jobs/${job.id}/tasks/${task.id}/download?format=pdf`}
+                            download
+                            className="text-xs text-indigo-600 hover:text-indigo-800 underline font-medium"
+                          >
+                            .pdf
+                          </a>
+                        </>
                       )}
                       {task.status === "failed" && (
                         <button
@@ -469,24 +431,6 @@ export function JobProgress({ initialJob }: Props) {
                           {retrying[task.id] ? "Retrying…" : "Retry"}
                         </button>
                       )}
-                      {task.status === "completed" && (
-                        <button
-                          onClick={() => setReviewModal({ open: true, taskId: task.id })}
-                          disabled={importing[task.id]}
-                          className="text-xs text-indigo-600 hover:text-indigo-800 font-medium disabled:opacity-50"
-                          title={importError ?? undefined}
-                        >
-                          {importing[task.id] ? "Creating…" : importError ? "Retry import" : "Create review project"}
-                        </button>
-                      )}
-                      {task.status === "imported" && task.projectId && (
-                        <Link
-                          href={`/projects/${task.projectId}`}
-                          className="text-xs text-purple-600 hover:text-purple-800 font-medium"
-                        >
-                          View review →
-                        </Link>
-                      )}
                     </div>
                   </td>
                 </tr>
@@ -495,109 +439,6 @@ export function JobProgress({ initialJob }: Props) {
           </tbody>
         </table>
       </div>
-
-      {/* ── Review pricing modal ── */}
-      {reviewModal.open && (() => {
-        // Estimate word count from tasks being imported
-        const targetTasks = reviewModal.taskId
-          ? job.tasks.filter((t: Task) => t.id === reviewModal.taskId)
-          : job.tasks.filter((t: Task) => t.status === "completed")
-        const totalUnits = targetTasks.reduce((s: number, t: Task) => s + t.totalUnits, 0)
-        const estWords = totalUnits * AVG_WORDS_PER_UNIT
-
-        const fmt = (n: number) => n < 0.01 ? "< $0.01" : `$${n.toFixed(2)}`
-        const platformCost = fmt(estWords * PLATFORM_REVIEW_RATE)
-        const ownCost = fmt(estWords * OWN_REVIEWER_PLATFORM_FEE)
-
-        const confirmReview = () => {
-          if (reviewModal.taskId) {
-            const task = job.tasks.find((t: Task) => t.id === reviewModal.taskId)
-            if (task) {
-              setReviewModal({ open: false })
-              handleImport(task, reviewerType)
-            }
-          } else {
-            handleImportAll(reviewerType)
-          }
-        }
-
-        return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-5">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Choose your review option</h2>
-                <p className="text-sm text-gray-500 mt-1">
-                  ~{estWords.toLocaleString()} words · cost added to your monthly invoice
-                </p>
-              </div>
-
-              {/* Option: Platform reviewer */}
-              <button
-                onClick={() => setReviewerType("platform")}
-                className={`w-full text-left rounded-xl border-2 p-4 transition-all ${
-                  reviewerType === "platform" ? "border-indigo-500 bg-indigo-50" : "border-gray-200 hover:border-indigo-300"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                      Jendee AI reviewer
-                      <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-medium">Recommended</span>
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      We source a native-speaker reviewer. Fast turnaround, no setup needed.
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-lg font-bold text-gray-900">{platformCost}</p>
-                    <p className="text-xs text-gray-400">$0.055/word</p>
-                  </div>
-                </div>
-              </button>
-
-              {/* Option: Own reviewer */}
-              <button
-                onClick={() => setReviewerType("own")}
-                className={`w-full text-left rounded-xl border-2 p-4 transition-all ${
-                  reviewerType === "own" ? "border-teal-500 bg-teal-50" : "border-gray-200 hover:border-teal-300"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900">Your own reviewer</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Invite a colleague or freelancer. You handle the assignment — we provide the review editor, audit trail, and export.
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-lg font-bold text-gray-900">{ownCost}</p>
-                    <p className="text-xs text-gray-400">$0.01/word platform fee</p>
-                  </div>
-                </div>
-              </button>
-
-              <p className="text-xs text-gray-400">
-                Estimate based on ~{AVG_WORDS_PER_UNIT} words/segment. Actual words counted at invoice time.
-              </p>
-
-              <div className="flex items-center gap-3 pt-1">
-                <button
-                  onClick={confirmReview}
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
-                >
-                  Confirm &amp; create project
-                </button>
-                <button
-                  onClick={() => setReviewModal({ open: false })}
-                  className="text-sm text-gray-500 hover:text-gray-700"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-      })()}
     </div>
   )
 }

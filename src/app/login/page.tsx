@@ -2,25 +2,68 @@
 
 import { useState } from "react"
 import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 
-export default function LoginPage() {
+type ErrorState =
+  | { kind: "text"; message: string }
+  | { kind: "unverified"; email: string }
+
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [mode, setMode] = useState<"signin" | "signup">(
+    searchParams.get("mode") === "signup" ? "signup" : "signin"
+  )
+  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [error, setError] = useState<ErrorState | null>(null)
   const [loading, setLoading] = useState(false)
   const [socialLoading, setSocialLoading] = useState<"google" | "apple" | null>(null)
+  const [resendState, setResendState] = useState<"idle" | "sending" | "sent" | "error">("idle")
 
   async function handleSocialSignIn(provider: "google" | "apple") {
     setSocialLoading(provider)
-    await signIn(provider, { callbackUrl: "/dashboard" })
+    await signIn(provider, { callbackUrl: "/translation-studio" })
+  }
+
+  async function handleResend(emailAddr: string) {
+    setResendState("sending")
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailAddr }),
+      })
+      setResendState(res.ok ? "sent" : "error")
+    } catch {
+      setResendState("error")
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    setError("")
+    setError(null)
+
+    if (mode === "signup") {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      })
+      const data = await res.json() as { error?: string }
+      if (!res.ok) {
+        setError({ kind: "text", message: data.error ?? "Registration failed" })
+        setLoading(false)
+        return
+      }
+      // After successful signup, show the unverified state immediately
+      setLoading(false)
+      setError({ kind: "unverified", email })
+      return
+    }
 
     const result = await signIn("credentials", {
       email,
@@ -28,13 +71,30 @@ export default function LoginPage() {
       redirect: false,
     })
 
-    setLoading(false)
-
     if (result?.error) {
-      setError("Invalid email or password")
+      // Check whether the failure is due to pending email verification
+      const checkRes = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, checkOnly: true }),
+      })
+      const checkData = await checkRes.json() as { pending?: boolean }
+      if (checkData.pending) {
+        setError({ kind: "unverified", email })
+      } else {
+        setError({ kind: "text", message: "Wrong email or password — please try again." })
+      }
     } else {
-      router.push("/dashboard")
+      router.push("/translation-studio")
     }
+
+    setLoading(false)
+  }
+
+  function switchMode(next: "signin" | "signup") {
+    setMode(next)
+    setError(null)
+    setResendState("idle")
   }
 
   return (
@@ -42,15 +102,59 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-indigo-600 tracking-tight">Jendee AI</h1>
-          <p className="text-sm text-gray-500 mt-1">Sign in to your account</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {mode === "signin" ? "Sign in to your account" : "Create your account"}
+          </p>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4">
-          {error && (
+          {error?.kind === "text" && (
             <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2">
-              {error}
+              {error.message}
             </div>
           )}
+
+          {error?.kind === "unverified" && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-3 text-sm space-y-2">
+              <p className="font-medium text-amber-800">Please verify your email first</p>
+              <p className="text-amber-700">
+                We sent a verification link to <strong>{error.email}</strong>. Click the link in
+                that email to activate your account, then sign in here.
+              </p>
+              {resendState === "sent" ? (
+                <p className="text-green-700 font-medium">Verification email resent ✓</p>
+              ) : resendState === "error" ? (
+                <p className="text-red-700">Failed to resend — please try again.</p>
+              ) : (
+                <button
+                  type="button"
+                  disabled={resendState === "sending"}
+                  onClick={() => handleResend(error.email)}
+                  className="text-indigo-600 hover:underline font-medium disabled:opacity-50"
+                >
+                  {resendState === "sending" ? "Sending…" : "Resend verification email"}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Mode toggle */}
+          <div className="flex rounded-lg border border-gray-200 p-1 gap-1">
+            <button
+              type="button"
+              onClick={() => switchMode("signin")}
+              className={"flex-1 text-sm font-medium py-1.5 rounded-md transition-colors " + (mode === "signin" ? "bg-indigo-600 text-white" : "text-gray-500 hover:text-gray-700")}
+            >
+              Sign in
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMode("signup")}
+              className={"flex-1 text-sm font-medium py-1.5 rounded-md transition-colors " + (mode === "signup" ? "bg-indigo-600 text-white" : "text-gray-500 hover:text-gray-700")}
+            >
+              Sign up
+            </button>
+          </div>
 
           {/* Social login buttons */}
           <div className="space-y-2">
@@ -92,11 +196,28 @@ export default function LoginPage() {
 
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400">or sign in with email</span>
+            <span className="text-xs text-gray-400">or with email</span>
             <div className="flex-1 h-px bg-gray-200" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === "signup" && (
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Full name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="Jane Smith"
+                />
+              </div>
+            )}
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email
@@ -122,25 +243,47 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={8}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 placeholder="••••••••"
               />
+              {mode === "signup" && (
+                <p className="text-xs text-gray-400 mt-1">Minimum 8 characters</p>
+              )}
             </div>
+
+            {mode === "signin" && (
+              <div className="text-right">
+                <a href="/forgot-password" className="text-xs text-indigo-600 hover:underline">
+                  Forgot password?
+                </a>
+              </div>
+            )}
 
             <button
               type="submit"
               disabled={loading || !!socialLoading}
               className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-medium py-2 rounded-lg text-sm transition-colors"
             >
-              {loading ? "Signing in…" : "Sign in"}
+              {loading
+                ? mode === "signup" ? "Creating account…" : "Signing in…"
+                : mode === "signup" ? "Create account" : "Sign in"}
             </button>
           </form>
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-4">
-          New users signing in with Google or Apple are created automatically.
+          New Google or Apple users are created automatically.
         </p>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   )
 }
