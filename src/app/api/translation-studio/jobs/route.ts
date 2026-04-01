@@ -20,16 +20,17 @@ export async function GET() {
     },
   })
 
-  // Attach task status counts
+  // Attach tasks + status counts in a single query per job
   const withStats = await Promise.all(
     jobs.map(async (job: (typeof jobs)[number]) => {
       const tasks = await db.translationTask.findMany({
         where: { jobId: job.id },
-        select: { status: true },
+        select: { id: true, targetLanguage: true, status: true },
+        orderBy: { targetLanguage: "asc" },
       })
       const completed = tasks.filter((t: (typeof tasks)[number]) => t.status === "completed" || t.status === "imported").length
       const failed = tasks.filter((t: (typeof tasks)[number]) => t.status === "failed").length
-      return { ...job, completedTasks: completed, failedTasks: failed }
+      return { ...job, tasks, completedTasks: completed, failedTasks: failed }
     })
   )
 

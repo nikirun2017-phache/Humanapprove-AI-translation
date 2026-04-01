@@ -5,6 +5,10 @@ import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Suspense } from "react"
 
+type ErrorState =
+  | { kind: "text"; message: string }
+  | { kind: "unverified"; email: string }
+
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -14,19 +18,34 @@ function LoginForm() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [error, setError] = useState<ErrorState | null>(null)
   const [loading, setLoading] = useState(false)
   const [socialLoading, setSocialLoading] = useState<"google" | "apple" | null>(null)
+  const [resendState, setResendState] = useState<"idle" | "sending" | "sent" | "error">("idle")
 
   async function handleSocialSignIn(provider: "google" | "apple") {
     setSocialLoading(provider)
     await signIn(provider, { callbackUrl: "/translation-studio" })
   }
 
+  async function handleResend(emailAddr: string) {
+    setResendState("sending")
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailAddr }),
+      })
+      setResendState(res.ok ? "sent" : "error")
+    } catch {
+      setResendState("error")
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    setError("")
+    setError(null)
 
     if (mode === "signup") {
       const res = await fetch("/api/auth/register", {
@@ -36,10 +55,14 @@ function LoginForm() {
       })
       const data = await res.json() as { error?: string }
       if (!res.ok) {
-        setError(data.error ?? "Registration failed")
+        setError({ kind: "text", message: data.error ?? "Registration failed" })
         setLoading(false)
         return
       }
+      // After successful signup, show the unverified state immediately
+      setLoading(false)
+      setError({ kind: "unverified", email })
+      return
     }
 
     const result = await signIn("credentials", {
@@ -48,18 +71,30 @@ function LoginForm() {
       redirect: false,
     })
 
-    setLoading(false)
-
     if (result?.error) {
-      setError(mode === "signup" ? "Account created but sign-in failed. Try signing in." : "Wrong email or password — please try again.")
+      // Check whether the failure is due to pending email verification
+      const checkRes = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, checkOnly: true }),
+      })
+      const checkData = await checkRes.json() as { pending?: boolean }
+      if (checkData.pending) {
+        setError({ kind: "unverified", email })
+      } else {
+        setError({ kind: "text", message: "Wrong email or password — please try again." })
+      }
     } else {
       router.push("/translation-studio")
     }
+
+    setLoading(false)
   }
 
   function switchMode(next: "signin" | "signup") {
     setMode(next)
-    setError("")
+    setError(null)
+    setResendState("idle")
   }
 
   return (
@@ -73,9 +108,33 @@ function LoginForm() {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4">
-          {error && (
+          {error?.kind === "text" && (
             <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2">
-              {error}
+              {error.message}
+            </div>
+          )}
+
+          {error?.kind === "unverified" && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-3 text-sm space-y-2">
+              <p className="font-medium text-amber-800">Please verify your email first</p>
+              <p className="text-amber-700">
+                We sent a verification link to <strong>{error.email}</strong>. Click the link in
+                that email to activate your account, then sign in here.
+              </p>
+              {resendState === "sent" ? (
+                <p className="text-green-700 font-medium">Verification email resent ✓</p>
+              ) : resendState === "error" ? (
+                <p className="text-red-700">Failed to resend — please try again.</p>
+              ) : (
+                <button
+                  type="button"
+                  disabled={resendState === "sending"}
+                  onClick={() => handleResend(error.email)}
+                  className="text-indigo-600 hover:underline font-medium disabled:opacity-50"
+                >
+                  {resendState === "sending" ? "Sending…" : "Resend verification email"}
+                </button>
+              )}
             </div>
           )}
 
@@ -192,6 +251,14 @@ function LoginForm() {
                 <p className="text-xs text-gray-400 mt-1">Minimum 8 characters</p>
               )}
             </div>
+
+            {mode === "signin" && (
+              <div className="text-right">
+                <a href="/forgot-password" className="text-xs text-indigo-600 hover:underline">
+                  Forgot password?
+                </a>
+              </div>
+            )}
 
             <button
               type="submit"

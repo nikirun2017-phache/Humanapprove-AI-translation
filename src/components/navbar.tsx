@@ -33,6 +33,17 @@ export function Navbar() {
           >
             Translation Studio
           </Link>
+          <Link
+            href="/jobs"
+            className={cn(
+              "text-sm font-medium transition-colors",
+              pathname.startsWith("/jobs")
+                ? "text-indigo-600"
+                : "text-gray-600 hover:text-gray-900"
+            )}
+          >
+            My Jobs
+          </Link>
           {role === "admin" && (
             <Link
               href="/admin/users"
