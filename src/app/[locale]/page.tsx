@@ -81,54 +81,52 @@ export default async function Home() {
             <span className="w-3 h-3 rounded-full bg-yellow-300" />
             <span className="w-3 h-3 rounded-full bg-green-300" />
             <span className="ml-4 flex-1 bg-white rounded px-3 py-1 text-xs text-gray-400 border border-gray-200">
-              summontranslator.com/projects/demo
+              summontranslator.com/translation-studio
             </span>
           </div>
-          {/* Fake review editor */}
-          <div className="grid grid-cols-3 divide-x divide-gray-200 min-h-64">
-            {/* Unit list */}
-            <div className="p-4 space-y-2 bg-white">
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-3">Units</p>
-              {[
-                { id: "nav.home", status: "approved", src: "Home" },
-                { id: "nav.about", status: "approved", src: "About" },
-                { id: "dashboard.welcome", status: "pending", src: "Welcome back, {name}!" },
-                { id: "errors.required", status: "rejected", src: "This field is required" },
-                { id: "buttons.save", status: "pending", src: "Save" },
-              ].map((u) => (
-                <div
-                  key={u.id}
-                  className={`px-3 py-2 rounded-lg text-xs flex items-center justify-between ${
-                    u.id === "dashboard.welcome" ? "bg-indigo-50 border border-indigo-200" : "bg-gray-50"
-                  }`}
-                >
-                  <span className="text-gray-500 font-mono truncate">{u.id}</span>
-                  <span className={
-                    u.status === "approved" ? "text-green-500" :
-                    u.status === "rejected" ? "text-red-500" : "text-gray-300"
-                  }>
-                    {u.status === "approved" ? "✓" : u.status === "rejected" ? "✗" : "○"}
-                  </span>
+          {/* Fake translation studio */}
+          <div className="p-6 bg-white space-y-5">
+            {/* Step indicator */}
+            <div className="flex items-center gap-2 text-xs font-medium">
+              {["Upload", "Configure", "Translate", "Download"].map((s, i) => (
+                <div key={s} className="flex items-center gap-2">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i < 3 ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-400"}`}>{i + 1}</div>
+                  <span className={i < 3 ? "text-gray-700" : "text-gray-400"}>{s}</span>
+                  {i < 3 && <span className="text-gray-300">›</span>}
                 </div>
               ))}
             </div>
-            {/* Editor */}
-            <div className="col-span-2 p-5 space-y-4 bg-white">
-              <div>
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Source</p>
-                <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700">Welcome back, {"{name}"}!</div>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Target · Japanese</p>
-                <div className="bg-white border-2 border-indigo-300 rounded-lg p-3 text-sm text-gray-800">
-                  お帰りなさい、{"{name}"}さん！
+            {/* Job in progress */}
+            <div className="border border-gray-100 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-sm text-gray-900">app-strings.json</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Claude Sonnet · 5 languages · 500 strings</p>
                 </div>
+                <span className="bg-indigo-50 text-indigo-700 text-xs font-semibold px-3 py-1 rounded-full">Translating…</span>
               </div>
-              <div className="flex gap-2 pt-1">
-                <div className="flex-1 bg-green-600 text-white text-xs font-medium py-2 rounded-lg text-center">✓ Approve</div>
-                <div className="flex-1 border border-red-200 text-red-600 text-xs font-medium py-2 rounded-lg text-center">✗ Reject</div>
+              <div className="space-y-2">
+                {[
+                  { lang: "Spanish", pct: 100, done: true },
+                  { lang: "French", pct: 100, done: true },
+                  { lang: "Japanese", pct: 68, done: false },
+                  { lang: "German", pct: 0, done: false },
+                  { lang: "Arabic", pct: 0, done: false },
+                ].map((row) => (
+                  <div key={row.lang} className="flex items-center gap-3">
+                    <span className="text-xs text-gray-500 w-16 shrink-0">{row.lang}</span>
+                    <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${row.done ? "bg-green-500" : "bg-indigo-500"}`}
+                        style={{ width: `${row.pct}%` }}
+                      />
+                    </div>
+                    <span className="text-xs w-8 text-right text-gray-400">{row.done ? "✓" : row.pct > 0 ? `${row.pct}%` : "—"}</span>
+                  </div>
+                ))}
               </div>
             </div>
+            <p className="text-xs text-gray-400 text-center">Files download automatically when each language finishes</p>
           </div>
         </div>
         <p className="text-center text-xs text-gray-400 mt-3">{t("mockPreview.caption")}</p>
