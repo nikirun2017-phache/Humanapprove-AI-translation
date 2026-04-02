@@ -5,7 +5,7 @@
  *
  * Required env vars (at least one set):
  *   RESEND_API_KEY        — Resend API key (re_...)
- *   RESEND_FROM           — sender address, defaults to "Jendee AI <noreply@jendee.ai>"
+ *   RESEND_FROM           — sender address, defaults to "Summon Translator <noreply@jendee.ai>"
  *   GMAIL_USER            — Gmail address (e.g. you@gmail.com)
  *   GMAIL_APP_PASSWORD    — Gmail App Password (16 chars, no spaces)
  *
@@ -13,10 +13,12 @@
  */
 
 const RESEND_API = "https://api.resend.com/emails"
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL ?? "https://app.jendee.ai"
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL ?? "https://summontranslator.com"
+const BRAND = "Summon Translator"
+const SUPPORT_EMAIL = "support@summontranslator.com"
 
 function from(): string {
-  return process.env.RESEND_FROM ?? process.env.GMAIL_USER ?? "Jendee AI <noreply@jendee.ai>"
+  return process.env.RESEND_FROM ?? `${BRAND} <${SUPPORT_EMAIL}>`
 }
 
 async function sendViaGmail(to: string, subject: string, html: string): Promise<void> {
@@ -30,7 +32,7 @@ async function sendViaGmail(to: string, subject: string, html: string): Promise<
     },
   })
   await transporter.sendMail({
-    from: `Jendee AI <${process.env.GMAIL_USER}>`,
+    from: `${BRAND} <${process.env.GMAIL_USER}>`,
     to,
     subject,
     html,
@@ -88,16 +90,17 @@ function layout(body: string): string {
       <table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden">
         <tr>
           <td style="background:#4f46e5;padding:20px 32px">
-            <span style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:-0.5px">Jendee AI</span>
+            <span style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:-0.5px">${BRAND}</span>
           </td>
         </tr>
         <tr><td style="padding:32px">${body}</td></tr>
         <tr>
           <td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:16px 32px">
             <p style="margin:0;font-size:11px;color:#9ca3af;line-height:1.5">
-              Jendee AI · AI-powered translation with human review<br>
+              ${BRAND} · AI-powered translation<br>
               <a href="${APP_URL}/privacy" style="color:#9ca3af">Privacy Policy</a> ·
-              <a href="${APP_URL}/terms" style="color:#9ca3af">Terms of Service</a>
+              <a href="${APP_URL}/terms" style="color:#9ca3af">Terms of Service</a> ·
+              <a href="mailto:${SUPPORT_EMAIL}" style="color:#9ca3af">${SUPPORT_EMAIL}</a>
             </p>
           </td>
         </tr>
@@ -120,7 +123,7 @@ export async function sendWelcomeEmail(name: string, email: string): Promise<voi
   const html = layout(`
     <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827">Welcome, ${name}!</h1>
     <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6">
-      Your Jendee AI account is ready. Upload a file, pick your target languages, and get
+      Your Summon Translator account is ready. Upload a file, pick your target languages, and get
       AI-translated results in minutes — no setup required.
     </p>
     ${btn("Go to Translation Studio", `${APP_URL}/translation-studio`)}
@@ -128,7 +131,7 @@ export async function sendWelcomeEmail(name: string, email: string): Promise<voi
       Use code <strong>1TIME</strong> at checkout to translate your first 1,000 words free.
     </p>
   `)
-  await send(email, "Welcome to Jendee AI", html)
+  await send(email, "Welcome to Summon Translator", html)
 }
 
 export async function sendJobCompleteEmail(
@@ -203,22 +206,22 @@ export async function sendVerificationEmail(email: string, verifyUrl: string): P
   const html = layout(`
     <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827">Verify your email</h1>
     <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6">
-      Thanks for signing up for Jendee AI! Click the button below to verify your email address
+      Thanks for signing up for Summon Translator! Click the button below to verify your email address
       and activate your account. This link expires in <strong>24 hours</strong>.
     </p>
     ${btn("Verify my email", verifyUrl)}
     <p style="margin:16px 0 0;font-size:13px;color:#6b7280;line-height:1.6">
-      If you didn't create an account with Jendee AI, you can safely ignore this email.
+      If you didn't create an account with Summon Translator, you can safely ignore this email.
     </p>
   `)
-  await send(email, "Verify your Jendee AI email address", html)
+  await send(email, "Verify your Summon Translator email address", html)
 }
 
 export async function sendPasswordResetEmail(email: string, resetUrl: string): Promise<void> {
   const html = layout(`
     <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827">Reset your password</h1>
     <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6">
-      We received a request to reset the password for your Jendee AI account.
+      We received a request to reset the password for your Summon Translator account.
       Click the button below — this link expires in <strong>1 hour</strong>.
     </p>
     ${btn("Reset password", resetUrl)}
@@ -227,5 +230,5 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string): P
       Your password will not change.
     </p>
   `)
-  await send(email, "Reset your Jendee AI password", html)
+  await send(email, "Reset your Summon Translator password", html)
 }

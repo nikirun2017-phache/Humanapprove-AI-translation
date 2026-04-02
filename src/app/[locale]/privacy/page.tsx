@@ -84,7 +84,7 @@ export default function PrivacyPage() {
             </ul>
             <p className="mt-3">
               To exercise any of these rights, email us at{" "}
-              <a href="mailto:privacy@jendee.ai" className="text-indigo-600 hover:underline">privacy@jendee.ai</a>.
+              <a href="mailto:support@summontranslator.com" className="text-indigo-600 hover:underline">support@summontranslator.com</a>.
             </p>
           </section>
 
@@ -102,7 +102,7 @@ export default function PrivacyPage() {
               We use industry-standard security practices including HTTPS, hashed passwords (bcrypt),
               and rate limiting. No method of transmission over the internet is 100% secure.
               If you discover a security issue, please disclose it responsibly to{" "}
-              <a href="mailto:security@jendee.ai" className="text-indigo-600 hover:underline">security@jendee.ai</a>.
+              <a href="mailto:support@summontranslator.com" className="text-indigo-600 hover:underline">support@summontranslator.com</a>.
             </p>
           </section>
 
@@ -126,7 +126,7 @@ export default function PrivacyPage() {
             <h2 className="text-lg font-semibold text-gray-900 mb-3">11. Contact</h2>
             <p>
               Questions? Email{" "}
-              <a href="mailto:privacy@jendee.ai" className="text-indigo-600 hover:underline">privacy@jendee.ai</a>.
+              <a href="mailto:support@summontranslator.com" className="text-indigo-600 hover:underline">support@summontranslator.com</a>.
             </p>
           </section>
         </div>

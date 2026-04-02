@@ -44,7 +44,7 @@ export default function TermsPage() {
               You must provide accurate and complete information when creating an account.
               You are responsible for maintaining the security of your credentials and for all
               activity under your account. Notify us immediately at{" "}
-              <a href="mailto:support@jendee.ai" className="text-indigo-600 hover:underline">support@jendee.ai</a>{" "}
+              <a href="mailto:support@summontranslator.com" className="text-indigo-600 hover:underline">support@summontranslator.com</a>{" "}
               if you suspect unauthorized access.
             </p>
           </section>
@@ -66,7 +66,7 @@ export default function TermsPage() {
             <p>
               If the Service fails to deliver a translation due to a platform error, you may request
               a full refund within 14 days by emailing{" "}
-              <a href="mailto:billing@jendee.ai" className="text-indigo-600 hover:underline">billing@jendee.ai</a>.
+              <a href="mailto:support@summontranslator.com" className="text-indigo-600 hover:underline">support@summontranslator.com</a>.
               Refunds are not available for completed translations where you simply did not use the output.
             </p>
           </section>
@@ -142,7 +142,7 @@ export default function TermsPage() {
             <h2 className="text-lg font-semibold text-gray-900 mb-3">12. Termination</h2>
             <p>
               You may close your account at any time by contacting{" "}
-              <a href="mailto:support@jendee.ai" className="text-indigo-600 hover:underline">support@jendee.ai</a>.
+              <a href="mailto:support@summontranslator.com" className="text-indigo-600 hover:underline">support@summontranslator.com</a>.
               We may suspend or terminate your account immediately if you breach these Terms.
               Upon termination, your access ends and data is deleted per our retention policy.
             </p>
@@ -170,7 +170,7 @@ export default function TermsPage() {
             <h2 className="text-lg font-semibold text-gray-900 mb-3">15. Contact</h2>
             <p>
               Questions about these Terms?{" "}
-              <a href="mailto:legal@jendee.ai" className="text-indigo-600 hover:underline">legal@jendee.ai</a>
+              <a href="mailto:support@summontranslator.com" className="text-indigo-600 hover:underline">support@summontranslator.com</a>
             </p>
           </section>
         </div>
