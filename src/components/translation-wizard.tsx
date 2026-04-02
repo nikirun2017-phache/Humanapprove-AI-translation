@@ -641,7 +641,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
       {/* Promo banner — always visible across all steps */}
       <div className="mb-5 flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3 text-sm text-indigo-800">
         <span className="shrink-0">🎉</span>
-        <span>Use code <strong className="font-semibold tracking-wide">SPRINT</strong> at checkout for <strong>50% off</strong> your first translation.</span>
+        <span>Use code <strong className="font-semibold tracking-wide">1TIME</strong> at checkout to translate your first 1,000 words free.</span>
       </div>
 
       {/* Step indicator */}
@@ -1020,6 +1020,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             <div>
               <h2 className="font-medium text-gray-900">Job details</h2>
               <p className="text-xs text-gray-400 mt-0.5">Name this job so you can find it later. Your downloaded files will use this name.</p>
+              <p className="text-xs text-gray-400 mt-1">Pricing: $0.007/word + AI cost. Minimum charge $5.00/job.</p>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">

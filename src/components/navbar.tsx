@@ -18,8 +18,8 @@ export function Navbar() {
     <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-6">
         <Link href="/translation-studio" className="flex items-center gap-2">
-          <Image src="/logo.png" alt="Jendee AI" width={32} height={32} className="rounded-full" />
-          <span className="font-semibold text-indigo-600 text-lg tracking-tight">Jendee AI</span>
+          <Image src="/logo.png" alt="Summon Translator" width={32} height={32} className="rounded-full" />
+          <span className="font-semibold text-indigo-600 text-lg tracking-tight">Summon Translator</span>
         </Link>
         <div className="flex items-center gap-4">
           <Link

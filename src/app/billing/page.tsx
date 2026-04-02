@@ -156,7 +156,7 @@ function generateInvoiceHtml(
 <body>
   <div class="header">
     <div>
-      <div class="brand">Jendee AI</div>
+      <div class="brand">Summon Translator</div>
       <div class="brand-sub">AI Translation Platform</div>
     </div>
     <div class="invoice-meta">
@@ -201,7 +201,7 @@ function generateInvoiceHtml(
 
   <div class="footnote">
     <p>All charges reflect professional AI-powered translation services, including quality assurance and platform support. Final amounts may vary slightly based on content volume and complexity.</p>
-    <p>Questions about your invoice? We're here to help — contact support@jendeeai.com</p>
+    <p>Questions about your invoice? We're here to help — contact support@summontranslator.com</p>
   </div>
 
   <script>window.onload = function() { window.print(); }</script>

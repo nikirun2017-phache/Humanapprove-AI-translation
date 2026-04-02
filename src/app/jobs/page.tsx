@@ -180,10 +180,13 @@ function JobRow({ job }: { job: Job }) {
   )
 }
 
+const PAGE_SIZE = 20
+
 export default function JobsPage() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [page, setPage] = useState(0)
 
   useEffect(() => {
     fetch("/api/translation-studio/jobs")
@@ -237,9 +240,32 @@ export default function JobsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {jobs.map(job => <JobRow key={job.id} job={job} />)}
+                {jobs.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map(job => <JobRow key={job.id} job={job} />)}
               </tbody>
             </table>
+            {jobs.length > PAGE_SIZE && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50">
+                <span className="text-xs text-gray-500">
+                  {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, jobs.length)} of {jobs.length} jobs
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPage(p => p - 1)}
+                    disabled={page === 0}
+                    className="text-xs px-3 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40"
+                  >
+                    ← Prev
+                  </button>
+                  <button
+                    onClick={() => setPage(p => p + 1)}
+                    disabled={(page + 1) * PAGE_SIZE >= jobs.length}
+                    className="text-xs px-3 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40"
+                  >
+                    Next →
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>

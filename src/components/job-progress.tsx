@@ -213,7 +213,7 @@ export function JobProgress({ initialJob }: Props) {
       return {
         icon: "✦",
         color: "bg-indigo-50 border-indigo-200 text-indigo-800",
-        text: `Translating ${langName} — ${pct}% done. Files download automatically when complete. Keep this tab open.`,
+        text: `Translating ${langName} — ${pct}% done. You'll receive an email when all files are ready — you can close this tab if needed.`,
       }
     }
     const pendingCount = tasks.filter((t: Task) => t.status === "pending").length
@@ -324,7 +324,7 @@ export function JobProgress({ initialJob }: Props) {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
             </svg>
-            Language {doneTasks + 1} of {totalTasks} in progress · Keep this tab open until complete
+            Language {doneTasks + 1} of {totalTasks} in progress · We'll email you when done
           </p>
         )}
       </div>
