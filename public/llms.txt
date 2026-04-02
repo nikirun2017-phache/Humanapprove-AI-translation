@@ -1,0 +1,135 @@
+# Summon Translator API
+
+AI-powered file translation service for developers. Translate JSON, XLIFF, Markdown,
+CSV, PDF, .strings, .po, .arb, .properties, Android XML, and Xcstrings files into any
+language using frontier AI models (Claude, GPT-4o, Gemini, DeepSeek).
+
+Base URL: https://summontranslator.com/api/v1
+Auth: Authorization: Bearer <api-key>
+Get your key: https://summontranslator.com/account
+
+Pricing: $0.007/word platform fee + AI model cost × 5 markup. Minimum $5.00/job.
+Billed monthly to card on file. First 1,000 words free with promo code 1TIME.
+
+---
+
+## Verify your API key
+
+GET /api/v1/ping
+Authorization: Bearer st_live_...
+
+Response: { "ok": true, "version": "1", "userId": "...", "authKind": "apikey" }
+
+---
+
+## Create a translation job
+
+POST /api/v1/jobs
+Authorization: Bearer st_live_...
+Content-Type: multipart/form-data
+
+Fields:
+  file            (required) — file to translate
+  provider        (required) — "anthropic" | "openai" | "gemini" | "deepseek"
+  model           (required) — e.g. "claude-haiku-4-5-20251001", "gpt-4o-mini", "gemini-2.0-flash"
+  targetLanguages (required) — comma-separated BCP-47 codes, e.g. "fr-FR,ja-JP,de-DE"
+  sourceLanguage  (optional) — default "en-US"
+  name            (optional) — job label, defaults to filename
+  callbackUrl     (optional) — HTTPS URL called when all tasks complete (webhook)
+  apiKey          (optional) — override AI provider key; uses system key if omitted
+
+Response 201: { "jobId": "...", "tasks": [{ "taskId": "...", "targetLanguage": "fr-FR" }] }
+Response 402: No payment method on file — add a card at summontranslator.com/billing
+Response 413: File too large (5 MB max for text formats)
+
+Example (curl):
+  curl -X POST https://summontranslator.com/api/v1/jobs \
+    -H "Authorization: Bearer st_live_..." \
+    -F "file=@strings.json" \
+    -F "provider=anthropic" \
+    -F "model=claude-haiku-4-5-20251001" \
+    -F "targetLanguages=fr-FR,ja-JP,de-DE" \
+    -F "callbackUrl=https://your-server.example/webhook"
+
+---
+
+## Check job status
+
+GET /api/v1/jobs/{jobId}
+Authorization: Bearer st_live_...
+
+Response: {
+  "jobId": "...",
+  "name": "strings.json",
+  "status": "pending" | "running" | "completed" | "failed",
+  "sourceFormat": "json",
+  "sourceLanguage": "en-US",
+  "tasks": [{
+    "taskId": "...",
+    "targetLanguage": "fr-FR",
+    "status": "completed",
+    "wordCount": 342,
+    "completedUnits": 45,
+    "totalUnits": 45,
+    "downloadUrl": "https://summontranslator.com/api/v1/jobs/.../tasks/.../download"
+  }]
+}
+
+Poll this endpoint until status is "completed" or "failed".
+Typical job time: 30 seconds to 5 minutes depending on file size and model.
+
+---
+
+## List your jobs
+
+GET /api/v1/jobs?limit=50&offset=0
+Authorization: Bearer st_live_...
+
+Returns array of jobs with task summaries. Default limit 50, max 100.
+
+---
+
+## Download translated file
+
+GET /api/v1/jobs/{jobId}/tasks/{taskId}/download
+Authorization: Bearer st_live_...
+
+Returns the translated file in its original format.
+Use the downloadUrl from the job status response.
+
+---
+
+## Webhook (callbackUrl)
+
+When a callbackUrl is provided at job creation, Summon Translator POSTs to it when all
+tasks complete. The request includes an HMAC-SHA256 signature for verification.
+
+Signature header: X-Summon-Signature-256: sha256=<hex>
+Verify: HMAC-SHA256(request_body, WEBHOOK_SIGNING_SECRET) must match.
+
+Payload:
+{
+  "event": "job.completed",
+  "jobId": "...",
+  "name": "strings.json",
+  "status": "completed",
+  "tasks": [{ "taskId": "...", "targetLanguage": "fr-FR", "status": "completed", "downloadUrl": "..." }],
+  "timestamp": "2026-04-01T12:00:00Z"
+}
+
+---
+
+## Supported file formats
+json, xliff, csv, md (Markdown), txt, strings (iOS), stringsdict (iOS),
+xcstrings (iOS), po (GNU gettext), xml (Android), arb (Flutter), properties (Java)
+
+## Supported models
+Anthropic: claude-sonnet-4-6, claude-haiku-4-5-20251001
+OpenAI: gpt-4o, gpt-4o-mini
+Google: gemini-2.0-flash
+DeepSeek: deepseek-chat
+
+## Common BCP-47 language codes
+fr-FR (French), de-DE (German), ja-JP (Japanese), zh-CN (Simplified Chinese),
+zh-TW (Traditional Chinese), ko-KR (Korean), es-ES (Spanish), pt-BR (Brazilian Portuguese),
+it-IT (Italian), nl-NL (Dutch), ar-SA (Arabic), th-TH (Thai), vi-VN (Vietnamese), hi-IN (Hindi)

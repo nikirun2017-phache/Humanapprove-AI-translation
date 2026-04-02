@@ -108,7 +108,7 @@
     "continueWithGoogle": "以 Google 繼續",
     "continueWithApple": "以 Apple 繼續",
     "orWithEmail": "或以電子郵件",
-    "contact": "新的 Google 或 Apple 使用者將自動建立帳號。",
+    "contact": "新的 Google 使用者將自動建立。",
     "error": "電子郵件或密碼錯誤——請重試",
     "registerFailed": "註冊失敗——請重試",
     "signupSignInFailed": "帳號已建立，但登入失敗。請嘗試登入。"

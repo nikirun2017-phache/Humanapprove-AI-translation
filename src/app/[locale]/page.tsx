@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation"
 import { CostEstimator } from "@/components/cost-estimator"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 import { getTranslations } from "next-intl/server"
+import Image from "next/image"
 
 export default async function Home() {
   const session = await auth()
@@ -72,10 +73,10 @@ export default async function Home() {
         <p className="text-xs text-gray-400 mt-3">No credit card required · Cancel anytime</p>
       </section>
 
-      {/* Mock UI preview */}
+      {/* Product screenshot */}
       <section className="max-w-5xl mx-auto px-6 pb-24">
         <div className="rounded-2xl border border-gray-200 shadow-xl overflow-hidden bg-gray-50">
-          {/* Fake browser chrome */}
+          {/* Browser chrome */}
           <div className="bg-gray-100 border-b border-gray-200 px-4 py-3 flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-red-300" />
             <span className="w-3 h-3 rounded-full bg-yellow-300" />
@@ -84,50 +85,14 @@ export default async function Home() {
               summontranslator.com/translation-studio
             </span>
           </div>
-          {/* Fake translation studio */}
-          <div className="p-6 bg-white space-y-5">
-            {/* Step indicator */}
-            <div className="flex items-center gap-2 text-xs font-medium">
-              {["Upload", "Configure", "Translate", "Download"].map((s, i) => (
-                <div key={s} className="flex items-center gap-2">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i < 3 ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-400"}`}>{i + 1}</div>
-                  <span className={i < 3 ? "text-gray-700" : "text-gray-400"}>{s}</span>
-                  {i < 3 && <span className="text-gray-300">›</span>}
-                </div>
-              ))}
-            </div>
-            {/* Job in progress */}
-            <div className="border border-gray-100 rounded-xl p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-sm text-gray-900">app-strings.json</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Claude Sonnet · 5 languages · 500 strings</p>
-                </div>
-                <span className="bg-indigo-50 text-indigo-700 text-xs font-semibold px-3 py-1 rounded-full">Translating…</span>
-              </div>
-              <div className="space-y-2">
-                {[
-                  { lang: "Spanish", pct: 100, done: true },
-                  { lang: "French", pct: 100, done: true },
-                  { lang: "Japanese", pct: 68, done: false },
-                  { lang: "German", pct: 0, done: false },
-                  { lang: "Arabic", pct: 0, done: false },
-                ].map((row) => (
-                  <div key={row.lang} className="flex items-center gap-3">
-                    <span className="text-xs text-gray-500 w-16 shrink-0">{row.lang}</span>
-                    <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${row.done ? "bg-green-500" : "bg-indigo-500"}`}
-                        style={{ width: `${row.pct}%` }}
-                      />
-                    </div>
-                    <span className="text-xs w-8 text-right text-gray-400">{row.done ? "✓" : row.pct > 0 ? `${row.pct}%` : "—"}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <p className="text-xs text-gray-400 text-center">Files download automatically when each language finishes</p>
-          </div>
+          <Image
+            src="/screenshot-studio.png"
+            alt="Translation Studio showing a JSON file being translated into 5 languages with real-time progress bars"
+            width={1200}
+            height={720}
+            className="w-full h-auto block"
+            priority
+          />
         </div>
         <p className="text-center text-xs text-gray-400 mt-3">{t("mockPreview.caption")}</p>
       </section>
@@ -135,7 +100,20 @@ export default async function Home() {
       {/* How it works */}
       <section id="how-it-works" className="bg-gray-50 border-y border-gray-100 py-20">
         <div className="max-w-4xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">{t("howItWorks.heading")}</h2>
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">{t("howItWorks.heading")}</h2>
+
+          {/* Explainer GIF */}
+          <div className="mb-12 rounded-2xl overflow-hidden border border-gray-200 shadow-md bg-white">
+            <Image
+              src="/how-it-works.gif"
+              alt="30-second walkthrough: upload a file, choose languages and model, see the cost preview, then download translated files"
+              width={1200}
+              height={675}
+              className="w-full h-auto block"
+              unoptimized
+            />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { step: "1", title: t("howItWorks.step1Title"), body: t("howItWorks.step1Body") },

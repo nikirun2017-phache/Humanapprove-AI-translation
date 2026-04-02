@@ -8,3 +8,5 @@ uploads/
 tsconfig.tsbuildinfo
 .DS_Store
 README_tmp.html
+.claude/
+.env

@@ -3,6 +3,7 @@
     "brand": "真谛 AI",
     "vision": "我们的愿景",
     "signIn": "登录 →",
+    "signUp": "注册",
     "home": "首页",
     "getStarted": "开始使用 →"
   },
@@ -93,12 +94,24 @@
   },
   "login": {
     "subtitle": "登录您的账户",
+    "signupSubtitle": "创建您的账户",
+    "signinTab": "登录",
+    "signupTab": "注册",
+    "nameLabel": "全名",
     "emailLabel": "电子邮件",
     "passwordLabel": "密码",
+    "passwordHint": "至少 8 个字符",
     "submit": "登录",
     "submitting": "登录中…",
-    "contact": "请联系管理员创建账户",
-    "error": "邮箱或密码无效"
+    "createAccount": "创建账户",
+    "creatingAccount": "创建账户中…",
+    "continueWithGoogle": "通过 Google 继续",
+    "continueWithApple": "通过 Apple 继续",
+    "orWithEmail": "或通过邮筱",
+    "contact": "新的 Google 用户将自动创建。",
+    "error": "邮箱或密码无效",
+    "registerFailed": "注册失败——请重试",
+    "signupSignInFailed": "账户已创建，但登录失败。请尝试登录。"
   },
   "vision": {
     "badge": "下一代翻译的五大支柱",

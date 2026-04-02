@@ -3,6 +3,7 @@
     "brand": "Jendee AI",
     "vision": "Our vision",
     "signIn": "Sign in →",
+    "signUp": "Sign up",
     "home": "Home",
     "getStarted": "Get started →"
   },
@@ -93,12 +94,24 @@
   },
   "login": {
     "subtitle": "Sign in to your account",
+    "signupSubtitle": "Create your account",
+    "signinTab": "Sign in",
+    "signupTab": "Sign up",
+    "nameLabel": "Full name",
     "emailLabel": "Email",
     "passwordLabel": "Password",
+    "passwordHint": "Minimum 8 characters",
     "submit": "Sign in",
     "submitting": "Signing in…",
-    "contact": "Contact your admin to create an account",
-    "error": "Invalid email or password"
+    "createAccount": "Create account",
+    "creatingAccount": "Creating account…",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithApple": "Continue with Apple",
+    "orWithEmail": "or with email",
+    "contact": "New Google users are created automatically.",
+    "error": "Invalid email or password",
+    "registerFailed": "Registration failed — please try again",
+    "signupSignInFailed": "Account created but sign-in failed. Try signing in."
   },
   "vision": {
     "badge": "The five pillars of next-generation translation",

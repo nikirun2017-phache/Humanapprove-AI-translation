@@ -70,6 +70,27 @@ export async function POST(req: NextRequest) {
         }
         break
       }
+
+      case "payment_intent.payment_failed": {
+        // Fired when the monthly charge cron's off_session PaymentIntent fails
+        const pi = event.data.object as Stripe.PaymentIntent
+        if (pi.customer) {
+          await db.user.updateMany({
+            where: { stripeCustomerId: pi.customer as string },
+            data: { subscriptionStatus: "past_due" },
+          })
+        }
+        // Update the MonthlyCharge record if we can match by metadata
+        const billingMonth = pi.metadata?.billingMonth
+        const userId = pi.metadata?.userId
+        if (userId && billingMonth) {
+          await db.monthlyCharge.updateMany({
+            where: { userId, billingMonth, status: "pending" },
+            data: { status: "failed" },
+          })
+        }
+        break
+      }
     }
   } catch (err) {
     console.error("Webhook handler error:", err)

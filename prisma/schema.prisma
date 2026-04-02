@@ -21,7 +21,7 @@ model User {
   stripeCustomerId   String?
   plan               String  @default("free") // free | pro | enterprise
   subscriptionStatus String  @default("none") // none | active | canceled | past_due | trialing
-  subscriptionId     String?
+  subscriptionId     String? // stores Stripe PaymentMethod ID (field name is legacy)
 
   projectsCreated  Project[]       @relation("ProjectCreator")
   projectsAssigned Project[]       @relation("ProjectReviewer")
@@ -31,6 +31,8 @@ model User {
   sessions         Session[]
   translationJobs  TranslationJob[]
   auditLogs        AuditLog[]
+  apiKeys          ApiKey[]
+  monthlyCharges   MonthlyCharge[]
 }
 
 model Account {
@@ -184,6 +186,10 @@ model TranslationJob {
   discountPct  Int      @default(0)  // 0-100, e.g. 50 = 50% off
   glossaryData String?  // JSON: { [langCode]: { source: string; target: string }[] }
 
+  // API integration fields
+  callbackUrl  String?  // webhook URL called when all tasks complete
+  apiKeyId     String?  // which ApiKey was used to create this job (null = browser session)
+
   createdBy User              @relation(fields: [createdById], references: [id])
   tasks     TranslationTask[]
 }
@@ -242,4 +248,38 @@ model TranslationTask {
 
   @@unique([jobId, targetLanguage])
   @@index([jobId])
+}
+
+// User-generated API keys for programmatic / OpenClaw access
+model ApiKey {
+  id         String    @id @default(cuid())
+  userId     String
+  name       String    // human label, e.g. "OpenClaw agent"
+  keyHash    String    @unique  // SHA-256(rawKey) hex — raw key is never stored
+  keyPrefix  String             // first 12 chars of rawKey for display, e.g. "st_live_Xk3p"
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  revokedAt  DateTime?          // null = active
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Tracks monthly billing charges to prevent double-charging
+model MonthlyCharge {
+  id              String    @id @default(cuid())
+  userId          String
+  billingMonth    String    // "YYYY-MM", e.g. "2026-03"
+  amountCents     Int       // charged amount in USD cents
+  stripeIntentId  String?   // Stripe PaymentIntent ID
+  status          String    @default("pending")
+  // pending | charged | failed | waived
+  createdAt       DateTime  @default(now())
+  chargedAt       DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, billingMonth])
+  @@index([billingMonth, status])
 }

@@ -3,6 +3,7 @@
     "brand": "Jendee AI",
     "vision": "Onze visie",
     "signIn": "Inloggen →",
+    "signUp": "Registreren",
     "home": "Home",
     "getStarted": "Aan de slag →"
   },
@@ -93,12 +94,24 @@
   },
   "login": {
     "subtitle": "Inloggen bij uw account",
+    "signupSubtitle": "Maak uw account aan",
+    "signinTab": "Inloggen",
+    "signupTab": "Registreren",
+    "nameLabel": "Volledige naam",
     "emailLabel": "E-mail",
     "passwordLabel": "Wachtwoord",
+    "passwordHint": "Minimaal 8 tekens",
     "submit": "Inloggen",
     "submitting": "Bezig met inloggen…",
-    "contact": "Neem contact op met uw beheerder om een account aan te maken",
-    "error": "Ongeldig e-mailadres of wachtwoord"
+    "createAccount": "Account aanmaken",
+    "creatingAccount": "Account aanmaken…",
+    "continueWithGoogle": "Doorgaan met Google",
+    "continueWithApple": "Doorgaan met Apple",
+    "orWithEmail": "of met e-mail",
+    "contact": "Nieuwe Google-gebruikers worden automatisch aangemaakt.",
+    "error": "Ongeldig e-mailadres of wachtwoord",
+    "registerFailed": "Registratie mislukt — probeer het opnieuw",
+    "signupSignInFailed": "Account aangemaakt maar aanmelden mislukt. Probeer in te loggen."
   },
   "vision": {
     "badge": "De vijf pijlers van volgende generatie vertaling",

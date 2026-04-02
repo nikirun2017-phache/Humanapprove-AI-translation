@@ -108,7 +108,7 @@
     "continueWithGoogle": "Continuer avec Google",
     "continueWithApple": "Continuer avec Apple",
     "orWithEmail": "ou avec e-mail",
-    "contact": "Les nouveaux utilisateurs Google ou Apple sont créés automatiquement.",
+    "contact": "Les nouveaux utilisateurs Google sont créés automatiquement.",
     "error": "E-mail ou mot de passe incorrect — veuillez réessayer",
     "registerFailed": "Échec de l&apos;inscription — veuillez réessayer",
     "signupSignInFailed": "Compte créé mais la connexion a échoué. Essayez de vous connecter."

@@ -3,6 +3,7 @@
     "brand": "Jendee AI",
     "vision": "Vår vision",
     "signIn": "Logga in →",
+    "signUp": "Registrera",
     "home": "Hem",
     "getStarted": "Kom igång →"
   },
@@ -93,12 +94,24 @@
   },
   "login": {
     "subtitle": "Logga in på ditt konto",
+    "signupSubtitle": "Skapa ditt konto",
+    "signinTab": "Logga in",
+    "signupTab": "Registrera",
+    "nameLabel": "Fullständigt namn",
     "emailLabel": "E-post",
     "passwordLabel": "Lösenord",
+    "passwordHint": "Minst 8 tecken",
     "submit": "Logga in",
     "submitting": "Loggar in…",
-    "contact": "Kontakta din administratör för att skapa ett konto",
-    "error": "Ogiltig e-postadress eller lösenord"
+    "createAccount": "Skapa konto",
+    "creatingAccount": "Skapar konto…",
+    "continueWithGoogle": "Fortsätt med Google",
+    "continueWithApple": "Fortsätt med Apple",
+    "orWithEmail": "eller med e-post",
+    "contact": "Nya Google-användare skapas automatiskt.",
+    "error": "Ogiltig e-postadress eller lösenord",
+    "registerFailed": "Registreringen misslyckades — försök igen",
+    "signupSignInFailed": "Kontot skapades men inloggningen misslyckades. Försök logga in."
   },
   "vision": {
     "badge": "De fem pelarna för nästa generations översättning",

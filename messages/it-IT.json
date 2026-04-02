@@ -3,6 +3,7 @@
     "brand": "Jendee AI",
     "vision": "La nostra visione",
     "signIn": "Accedi →",
+    "signUp": "Registrati",
     "home": "Home",
     "getStarted": "Inizia →"
   },
@@ -93,12 +94,24 @@
   },
   "login": {
     "subtitle": "Accedi al tuo account",
+    "signupSubtitle": "Crea il tuo account",
+    "signinTab": "Accedi",
+    "signupTab": "Registrati",
+    "nameLabel": "Nome completo",
     "emailLabel": "Email",
     "passwordLabel": "Password",
+    "passwordHint": "Minimo 8 caratteri",
     "submit": "Accedi",
     "submitting": "Accesso in corso…",
-    "contact": "Contatta il tuo amministratore per creare un account",
-    "error": "Email o password non validi"
+    "createAccount": "Crea account",
+    "creatingAccount": "Creazione account…",
+    "continueWithGoogle": "Continua con Google",
+    "continueWithApple": "Continua con Apple",
+    "orWithEmail": "o con e-mail",
+    "contact": "I nuovi utenti Google vengono creati automaticamente.",
+    "error": "Email o password non validi",
+    "registerFailed": "Registrazione fallita — riprova",
+    "signupSignInFailed": "Account creato ma l’accesso non è riuscito. Prova ad accedere."
   },
   "vision": {
     "badge": "I cinque pilastri della traduzione di nuova generazione",

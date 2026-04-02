@@ -64,6 +64,10 @@ const RULES: Array<{ prefix: string; limit: number; windowMs: number; label: str
   { prefix: "/api/auth/callback",           limit: 20,  windowMs: 60_000,  label: "auth-cb" },
   { prefix: "/api/billing/promo",           limit: 10,  windowMs: 60_000,  label: "promo" },
   { prefix: "/api/billing/portal",          limit: 10,  windowMs: 60_000,  label: "portal" },
+  { prefix: "/api/cron/",                   limit: 5,   windowMs: 60_000,  label: "cron" },
+  // v1 public API — rate-limited per API key prefix, not IP
+  { prefix: "/api/v1/jobs",                 limit: 10,  windowMs: 60_000,  label: "v1-jobs" },
+  { prefix: "/api/v1/",                     limit: 60,  windowMs: 60_000,  label: "v1-api" },
   { prefix: "/api/translation-studio/jobs", limit: 20,  windowMs: 60_000,  label: "jobs" },
   { prefix: "/api/projects",               limit: 30,  windowMs: 60_000,  label: "projects" },
   { prefix: "/api/",                        limit: 120, windowMs: 60_000,  label: "api" },
@@ -82,7 +86,16 @@ export function middleware(req: NextRequest) {
     const rule = RULES.find(r => pathname.startsWith(r.prefix))
 
     if (rule) {
-      const key = `${rule.label}:${ip}`
+      // For v1 API routes, key by API key prefix (first 16 chars of Bearer token)
+      // so different users sharing an IP aren't throttled together
+      let rateLimitKey = ip
+      if (pathname.startsWith("/api/v1/")) {
+        const bearer = req.headers.get("authorization")
+        if (bearer?.startsWith("Bearer st_live_")) {
+          rateLimitKey = bearer.slice(7, 23) // "st_live_" + 8 chars = 16 total
+        }
+      }
+      const key = `${rule.label}:${rateLimitKey}`
       const { allowed, retryAfter } = rateLimit(key, rule.limit, rule.windowMs)
 
       if (!allowed) {

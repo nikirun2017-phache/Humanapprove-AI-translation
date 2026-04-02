@@ -3,6 +3,7 @@
     "brand": "Jendee AI",
     "vision": "Notre vision",
     "signIn": "Se connecter →",
+    "signUp": "S’inscrire",
     "home": "Accueil",
     "getStarted": "Commencer →"
   },
@@ -93,12 +94,24 @@
   },
   "login": {
     "subtitle": "Connectez-vous à votre compte",
+    "signupSubtitle": "Créez votre compte",
+    "signinTab": "Connexion",
+    "signupTab": "Inscription",
+    "nameLabel": "Nom complet",
     "emailLabel": "E-mail",
     "passwordLabel": "Mot de passe",
+    "passwordHint": "Minimum 8 caractères",
     "submit": "Se connecter",
     "submitting": "Connexion en cours…",
-    "contact": "Contactez votre administrateur pour créer un compte",
-    "error": "E-mail ou mot de passe incorrect"
+    "createAccount": "Créer un compte",
+    "creatingAccount": "Création du compte…",
+    "continueWithGoogle": "Continuer avec Google",
+    "continueWithApple": "Continuer avec Apple",
+    "orWithEmail": "ou avec courriel",
+    "contact": "Les nouveaux utilisateurs Google sont créés automatiquement.",
+    "error": "E-mail ou mot de passe incorrect",
+    "registerFailed": "L’inscription a échoué — veuillez réessayer",
+    "signupSignInFailed": "Compte créé mais la connexion a échoué. Essayez de vous connecter."
   },
   "vision": {
     "badge": "Les cinq piliers de la traduction nouvelle génération",

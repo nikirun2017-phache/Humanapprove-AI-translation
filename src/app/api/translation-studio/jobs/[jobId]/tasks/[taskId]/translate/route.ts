@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { resolveAuth } from "@/lib/resolve-auth"
+import { fireWebhook } from "@/lib/fire-webhook"
 import { readFile, writeFile, mkdir } from "fs/promises"
 import path from "path"
 import { resolveApiKey } from "@/lib/api-key-resolver"
@@ -47,16 +48,20 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ jobId: string; taskId: string }> }
 ) {
   const taskStartTime = Date.now()
 
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  // Accept both session cookies (browser) and Bearer API keys (OpenClaw / programmatic)
+  const resolved = await resolveAuth(req)
+  if (resolved.kind === "unauthenticated") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+  const userId = resolved.user.id
+  const role = resolved.user.role
 
   const { jobId, taskId } = await params
-  const { id: userId, role } = session.user
 
   const [job, task] = await Promise.all([
     db.translationJob.findUnique({ where: { id: jobId } }),
@@ -378,12 +383,31 @@ export async function POST(
       await db.translationJob.update({ where: { id: jobId }, data: { status: "completed" } })
       await db.systemSetting.deleteMany({ where: { key: `ai_job_key_${jobId}` } })
 
-      // Notify job creator — fire-and-forget, email failure must not break the response
-      try {
-        const allTasks = await db.translationTask.findMany({
-          where: { jobId },
-          select: { targetLanguage: true },
+      const allTasks = await db.translationTask.findMany({
+        where: { jobId },
+        select: { id: true, targetLanguage: true, status: true },
+      })
+
+      // Fire completion webhook if a callbackUrl was provided at job creation
+      if (job.callbackUrl) {
+        const base = new URL(req.url).origin
+        fireWebhook(job.callbackUrl, {
+          event: "job.completed",
+          jobId,
+          name: job.name,
+          status: "completed",
+          tasks: allTasks.map((t: { id: string; targetLanguage: string; status: string }) => ({
+            taskId: t.id,
+            targetLanguage: t.targetLanguage,
+            status: t.status,
+            downloadUrl: `${base}/api/v1/jobs/${jobId}/tasks/${t.id}/download`,
+          })),
+          timestamp: new Date().toISOString(),
         })
+      }
+
+      // Notify job creator via email — fire-and-forget
+      try {
         const creator = await db.user.findUnique({
           where: { id: job.createdById },
           select: { email: true, name: true },

@@ -3,6 +3,7 @@
     "brand": "Jendee AI",
     "vision": "Nuestra visión",
     "signIn": "Iniciar sesión →",
+    "signUp": "Registrarse",
     "home": "Inicio",
     "getStarted": "Comenzar →"
   },
@@ -93,12 +94,24 @@
   },
   "login": {
     "subtitle": "Inicia sesión en tu cuenta",
+    "signupSubtitle": "Crea tu cuenta",
+    "signinTab": "Iniciar sesión",
+    "signupTab": "Registrarse",
+    "nameLabel": "Nombre completo",
     "emailLabel": "Correo electrónico",
     "passwordLabel": "Contraseña",
+    "passwordHint": "Mínimo 8 caracteres",
     "submit": "Iniciar sesión",
     "submitting": "Iniciando sesión…",
-    "contact": "Contacta con tu administrador para crear una cuenta",
-    "error": "Correo electrónico o contraseña incorrectos"
+    "createAccount": "Crear cuenta",
+    "creatingAccount": "Creando cuenta…",
+    "continueWithGoogle": "Continuar con Google",
+    "continueWithApple": "Continuar con Apple",
+    "orWithEmail": "o con correo electrónico",
+    "contact": "Los nuevos usuarios de Google se crean automáticamente.",
+    "error": "Correo electrónico o contraseña incorrectos",
+    "registerFailed": "El registro falló — por favor inténtalo de nuevo",
+    "signupSignInFailed": "Cuenta creada pero no se pudo iniciar sesión. Intenta iniciar sesión."
   },
   "vision": {
     "badge": "Los cinco pilares de la traducción de próxima generación",

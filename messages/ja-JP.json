@@ -3,6 +3,7 @@
     "brand": "真谛 AI",
     "vision": "私たちのビジョン",
     "signIn": "ログイン →",
+    "signUp": "新規登録",
     "home": "ホーム",
     "getStarted": "始める →"
   },
@@ -93,12 +94,24 @@
   },
   "login": {
     "subtitle": "アカウントにログイン",
+    "signupSubtitle": "アカウントを作成する",
+    "signinTab": "ログイン",
+    "signupTab": "新規登録",
+    "nameLabel": "氏名",
     "emailLabel": "メール",
     "passwordLabel": "パスワード",
+    "passwordHint": "8文字以上",
     "submit": "ログイン",
     "submitting": "ログイン中…",
-    "contact": "アカウントを作成するには管理者にお問い合わせください",
-    "error": "メールアドレスまたはパスワードが無効です"
+    "createAccount": "アカウントを作成",
+    "creatingAccount": "アカウント作成中…",
+    "continueWithGoogle": "Googleで続ける",
+    "continueWithApple": "Appleで続ける",
+    "orWithEmail": "またはメールで",
+    "contact": "新しいGoogleユーザーは自動的に作成されます。",
+    "error": "メールアドレスまたはパスワードが無効です",
+    "registerFailed": "登録に失敗しました。もう一度お試しください",
+    "signupSignInFailed": "アカウントは作成されましたが、サインインに失敗しました。サインインをお試しください。"
   },
   "vision": {
     "badge": "次世代翻訳の5つの柱",
