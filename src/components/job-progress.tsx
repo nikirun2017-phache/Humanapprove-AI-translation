@@ -147,10 +147,18 @@ export function JobProgress({ initialJob }: Props) {
     // The translate API accepts them and resets progress from scratch
     const pending = latest.tasks.filter((t: Task) => t.status === "pending" || t.status === "running")
 
-    for (const task of pending) {
-      if (pausedRef.current) break
-      await translateTask(task)
+    // Run up to 3 languages concurrently (matches server MAX_CONCURRENT_PER_USER)
+    const CONCURRENCY = 3
+    let i = 0
+    async function runNext(): Promise<void> {
+      while (i < pending.length) {
+        if (pausedRef.current) break
+        const task = pending[i++]
+        await translateTask(task)
+        if (!pausedRef.current) await runNext()
+      }
     }
+    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, pending.length) }, runNext))
 
     runningRef.current = false
   }
