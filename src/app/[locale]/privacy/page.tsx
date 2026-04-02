@@ -1,8 +1,8 @@
 import Link from "next/link"
 
 export const metadata = {
-  title: "Privacy Policy — Jendee AI",
-  description: "How Jendee AI collects, uses, and protects your personal information.",
+  title: "Privacy Policy — Summon Translator",
+  description: "How Summon Translator collects, uses, and protects your personal information.",
 }
 
 export default function PrivacyPage() {
@@ -10,7 +10,7 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-white">
       <header className="border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-4xl mx-auto">
-        <Link href="/" className="font-bold text-indigo-600 text-xl tracking-tight">Jendee AI</Link>
+        <Link href="/" className="font-bold text-indigo-600 text-xl tracking-tight">Summon Translator</Link>
         <Link href="/login" className="text-sm text-gray-500 hover:text-gray-900">Sign in</Link>
       </header>
 
@@ -23,8 +23,8 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-3">1. Who we are</h2>
             <p>
-              Jendee AI (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) provides AI-powered translation and human review
-              services at <strong>jendee.ai</strong>. This policy explains how we collect, use, and
+              Summon Translator (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) provides AI-powered translation and human review
+              services at <strong>summontranslator.com</strong>. This policy explains how we collect, use, and
               protect personal information when you use our platform.
             </p>
           </section>
@@ -43,7 +43,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-3">3. How we use your information</h2>
             <ul className="list-disc pl-5 space-y-2">
-              <li>To provide, operate, and improve the Jendee AI service.</li>
+              <li>To provide, operate, and improve the Summon Translator service.</li>
               <li>To process payments and send receipts.</li>
               <li>To send transactional emails (account confirmation, job completion, billing alerts).</li>
               <li>To respond to support requests.</li>
@@ -109,7 +109,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-3">9. Children</h2>
             <p>
-              Jendee AI is not directed at children under 16. We do not knowingly collect personal
+              Summon Translator is not directed at children under 16. We do not knowingly collect personal
               information from children.
             </p>
           </section>
@@ -134,7 +134,7 @@ export default function PrivacyPage() {
 
       <footer className="border-t border-gray-100 py-8 mt-16">
         <div className="max-w-4xl mx-auto px-6 flex items-center justify-between">
-          <span className="font-bold text-indigo-600 tracking-tight">Jendee AI</span>
+          <span className="font-bold text-indigo-600 tracking-tight">Summon Translator</span>
           <div className="flex gap-4 text-xs text-gray-400">
             <Link href="/privacy" className="hover:text-gray-600">Privacy</Link>
             <Link href="/terms" className="hover:text-gray-600">Terms</Link>

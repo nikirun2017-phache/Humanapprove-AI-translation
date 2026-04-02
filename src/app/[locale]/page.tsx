@@ -81,7 +81,7 @@ export default async function Home() {
             <span className="w-3 h-3 rounded-full bg-yellow-300" />
             <span className="w-3 h-3 rounded-full bg-green-300" />
             <span className="ml-4 flex-1 bg-white rounded px-3 py-1 text-xs text-gray-400 border border-gray-200">
-              app.jendee.ai/projects/demo
+              summontranslator.com/projects/demo
             </span>
           </div>
           {/* Fake review editor */}

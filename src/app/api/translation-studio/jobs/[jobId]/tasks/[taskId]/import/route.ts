@@ -14,7 +14,7 @@ export async function POST(
   const { jobId, taskId } = await params
   const { id: userId, role } = session.user
 
-  // reviewerType: "platform" = Jendee AI sources reviewer; "own" = customer brings their own
+  // reviewerType: "platform" = Summon Translator sources reviewer; "own" = customer brings their own
   const body = await req.json().catch(() => ({})) as { reviewerType?: string }
   const reviewerType: "platform" | "own" = body.reviewerType === "platform" ? "platform" : "own"
 

@@ -1,8 +1,8 @@
 import Link from "next/link"
 
 export const metadata = {
-  title: "Terms of Service — Jendee AI",
-  description: "Terms and conditions for using the Jendee AI translation platform.",
+  title: "Terms of Service — Summon Translator",
+  description: "Terms and conditions for using the Summon Translator translation platform.",
 }
 
 export default function TermsPage() {
@@ -10,7 +10,7 @@ export default function TermsPage() {
   return (
     <div className="min-h-screen bg-white">
       <header className="border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-4xl mx-auto">
-        <Link href="/" className="font-bold text-indigo-600 text-xl tracking-tight">Jendee AI</Link>
+        <Link href="/" className="font-bold text-indigo-600 text-xl tracking-tight">Summon Translator</Link>
         <Link href="/login" className="text-sm text-gray-500 hover:text-gray-900">Sign in</Link>
       </header>
 
@@ -23,16 +23,16 @@ export default function TermsPage() {
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-3">1. Acceptance of terms</h2>
             <p>
-              By creating an account or using the Jendee AI platform (&quot;Service&quot;), you agree to
+              By creating an account or using the Summon Translator platform (&quot;Service&quot;), you agree to
               these Terms of Service (&quot;Terms&quot;). If you do not agree, do not use the Service.
-              These Terms form a binding agreement between you and Jendee AI.
+              These Terms form a binding agreement between you and Summon Translator.
             </p>
           </section>
 
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-3">2. Description of service</h2>
             <p>
-              Jendee AI provides AI-powered translation and human review services. Users can upload
+              Summon Translator provides AI-powered translation and human review services. Users can upload
               content files, select target languages, and receive translated output. The Service
               also offers optional human linguistic quality assurance review.
             </p>
@@ -75,7 +75,7 @@ export default function TermsPage() {
             <h2 className="text-lg font-semibold text-gray-900 mb-3">6. Your content</h2>
             <p>
               You retain all rights to the content you upload (&quot;Your Content&quot;). By using the Service,
-              you grant Jendee AI a limited license to process Your Content solely to provide the Service.
+              you grant Summon Translator a limited license to process Your Content solely to provide the Service.
               You represent that you have the right to upload and translate Your Content and that doing
               so does not violate any third-party rights.
             </p>
@@ -102,17 +102,17 @@ export default function TermsPage() {
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-3">8. Translation quality</h2>
             <p>
-              AI translations are provided as-is. Machine translation can contain errors. Jendee AI
+              AI translations are provided as-is. Machine translation can contain errors. Summon Translator
               does not guarantee that translations are accurate, complete, or suitable for any particular
               purpose. For critical use cases (legal, medical, financial), we recommend professional
-              human review. Jendee AI is not liable for decisions made based on machine-translated content.
+              human review. Summon Translator is not liable for decisions made based on machine-translated content.
             </p>
           </section>
 
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-3">9. Intellectual property</h2>
             <p>
-              The Jendee AI platform, including its software, design, and brand, is owned by Jendee AI
+              The Summon Translator platform, including its software, design, and brand, is owned by Summon Translator
               and protected by intellectual property law. You may not copy, modify, or distribute any
               part of the platform without written permission.
             </p>
@@ -121,7 +121,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-3">10. Limitation of liability</h2>
             <p>
-              To the fullest extent permitted by law, Jendee AI shall not be liable for any indirect,
+              To the fullest extent permitted by law, Summon Translator shall not be liable for any indirect,
               incidental, special, consequential, or punitive damages, or any loss of profits or revenues,
               arising out of your use of the Service. Our total liability for any claim arising out of
               or relating to these Terms shall not exceed the amount you paid us in the 3 months
@@ -178,7 +178,7 @@ export default function TermsPage() {
 
       <footer className="border-t border-gray-100 py-8 mt-16">
         <div className="max-w-4xl mx-auto px-6 flex items-center justify-between">
-          <span className="font-bold text-indigo-600 tracking-tight">Jendee AI</span>
+          <span className="font-bold text-indigo-600 tracking-tight">Summon Translator</span>
           <div className="flex gap-4 text-xs text-gray-400">
             <Link href="/privacy" className="hover:text-gray-600">Privacy</Link>
             <Link href="/terms" className="hover:text-gray-600">Terms</Link>

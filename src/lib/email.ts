@@ -5,7 +5,7 @@
  *
  * Required env vars (at least one set):
  *   RESEND_API_KEY        — Resend API key (re_...)
- *   RESEND_FROM           — sender address, defaults to "Summon Translator <noreply@jendee.ai>"
+ *   RESEND_FROM           — sender address, defaults to "Summon Translator <noreply@summontranslator.com>"
  *   GMAIL_USER            — Gmail address (e.g. you@gmail.com)
  *   GMAIL_APP_PASSWORD    — Gmail App Password (16 chars, no spaces)
  *

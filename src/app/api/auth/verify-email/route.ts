@@ -3,7 +3,7 @@ import { db } from "@/lib/db"
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token")
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.jendee.ai"
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.summontranslator.com"
 
   if (!token) {
     return NextResponse.redirect(`${appUrl}/login?verified=invalid`)

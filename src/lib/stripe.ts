@@ -17,12 +17,12 @@ export {
 
 /**
  * Light review rate — informational estimate for users budgeting
- * their own reviewer costs. Not invoiced by Jendee AI.
+ * their own reviewer costs. Not invoiced by Summon Translator.
  */
 export const LIGHT_REVIEW_RATE = 0.035
 
 /**
  * Full LQA rate — informational estimate for full linguistic QA
- * with error categorisation. Not invoiced by Jendee AI.
+ * with error categorisation. Not invoiced by Summon Translator.
  */
 export const FULL_LQA_RATE = 0.090

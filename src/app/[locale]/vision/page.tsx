@@ -151,7 +151,7 @@ export default async function VisionPage() {
       <footer className="border-t border-gray-100 py-8">
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
           <span className="font-bold text-indigo-600 tracking-tight">{tNav("brand")}</span>
-          <p className="text-xs text-gray-400">© {new Date().getFullYear()} Jendee AI. All rights reserved.</p>
+          <p className="text-xs text-gray-400">© {new Date().getFullYear()} Summon Translator. All rights reserved.</p>
         </div>
       </footer>
     </div>

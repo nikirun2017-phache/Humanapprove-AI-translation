@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-indigo-600 tracking-tight">Jendee AI</h1>
+          <h1 className="text-2xl font-bold text-indigo-600 tracking-tight">Summon Translator</h1>
           <p className="text-sm text-gray-500 mt-1">Reset your password</p>
         </div>
 
