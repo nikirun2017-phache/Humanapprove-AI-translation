@@ -90,6 +90,15 @@ export function Navbar() {
             {session.user.role}
           </span>
         </span>
+        <Link
+          href="/account"
+          className={cn(
+            "text-sm transition-colors",
+            pathname === "/account" ? "text-indigo-600 font-medium" : "text-gray-500 hover:text-gray-800"
+          )}
+        >
+          Account
+        </Link>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           className="text-sm text-gray-500 hover:text-gray-800 transition-colors"

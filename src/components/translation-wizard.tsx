@@ -710,7 +710,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
                   />
                   <p className="text-xs text-gray-400 mt-1">
-                    Requires <code>repo</code> read scope. Used to read files and push translated content back to your branch.
+                    Requires <code>repo</code> read scope. Used to read files from your branch.
                   </p>
                 </div>
                 <button
@@ -823,7 +823,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                           <li>Select the files you want to translate using the checkboxes above.</li>
                           <li>Click the button below — selected files load into the wizard.</li>
                           <li>Pick your target languages and confirm the job.</li>
-                          <li>Once complete, translated files are pushed back to the PR branch automatically.</li>
+                          <li>Once complete, download the translated files and commit them to your branch manually.</li>
                         </ol>
                       </div>
                       <button
@@ -1464,7 +1464,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
         const promoDiscount = effectiveDiscountPct > 0 ? grandTotalBeforeDiscount * (effectiveDiscountPct / 100) : 0
         const grandTotalCharge = Math.max(0, grandTotalBeforeDiscount - promoDiscount)
         // Split into fixed (platform fee) and variable (AI markup) components for transparency
-        const totalPlatformFee = fileRows.reduce((s: number, r: (typeof fileRows)[number]) => s + r.estimatedWords * PLATFORM_FEE_PER_WORD * selectedLangs.size, 0)
+
         const minFeeApplied = !promoCoversAll && grandTotalBeforeDiscount > grandTotalRaw
 
         return (
