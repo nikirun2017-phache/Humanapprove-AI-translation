@@ -2,8 +2,8 @@
 import { NextResponse } from "next/server"
 
 interface UserBillingFields {
-  subscriptionStatus: string
-  subscriptionId: string | null
+  subscriptionStatus?: string | null
+  subscriptionId?: string | null
 }
 
 /**

@@ -219,7 +219,7 @@ export async function POST(req: NextRequest) {
   }
 
   const wordCount = units.reduce(
-    (sum, u) => sum + ((u.sourceText ?? u.source ?? "").split(/\s+/).filter(Boolean).length), 0
+    (sum, u) => sum + ((u.sourceText ?? "").split(/\s+/).filter(Boolean).length), 0
   )
 
   // Create job + tasks in a single transaction
