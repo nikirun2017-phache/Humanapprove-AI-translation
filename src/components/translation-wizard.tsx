@@ -645,12 +645,12 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
       </div>
 
       {/* Step indicator */}
-      <div className="flex items-center gap-2 mb-8">
+      <div className="flex items-center gap-1.5 sm:gap-2 mb-6 sm:mb-8">
         {([1, 2, 3] as Step[]).map((s, i) => (
-          <div key={s} className="flex items-center gap-2">
-            {i > 0 && <div className="w-8 h-px bg-gray-200" />}
-            <div className={`flex items-center gap-1.5 text-sm font-medium ${step === s ? "text-indigo-600" : step > s ? "text-gray-400" : "text-gray-300"}`}>
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${step === s ? "bg-indigo-600 text-white" : step > s ? "bg-gray-200 text-gray-500" : "bg-gray-100 text-gray-300"}`}>{s}</span>
+          <div key={s} className="flex items-center gap-1.5 sm:gap-2">
+            {i > 0 && <div className="w-5 sm:w-8 h-px bg-gray-200" />}
+            <div className={`flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium ${step === s ? "text-indigo-600" : step > s ? "text-gray-400" : "text-gray-300"}`}>
+              <span className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-xs ${step === s ? "bg-indigo-600 text-white" : step > s ? "bg-gray-200 text-gray-500" : "bg-gray-100 text-gray-300"}`}>{s}</span>
               {s === 1 ? "Upload" : s === 2 ? "Configure" : "Confirm"}
             </div>
           </div>
@@ -749,8 +749,8 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                     const selWords = selFiles.reduce((s: number, f: GithubPrFile) => s + f.wordCount, 0)
                     const allChecked = prAnalysis.files.every((f: GithubPrFile) => selectedPrFiles.has(f.path))
                     return (
-                    <div className="border border-gray-200 rounded-lg overflow-hidden">
-                      <table className="w-full text-sm">
+                    <div className="border border-gray-200 rounded-lg overflow-x-auto">
+                      <table className="w-full text-sm min-w-[400px]">
                         <thead className="bg-gray-50 border-b border-gray-200">
                           <tr>
                             <th className="px-3 py-2">
@@ -983,11 +983,11 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
 
           {/* Preview for single non-PDF file */}
           {entries.length === 1 && !entries[0].file.name.endsWith(".pdf") && entries[0].preview.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
               <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 text-xs font-medium text-gray-600">
                 Preview (first 10 strings)
               </div>
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[320px]">
                 <tbody className="divide-y divide-gray-50">
                   {entries[0].preview.slice(0, 10).map((u: SourceUnit) => (
                     <tr key={u.id}>
@@ -1481,7 +1481,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             </div>
 
             {/* Cost breakdown per file */}
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
               <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <div>
                   <h2 className="font-medium text-gray-900">Estimated cost</h2>
@@ -1501,7 +1501,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                 </div>
               </div>
 
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[360px]">
                 <thead className="bg-gray-50 border-b border-gray-100">
                   <tr className="text-left text-xs text-gray-500">
                     <th className="px-5 py-2 font-medium">File</th>
