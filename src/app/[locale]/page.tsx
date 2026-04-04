@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
 import { Link } from "@/i18n/navigation"
+import NextLink from "next/link"
 import { CostEstimator } from "@/components/cost-estimator"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 import { getTranslations } from "next-intl/server"
@@ -265,9 +266,9 @@ export default async function Home() {
             <Link href="/terms" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
               Terms of Service
             </Link>
-            <Link href="/careers" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+            <NextLink href="/careers" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
               Careers
-            </Link>
+            </NextLink>
             <p className="text-xs text-gray-400">{t("footer.rights", { year: new Date().getFullYear() })}</p>
           </div>
         </div>
