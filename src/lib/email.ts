@@ -232,3 +232,115 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string): P
   `)
   await send(email, "Reset your Summon Translator password", html)
 }
+
+export async function sendApplicationConfirmationEmail(name: string, email: string): Promise<void> {
+  const html = layout(`
+    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827">Application received</h1>
+    <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6">
+      Hi <strong>${name}</strong>, thank you for applying to join the Summon Translator reviewer network.
+      We have received your application and will review it shortly.
+    </p>
+    <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6">
+      We typically respond within <strong>5 business days</strong>. We will contact you at this email address with our decision.
+    </p>
+    <p style="margin:16px 0 0;font-size:13px;color:#6b7280;line-height:1.6">
+      If you have any questions in the meantime, reply to this email or contact us at
+      <a href="mailto:${SUPPORT_EMAIL}" style="color:#4f46e5;text-decoration:none">${SUPPORT_EMAIL}</a>.
+    </p>
+  `)
+  await send(email, "We received your reviewer application", html)
+}
+
+export async function sendAdminApplicationNotificationEmail(application: {
+  id: string
+  fullName: string
+  email: string
+  languagePairs: string
+  yearsExperience: number
+  catTools: string
+  mtExperience: boolean
+  bio: string
+  profileUrl?: string | null
+}): Promise<void> {
+  const langs = JSON.parse(application.languagePairs).join(", ") || "—"
+  const tools = JSON.parse(application.catTools).join(", ") || "—"
+  const html = layout(`
+    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827">New reviewer application</h1>
+    <p style="margin:0 0 20px;font-size:14px;color:#6b7280">Submitted by ${application.fullName}</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin:0 0 20px">
+      ${[
+        ["Name", application.fullName],
+        ["Email", application.email],
+        ["Language pairs", langs],
+        ["Years of experience", String(application.yearsExperience)],
+        ["CAT tools", tools],
+        ["MT post-editing exp.", application.mtExperience ? "Yes" : "No"],
+        ["Profile URL", application.profileUrl ?? "—"],
+      ].map(([label, value]) => `
+        <tr style="border-bottom:1px solid #f3f4f6">
+          <td style="padding:10px 14px;font-size:13px;font-weight:600;color:#6b7280;width:40%;background:#f9fafb">${label}</td>
+          <td style="padding:10px 14px;font-size:13px;color:#111827">${value}</td>
+        </tr>`).join("")}
+    </table>
+    <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#6b7280">Bio / Motivation</p>
+    <p style="margin:0 0 20px;font-size:14px;color:#374151;line-height:1.6;background:#f9fafb;padding:12px 14px;border-radius:8px;border:1px solid #e5e7eb">
+      ${application.bio.replace(/\n/g, "<br>")}
+    </p>
+    ${btn("Review application", `${APP_URL}/admin/applications`)}
+  `)
+  await send(SUPPORT_EMAIL, `New reviewer application — ${application.fullName}`, html)
+}
+
+export async function sendReviewerApprovalEmail(
+  name: string,
+  email: string,
+  setPasswordUrl: string | null
+): Promise<void> {
+  const passwordSection = setPasswordUrl
+    ? `<p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6">
+        To get started, set your password using the button below. This link expires in <strong>1 hour</strong>.
+        If it expires, use the <a href="${APP_URL}/forgot-password" style="color:#4f46e5;text-decoration:none">Forgot password</a> flow.
+       </p>
+       ${btn("Set your password", setPasswordUrl)}`
+    : `<p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6">
+        You can log in with your existing account at any time.
+       </p>
+       ${btn("Sign in", `${APP_URL}/login`)}`
+
+  const html = layout(`
+    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827">Your application has been approved</h1>
+    <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6">
+      Hi <strong>${name}</strong>, congratulations! We have reviewed your application and are pleased to welcome you
+      to the Summon Translator reviewer network.
+    </p>
+    <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6">
+      Your account has been set up with <strong>Reviewer</strong> access. You will be able to review and approve
+      AI-translated content across your registered language pairs.
+    </p>
+    ${passwordSection}
+    <p style="margin:20px 0 0;font-size:13px;color:#6b7280;line-height:1.6">
+      If you have any questions, reply to this email or contact us at
+      <a href="mailto:${SUPPORT_EMAIL}" style="color:#4f46e5;text-decoration:none">${SUPPORT_EMAIL}</a>.
+    </p>
+  `)
+  await send(email, "Your reviewer application has been approved — Summon Translator", html)
+}
+
+export async function sendReviewerRejectionEmail(name: string, email: string): Promise<void> {
+  const html = layout(`
+    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827">Update on your application</h1>
+    <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6">
+      Hi <strong>${name}</strong>, thank you for your interest in joining the Summon Translator reviewer network
+      and for taking the time to apply.
+    </p>
+    <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6">
+      After careful review, we are not moving forward with your application at this time.
+      We encourage you to apply again in the future as our language needs evolve.
+    </p>
+    <p style="margin:16px 0 0;font-size:13px;color:#6b7280;line-height:1.6">
+      If you have questions, feel free to reach out at
+      <a href="mailto:${SUPPORT_EMAIL}" style="color:#4f46e5;text-decoration:none">${SUPPORT_EMAIL}</a>.
+    </p>
+  `)
+  await send(email, "Update on your Summon Translator reviewer application", html)
+}

@@ -148,45 +148,24 @@ export default function CareersPage() {
         <section className="mb-12">
           <h2 className="text-xl font-bold text-gray-900 mb-4">How to apply</h2>
           <p className="text-gray-700 leading-relaxed mb-5">
-            Send the following to{" "}
-            <a href="mailto:support@summontranslator.com?subject=LQA%20Reviewer%20Application%20%E2%80%94%20%5BYour%20Language%20Pair%5D"
-              className="text-indigo-600 hover:underline">
-              support@summontranslator.com
-            </a>{" "}
-            with the subject line{" "}
-            <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-sm">
-              LQA Reviewer Application — [Your Language Pair]
-            </span>
+            Fill out our online application form — it takes about 5 minutes. We will ask about your
+            language pairs, experience level, and background.
           </p>
-          <ol className="space-y-3 list-none">
-            {[
-              "Brief intro and your language pair(s)",
-              "Your CV or translator profile (TranslatorsCafe, ProZ, or LinkedIn)",
-              "Two or three sentences on your experience with MT post-editing or structured file formats",
-            ].map((item, i) => (
-              <li key={item} className="flex gap-4">
-                <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
-                  {i + 1}
-                </span>
-                <span className="text-gray-700 leading-relaxed">{item}</span>
-              </li>
-            ))}
-          </ol>
-          <p className="text-sm text-gray-400 mt-6">We review applications on a rolling basis.</p>
+          <p className="text-sm text-gray-400 mt-6">We review applications on a rolling basis and typically respond within 5 business days.</p>
         </section>
 
         {/* CTA */}
         <div className="bg-indigo-50 rounded-2xl px-8 py-8 text-center">
           <h3 className="text-lg font-bold text-gray-900 mb-2">Ready to apply?</h3>
           <p className="text-sm text-gray-500 mb-5">
-            Send your application to support@summontranslator.com — we typically respond within 5 business days.
+            Complete our short application form — we typically respond within 5 business days.
           </p>
-          <a
-            href="mailto:support@summontranslator.com?subject=LQA%20Reviewer%20Application%20%E2%80%94%20%5BYour%20Language%20Pair%5D"
+          <Link
+            href="/reviewer-signup"
             className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-6 py-3 rounded-lg transition-colors"
           >
             Apply now →
-          </a>
+          </Link>
         </div>
       </main>
 
