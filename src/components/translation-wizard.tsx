@@ -916,22 +916,30 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                                   : ""}
                         </p>
                       )}
-                      {isPdf && entry.probePending && (
-                        <div className="mt-2 space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-indigo-600">Analysing PDF…</span>
-                            <span className="text-xs text-gray-400">please wait</span>
+                      {isPdf && entry.probePending && (() => {
+                        const mb = entry.file.size / (1024 * 1024)
+                        const estSecs = mb < 0.5 ? "5–15 sec" : mb < 2 ? "15–30 sec" : mb < 10 ? "30–60 sec" : "1–3 min"
+                        return (
+                          <div className="mt-2 space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-medium text-indigo-600">Analysing PDF…</span>
+                              <span className="text-xs text-gray-400">est. {estSecs}</span>
+                            </div>
+                            <div className="relative h-2.5 w-full bg-indigo-100 rounded-full overflow-hidden">
+                              <div
+                                className="absolute inset-y-0 left-0 w-2/5 bg-indigo-500 rounded-full"
+                                style={{animation: "pdf-scan 1.5s ease-in-out infinite"}}
+                              />
+                            </div>
+                            <p className="text-xs text-gray-400 leading-relaxed">
+                              Extracting and segmenting all text now so translation starts instantly.
+                              {mb >= 2 && " Large files run through multiple extraction strategies (pdftotext → pdfplumber → pypdf)."}
+                              {mb >= 5 && " Scanned/image PDFs also require AI vision OCR, which adds extra time."}
+                            </p>
+                            <style>{`@keyframes pdf-scan{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}`}</style>
                           </div>
-                          <div className="relative h-2.5 w-full bg-indigo-100 rounded-full overflow-hidden">
-                            <div
-                              className="absolute inset-y-0 left-0 w-2/5 bg-indigo-500 rounded-full"
-                              style={{animation: "pdf-scan 1.5s ease-in-out infinite"}}
-                            />
-                          </div>
-                          <p className="text-xs text-gray-400">Counting pages and extracting text — larger files take longer</p>
-                          <style>{`@keyframes pdf-scan{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}`}</style>
-                        </div>
-                      )}
+                        )
+                      })()}
                       {isXliff && entry.xliffMeta && !entry.parseError && (
                         <p className="text-xs text-indigo-600 mt-0.5">
                           Source: <strong>{entry.xliffMeta.sourceLanguage}</strong>
@@ -944,8 +952,13 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                         <>
                           <p className={`text-xs mt-0.5 ${probe.isScanned ? "text-amber-600" : "text-green-600"}`}>
                             {probe.isScanned
-                              ? "Scanned PDF — text extracted via AI vision"
-                              : `Text PDF — ${probe.wordCount.toLocaleString()} words detected`}
+                              ? `Scanned PDF — ${probe.numPages} page${probe.numPages !== 1 ? "s" : ""}, text extracted via AI vision`
+                              : `Text PDF — ${probe.wordCount.toLocaleString()} words across ${probe.numPages} page${probe.numPages !== 1 ? "s" : ""}`}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {probe.isScanned
+                              ? "Scanned PDFs use Claude Vision OCR — analysis takes longer for many pages"
+                              : "Text PDFs extract instantly — no AI needed for analysis"}
                           </p>
                           <p className="text-xs text-gray-400 mt-0.5">
                             Delivers .xliff · .txt · .pdf — original layout is approximated
