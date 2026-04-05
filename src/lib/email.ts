@@ -128,7 +128,7 @@ export async function sendWelcomeEmail(name: string, email: string): Promise<voi
     </p>
     ${btn("Go to Translation Studio", `${APP_URL}/translation-studio`)}
     <p style="margin:16px 0 0;font-size:13px;color:#6b7280;line-height:1.6">
-      Use code <strong>1TIME</strong> at checkout to translate your first 1,000 words free.
+      Use code <strong>1TIME</strong> at checkout to translate your first 10,000 words free.
     </p>
   `)
   await send(email, "Welcome to Summon Translator", html)

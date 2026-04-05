@@ -641,7 +641,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
       {/* Promo banner — always visible across all steps */}
       <div className="mb-5 flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3 text-sm text-indigo-800">
         <span className="shrink-0">🎉</span>
-        <span>Use code <strong className="font-semibold tracking-wide">1TIME</strong> at checkout to translate your first 1,000 words free.</span>
+        <span>Use code <strong className="font-semibold tracking-wide">1TIME</strong> at checkout to translate your first 10,000 words free.</span>
       </div>
 
       {/* Step indicator */}
@@ -1608,7 +1608,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                 <div className="mt-1.5 space-y-1">
                   <p className={`text-xs ${promoState.valid ? "text-green-600" : "text-red-500"}`}>
                     {promoState.valid
-                      ? `✓ Code accepted — first 1,000 words free!`
+                      ? `✓ Code accepted — first 10,000 words free!`
                       : `✕ ${promoState.error}`}
                   </p>
                   {promoState.valid && promoState.maxWordsPerJob != null && totalWords > promoState.maxWordsPerJob && (

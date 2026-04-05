@@ -247,7 +247,7 @@ export async function POST(req: NextRequest) {
       if (perUserOk) {
         appliedPromoCode = promo.code
         // Partial discount: if job exceeds the free-word cap, scale discount proportionally.
-        // e.g. 1TIME gives 100% off first 1,000 words — a 13,000-word job gets 1000/13000 = ~7.7% off.
+        // e.g. 1TIME gives 100% off first 10,000 words — a 30,000-word job gets 10000/30000 = ~33% off.
         if (promo.maxWordsPerJob !== null && totalSourceWords > promo.maxWordsPerJob) {
           discountPct = Math.round((promo.maxWordsPerJob / totalSourceWords) * promo.discountPct)
         } else {

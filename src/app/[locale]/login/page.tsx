@@ -166,7 +166,7 @@ function LoginForm() {
           <div className="flex items-start gap-3 bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-4">
             <span className="text-2xl shrink-0 mt-0.5">🎁</span>
             <div>
-              <p className="text-sm font-semibold text-indigo-900 mb-0.5">Translate your first 1,000 words free</p>
+              <p className="text-sm font-semibold text-indigo-900 mb-0.5">Translate your first 10,000 words free</p>
               <p className="text-sm text-indigo-700">
                 Sign up and use code{" "}
                 <span className="font-mono font-bold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md tracking-wider">
