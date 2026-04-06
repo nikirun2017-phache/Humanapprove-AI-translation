@@ -50,7 +50,7 @@ const nextConfig: NextConfig = {
     },
     {
       // Allow the portfolio HTML files to be embedded in iframes (same origin)
-      source: "/high-voltage-safety-course:path*",
+      source: "/high-voltage-safety-course(.+)?",
       headers: [
         { key: "X-Frame-Options", value: "SAMEORIGIN" },
         {
