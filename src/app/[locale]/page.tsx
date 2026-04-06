@@ -48,7 +48,7 @@ export default async function Home() {
           {t("hero.badge")}
         </div>
         <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-6 ml-2">
-          🎁 Translate your first 1,000 words free — use code <span className="font-mono bg-green-100 px-1.5 py-0.5 rounded">1TIME</span>
+          🎁 Translate your first 10,000 words free — use code <span className="font-mono bg-green-100 px-1.5 py-0.5 rounded">1TIME</span>
         </div>
         <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 leading-tight mb-6">
           {t("hero.h1Line1")}<br />
@@ -62,7 +62,7 @@ export default async function Home() {
             href="/login?mode=signup"
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl text-sm transition-colors shadow-sm"
           >
-            Start free — 1,000 words on us
+            Start free — 10,000 words on us
           </Link>
           <a
             href="#how-it-works"
@@ -271,7 +271,7 @@ export default async function Home() {
             <CostEstimator />
           </div>
           <div className="flex items-center justify-center gap-2 bg-green-50 border border-green-200 text-green-800 text-sm font-medium px-4 py-3 rounded-xl mb-8">
-            🎁 <span>Your first 1,000 words are free — sign up and enter code <span className="font-mono font-bold">1TIME</span> at checkout</span>
+            🎁 <span>Your first 10,000 words are free — sign up and enter code <span className="font-mono font-bold">1TIME</span> at checkout</span>
           </div>
 
           {/* Included */}
@@ -294,7 +294,7 @@ export default async function Home() {
         <h2 className="text-3xl font-bold text-gray-900 mb-4">{t("cta.heading")}</h2>
         <p className="text-gray-500 mb-6">{t("cta.body")}</p>
         <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-800 text-sm font-medium px-4 py-2 rounded-lg mb-6">
-          🎁 Your first 1,000 words are free — no credit card needed
+          🎁 Your first 10,000 words are free — no credit card needed
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
