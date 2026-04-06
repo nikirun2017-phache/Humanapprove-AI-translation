@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { parseJsonSource, parseCsvSource, parseMarkdownSource, parseTxtSource, parsePdfSource, parseXliffSource, parseStringsSource, parseStringsDictSource, parseXcstringsSource, parsePoSource, parseAndroidXmlSource, parseArbSource, parsePropertiesSource, type SourceUnit, type PdfParseResult } from "@/lib/source-parser"
+import { parseHtmlSource } from "@/lib/html-source-parser"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
 
@@ -79,9 +80,9 @@ export async function POST(req: NextRequest) {
   }
 
   const rawExt = file.name.split(".").pop()?.toLowerCase()
-  const ALLOWED_EXTS = new Set(["json","csv","md","txt","pdf","xliff","xlf","strings","stringsdict","xcstrings","po","xml","arb","properties"])
+  const ALLOWED_EXTS = new Set(["json","csv","md","txt","pdf","xliff","xlf","strings","stringsdict","xcstrings","po","xml","arb","properties","html"])
   if (!rawExt || !ALLOWED_EXTS.has(rawExt)) {
-    return NextResponse.json({ error: "Unsupported file type. Accepted: .json, .csv, .md, .txt, .pdf, .xliff, .xlf, .strings, .stringsdict, .xcstrings, .po, .xml, .arb, .properties" }, { status: 400 })
+    return NextResponse.json({ error: "Unsupported file type. Accepted: .json, .csv, .md, .txt, .pdf, .html, .xliff, .xlf, .strings, .stringsdict, .xcstrings, .po, .xml, .arb, .properties" }, { status: 400 })
   }
   // Normalise .xlf → xliff so sourceFormat is consistent throughout
   const ext = rawExt === "xlf" ? "xliff" : rawExt
@@ -187,6 +188,7 @@ export async function POST(req: NextRequest) {
         case "xml":         units = parseAndroidXmlSource(content); break
         case "arb":         units = parseArbSource(content); break
         case "properties":  units = parsePropertiesSource(content); break
+        case "html":        units = parseHtmlSource(content); break
         default:            units = parseCsvSource(content)
       }
     }

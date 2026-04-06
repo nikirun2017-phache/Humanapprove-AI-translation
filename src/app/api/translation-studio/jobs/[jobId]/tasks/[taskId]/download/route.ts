@@ -9,6 +9,7 @@ import {
   exportAsPo, exportAsAndroidXml, exportAsArb, exportAsProperties,
   formatMimeType,
 } from "@/lib/original-format-exporter"
+import { reconstructHtml } from "@/lib/html-source-parser"
 
 export async function GET(
   req: NextRequest,
@@ -164,6 +165,16 @@ export async function GET(
       headers: {
         "Content-Type": "text/markdown; charset=utf-8",
         "Content-Disposition": `attachment; filename="${safeName}.md"`,
+      },
+    })
+  }
+
+  if (fmt === "html") {
+    const reconstructed = reconstructHtml(sourceContent, translations, task.targetLanguage)
+    return new NextResponse(reconstructed, {
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Content-Disposition": `attachment; filename="${safeName}.html"`,
       },
     })
   }

@@ -62,6 +62,7 @@ function fileTypeLabel(name: string) {
   if (name.endsWith(".xml")) return "Android XML"
   if (name.endsWith(".arb")) return ".arb"
   if (name.endsWith(".properties")) return ".properties"
+  if (name.endsWith(".html") || name.endsWith(".htm")) return "HTML"
   return "file"
 }
 
@@ -116,6 +117,21 @@ function parseResourcePreview(content: string, filename: string): SourceUnit[] {
       }
     }
   } catch { /* ignore parse errors in preview */ }
+  return units
+}
+
+/** Quick client-side HTML preview — extracts first 10 translatable text nodes */
+function parseHtmlPreview(html: string): SourceUnit[] {
+  const units: SourceUnit[] = []
+  const SPLIT_RE = /(<!--[\s\S]*?-->|<!\w[^>]*>|<script\b[\s\S]*?<\/script>|<style\b[\s\S]*?<\/style>|<[^>]*>)/gi
+  const parts = html.split(SPLIT_RE)
+  let idx = 0
+  for (let i = 0; i < parts.length && units.length < 10; i += 2) {
+    const text = parts[i].trim()
+    if (text && /\p{L}/u.test(text)) {
+      units.push({ id: `t_${idx++}`, sourceText: text })
+    }
+  }
   return units
 }
 
@@ -348,6 +364,8 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
               units = flattenForPreview(JSON.parse(content) as unknown)
             } else if (f.name.endsWith(".md") || f.name.endsWith(".txt")) {
               units = parseMarkdownPreview(content)
+            } else if (f.name.endsWith(".html") || f.name.endsWith(".htm")) {
+              units = parseHtmlPreview(content)
             } else {
               units = parseCsvPreview(content)
             }
@@ -852,7 +870,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             <input
               id="file-input"
               type="file"
-              accept=".json,.csv,.md,.txt,.pdf,.xliff,.xlf,.strings,.stringsdict,.xcstrings,.po,.xml,.arb,.properties"
+              accept=".json,.csv,.md,.txt,.pdf,.html,.htm,.xliff,.xlf,.strings,.stringsdict,.xcstrings,.po,.xml,.arb,.properties"
               multiple
               className="hidden"
               onChange={handleInputChange}
