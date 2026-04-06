@@ -27,6 +27,19 @@ function escapeHtml(str: string): string {
 }
 
 /**
+ * Convert inline markdown (**bold**, *italic*) to HTML after HTML-escaping.
+ * Must be called on already-escaped text so the angle brackets in <strong>/<em>
+ * are literal and not double-escaped.
+ */
+function applyInlineFormatting(escaped: string): string {
+  return escaped
+    // **bold** — must come before *italic* to avoid partial matches
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    // *italic* — only single asterisks remaining after bold pass
+    .replace(/\*([^*]+?)\*/g, "<em>$1</em>")
+}
+
+/**
  * Convert a simplified Markdown string to HTML.
  * Handles: # headings, - lists, | tables, __IMAGE_PLACEHOLDER__ markers.
  */
@@ -43,16 +56,16 @@ function markdownToHtml(markdown: string): string {
 
     if (h3) {
       if (inList) { html += "</ul>\n"; inList = false }
-      html += `<h3>${escapeHtml(h3[1].trim())}</h3>\n`
+      html += `<h3>${applyInlineFormatting(escapeHtml(h3[1].trim()))}</h3>\n`
     } else if (h2) {
       if (inList) { html += "</ul>\n"; inList = false }
-      html += `<h2>${escapeHtml(h2[1].trim())}</h2>\n`
+      html += `<h2>${applyInlineFormatting(escapeHtml(h2[1].trim()))}</h2>\n`
     } else if (h1) {
       if (inList) { html += "</ul>\n"; inList = false }
-      html += `<h1>${escapeHtml(h1[1].trim())}</h1>\n`
+      html += `<h1>${applyInlineFormatting(escapeHtml(h1[1].trim()))}</h1>\n`
     } else if (li) {
       if (!inList) { html += "<ul>\n"; inList = true }
-      html += `<li>${escapeHtml(li[1].trim())}</li>\n`
+      html += `<li>${applyInlineFormatting(escapeHtml(li[1].trim()))}</li>\n`
     } else if (line.startsWith("|")) {
       if (inList) { html += "</ul>\n"; inList = false }
       const cells = line.split("|").filter((c) => c.trim() && !c.match(/^[-\s]+$/))
@@ -66,7 +79,7 @@ function markdownToHtml(markdown: string): string {
       if (inList) { html += "</ul>\n"; inList = false }
     } else {
       if (inList) { html += "</ul>\n"; inList = false }
-      html += `<p>${escapeHtml(line.trim())}</p>\n`
+      html += `<p>${applyInlineFormatting(escapeHtml(line.trim()))}</p>\n`
     }
   }
   if (inList) html += "</ul>\n"
@@ -174,7 +187,7 @@ export async function generateTranslatedPdf(
     .map((p) =>
       p === IMAGE_PLACEHOLDER
         ? `<div class="img-placeholder">📷 Image</div>`
-        : `<p>${escapeHtml(p)}</p>`
+        : `<p>${applyInlineFormatting(escapeHtml(p))}</p>`
     )
     .join("\n")
 
