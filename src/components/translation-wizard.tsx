@@ -120,13 +120,14 @@ function parseResourcePreview(content: string, filename: string): SourceUnit[] {
   return units
 }
 
-/** Quick client-side HTML preview — extracts first 10 translatable text nodes */
+/** Client-side HTML preview — returns ALL translatable text nodes so the count is accurate.
+ *  The preview table slices to 10 rows itself. */
 function parseHtmlPreview(html: string): SourceUnit[] {
   const units: SourceUnit[] = []
   const SPLIT_RE = /(<!--[\s\S]*?-->|<!\w[^>]*>|<script\b[\s\S]*?<\/script>|<style\b[\s\S]*?<\/style>|<[^>]*>)/gi
   const parts = html.split(SPLIT_RE)
   let idx = 0
-  for (let i = 0; i < parts.length && units.length < 10; i += 2) {
+  for (let i = 0; i < parts.length; i += 2) {
     const text = parts[i].trim()
     if (text && /\p{L}/u.test(text)) {
       units.push({ id: `t_${idx++}`, sourceText: text })
@@ -878,7 +879,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             <p className="text-gray-500">
               Drop files here or click to browse
             </p>
-            <p className="text-xs text-gray-400 mt-1">JSON · CSV · Markdown · TXT · PDF · XLIFF · .strings · .po · Android XML · .arb · .properties · Multiple files OK</p>
+            <p className="text-xs text-gray-400 mt-1">JSON · CSV · Markdown · TXT · PDF · HTML · XLIFF · .strings · .po · Android XML · .arb · .properties · Multiple files OK</p>
           </div>
 
           {/* File list */}
