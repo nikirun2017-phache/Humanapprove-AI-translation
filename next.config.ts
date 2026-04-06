@@ -49,8 +49,8 @@ const nextConfig: NextConfig = {
       headers: securityHeaders,
     },
     {
-      // Allow the portfolio HTML files to be embedded in iframes (same origin)
-      source: "/high-voltage-safety-course(.+)?",
+      // Allow portfolio files to be embedded in iframes (same origin)
+      source: "/(high-voltage-safety-course|rio-tinto-yarwun)(.+)?",
       headers: [
         { key: "X-Frame-Options", value: "SAMEORIGIN" },
         {
