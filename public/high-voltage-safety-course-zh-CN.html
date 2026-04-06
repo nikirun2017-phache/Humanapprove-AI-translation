@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>高压电气安全：基本规范与操作程序</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f12;
+    --surface: #161a20;
+    --surface2: #1e2430;
+    --border: #2a3040;
+    --amber: #f5b800;
+    --amber-dim: #c49200;
+    --amber-glow: rgba(245,184,0,0.12);
+    --red: #e03d3d;
+    --green: #2dd58a;
+    --blue: #4da6ff;
+    --text: #e8eaf0;
+    --text-dim: #8490a8;
+    --text-muted: #4a5568;
+    --correct: #1a3d2b;
+    --correct-border: #2dd58a;
+    --incorrect: #3d1a1a;
+    --incorrect-border: #e03d3d;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans SC', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 2px solid var(--amber);
+    padding: 0 2rem;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+  .topbar-logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber);
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+  .topbar-logo .icon { font-size: 1.4rem; }
+  .topbar-title {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    flex: 1;
+    text-align: center;
+    padding: 0 1rem;
+  }
+  .progress-pill {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--amber);
+    background: var(--amber-glow);
+    border: 1px solid var(--amber-dim);
+    border-radius: 20px;
+    padding: 0.25rem 0.8rem;
+    white-space: nowrap;
+  }
+
+  .layout { display: flex; flex: 1; overflow: hidden; }
+
+  .sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 1.5rem 0;
+    height: calc(100vh - 60px);
+    position: sticky;
+    top: 60px;
+  }
+  .sidebar-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 0 1.5rem 0.8rem;
+  }
+  .module-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.85rem 1.5rem;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    color: var(--text-dim);
+    transition: all 0.18s;
+    border-left: 3px solid transparent;
+    font-family: 'Noto Sans SC', sans-serif;
+  }
+  .module-btn:hover { background: var(--surface2); color: var(--text); }
+  .module-btn.active { background: var(--amber-glow); border-left-color: var(--amber); color: var(--amber); }
+  .module-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    background: var(--border);
+    color: var(--text-muted);
+    border-radius: 4px;
+    padding: 2px 6px;
+    min-width: 26px;
+    text-align: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .module-btn.active .module-num { background: var(--amber); color: #000; }
+  .module-btn.completed .module-num { background: var(--green); color: #000; }
+  .module-text { font-size: 0.82rem; font-weight: 500; line-height: 1.5; }
+
+  .main { flex: 1; overflow-y: auto; padding: 2.5rem 3rem 4rem; max-width: 900px; }
+
+  .module-panel { display: none; }
+  .module-panel.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .lesson-header { border-left: 4px solid var(--amber); padding-left: 1.25rem; margin-bottom: 2rem; }
+  .lesson-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--amber-dim);
+    margin-bottom: 0.4rem;
+  }
+  .lesson-title {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text);
+  }
+  .lesson-desc { margin-top: 1rem; font-size: 0.92rem; line-height: 1.8; color: var(--text-dim); max-width: 700px; }
+
+  .section-heading {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 2.5rem 0 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .section-heading::before { content: ''; width: 18px; height: 3px; background: var(--amber); border-radius: 2px; flex-shrink: 0; }
+  .section-body { font-size: 0.9rem; line-height: 1.8; color: var(--text-dim); margin-bottom: 1.5rem; }
+
+  .objectives { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem 1.75rem; margin: 1.5rem 0 2rem; }
+  .objectives-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 1rem;
+  }
+  .objectives li { display: flex; gap: 0.7rem; align-items: flex-start; font-size: 0.88rem; color: var(--text-dim); line-height: 1.7; padding: 0.4rem 0; list-style: none; }
+  .objectives li::before { content: '→'; color: var(--amber); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; flex-shrink: 0; }
+
+  .accordion { margin: 1.5rem 0; }
+  .acc-item { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.5rem; overflow: hidden; transition: border-color 0.2s; }
+  .acc-item.open { border-color: var(--amber-dim); }
+  .acc-trigger {
+    width: 100%;
+    background: var(--surface);
+    border: none;
+    padding: 1rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+    text-align: left;
+    transition: background 0.2s;
+  }
+  .acc-trigger:hover { background: var(--surface2); }
+  .acc-item.open .acc-trigger { background: var(--amber-glow); color: var(--amber); }
+  .acc-arrow { font-size: 0.75rem; color: var(--text-muted); transition: transform 0.25s; flex-shrink: 0; margin-left: 1rem; }
+  .acc-item.open .acc-arrow { transform: rotate(180deg); color: var(--amber); }
+  .acc-body { display: none; padding: 1.1rem 1.25rem 1.25rem; font-size: 0.88rem; line-height: 1.8; color: var(--text-dim); background: var(--surface2); border-top: 1px solid var(--border); }
+  .acc-item.open .acc-body { display: block; animation: fadeIn 0.2s ease; }
+
+  .flashcard-deck { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1.5rem 0; }
+  .flashcard { width: calc(50% - 0.5rem); min-height: 160px; perspective: 800px; cursor: pointer; }
+  @media (max-width: 600px) { .flashcard { width: 100%; } }
+  .flashcard-inner { width: 100%; height: 100%; min-height: 160px; position: relative; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+  .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+  .card-front, .card-back { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 10px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: center; min-height: 160px; }
+  .card-front { background: var(--surface); border: 1px solid var(--border); }
+  .card-back { background: var(--surface2); border: 1px solid var(--amber-dim); transform: rotateY(180deg); }
+  .card-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.58rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.6rem; }
+  .card-back .card-label { color: var(--amber-dim); }
+  .card-front p { font-family: 'Noto Sans SC', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text); line-height: 1.4; }
+  .card-back p { font-size: 0.83rem; line-height: 1.75; color: var(--text-dim); }
+  .card-hint { margin-top: auto; font-size: 0.65rem; color: var(--text-muted); font-family: 'IBM Plex Mono', monospace; }
+
+  .quiz-block { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 2rem 0; }
+  .quiz-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--amber); margin-bottom: 0.8rem; }
+  .quiz-question { font-size: 0.95rem; font-weight: 600; color: var(--text); line-height: 1.6; margin-bottom: 1.2rem; }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; }
+  .quiz-option {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    font-size: 0.86rem;
+    color: var(--text-dim);
+    text-align: left;
+    font-family: 'Noto Sans SC', sans-serif;
+    transition: all 0.18s;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    width: 100%;
+  }
+  .quiz-option:hover:not(:disabled) { border-color: var(--amber-dim); color: var(--text); background: var(--amber-glow); }
+  .quiz-option.correct { background: var(--correct); border-color: var(--correct-border); color: var(--green); }
+  .quiz-option.incorrect { background: var(--incorrect); border-color: var(--incorrect-border); color: var(--red); }
+  .quiz-option:disabled { cursor: default; }
+  .opt-letter { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.85rem; background: var(--border); border-radius: 4px; padding: 1px 7px; flex-shrink: 0; margin-top: 1px; }
+  .quiz-feedback { margin-top: 1rem; padding: 0.9rem 1rem; border-radius: 8px; font-size: 0.85rem; line-height: 1.65; display: none; }
+  .quiz-feedback.show { display: block; animation: fadeIn 0.25s ease; }
+  .quiz-feedback.correct { background: var(--correct); border: 1px solid var(--correct-border); color: #7fffb9; }
+  .quiz-feedback.incorrect { background: var(--incorrect); border: 1px solid var(--incorrect-border); color: #ffaaaa; }
+  .quiz-retry { margin-top: 0.75rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem 1rem; font-size: 0.8rem; color: var(--text-dim); cursor: pointer; font-family: 'Noto Sans SC', sans-serif; transition: all 0.18s; display: none; }
+  .quiz-retry.show { display: inline-block; }
+  .quiz-retry:hover { border-color: var(--amber); color: var(--amber); }
+
+  .callout { display: flex; gap: 1rem; background: var(--amber-glow); border: 1px solid var(--amber-dim); border-radius: 10px; padding: 1.1rem 1.25rem; margin: 1.5rem 0; font-size: 0.88rem; line-height: 1.7; color: var(--text); }
+  .callout-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .step-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; position: relative; overflow: hidden; }
+  .step-card::before { content: attr(data-num); position: absolute; top: -0.3rem; right: 0.6rem; font-family: 'Barlow Condensed', sans-serif; font-size: 4rem; font-weight: 800; color: var(--border); line-height: 1; pointer-events: none; }
+  .step-title { font-family: 'Noto Sans SC', sans-serif; font-size: 0.95rem; font-weight: 700; color: var(--amber); margin-bottom: 0.5rem; }
+  .step-body { font-size: 0.82rem; line-height: 1.7; color: var(--text-dim); }
+
+  .hierarchy { display: flex; flex-direction: column; gap: 0; margin: 1.5rem 0; }
+  .hier-level { display: flex; align-items: stretch; position: relative; }
+  .hier-bar { width: 6px; flex-shrink: 0; border-radius: 3px; margin-right: 1rem; }
+  .hier-content { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1rem; margin-bottom: 0.4rem; }
+  .hier-title { font-family: 'Noto Sans SC', sans-serif; font-weight: 700; font-size: 0.9rem; }
+  .hier-desc { font-size: 0.8rem; color: var(--text-dim); line-height: 1.6; margin-top: 0.25rem; }
+
+  .data-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.83rem; }
+  .data-table th { background: var(--surface2); color: var(--amber); font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.7rem 1rem; text-align: left; border-bottom: 2px solid var(--amber-dim); }
+  .data-table td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); color: var(--text-dim); line-height: 1.4; }
+  .data-table tr:hover td { background: var(--surface); }
+  .data-table td:first-child { color: var(--text); font-weight: 500; }
+
+  .summary-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem 1.75rem; margin: 2.5rem 0 1rem; }
+  .summary-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.75rem; }
+  .summary-box p { font-size: 0.88rem; line-height: 1.8; color: var(--text-dim); }
+  .summary-box p + p { margin-top: 0.75rem; }
+
+  .module-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .nav-btn { font-family: 'Noto Sans SC', sans-serif; font-weight: 600; font-size: 0.85rem; padding: 0.65rem 1.5rem; border-radius: 6px; cursor: pointer; transition: all 0.18s; border: none; }
+  .nav-btn.primary { background: var(--amber); color: #000; }
+  .nav-btn.primary:hover { background: #ffd03a; }
+  .nav-btn.secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--text-dim); }
+  .nav-btn.secondary:hover { border-color: var(--amber); color: var(--amber); }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .completion-banner { background: linear-gradient(135deg, #0d2a1a 0%, #1a3d2b 100%); border: 1px solid var(--green); border-radius: 12px; padding: 2rem; text-align: center; margin: 2rem 0; }
+  .completion-banner h2 { font-family: 'Noto Sans SC', sans-serif; font-size: 1.7rem; font-weight: 700; color: var(--green); margin-bottom: 0.5rem; }
+  .completion-banner p { color: #7fffb9; font-size: 0.88rem; line-height: 1.75; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo"><span class="icon">⚡</span> HV Safety</div>
+  <div class="topbar-title">高压电气安全：基本规范与操作程序</div>
+  <div class="progress-pill" id="progress-pill">1 / 7</div>
+</div>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-label">课程模块</div>
+    <button class="module-btn active" onclick="showModule(0)">
+      <span class="module-num">01</span><span class="module-text">了解高压危害</span>
+    </button>
+    <button class="module-btn" onclick="showModule(1)">
+      <span class="module-num">02</span><span class="module-text">工作场所准备与 DNOT 程序</span>
+    </button>
+    <button class="module-btn" onclick="showModule(2)">
+      <span class="module-num">03</span><span class="module-text">控制层级与 PPE 选择</span>
+    </button>
+    <button class="module-btn" onclick="showModule(3)">
+      <span class="module-num">04</span><span class="module-text">角色、职责与安全接近距离</span>
+    </button>
+    <button class="module-btn" onclick="showModule(4)">
+      <span class="module-num">05</span><span class="module-text">电磁感应危害与控制措施</span>
+    </button>
+    <button class="module-btn" onclick="showModule(5)">
+      <span class="module-num">06</span><span class="module-text">紧急响应与事故处理程序</span>
+    </button>
+    <button class="module-btn" onclick="showModule(6)">
+      <span class="module-num">07</span><span class="module-text">法规、标准与课程评估</span>
+    </button>
+  </nav>
+
+  <main class="main">
+
+    <!-- ══ 模块 1：了解高压危害 ══ -->
+    <div class="module-panel active" id="module-0">
+      <div class="lesson-header">
+        <div class="lesson-eyebrow">模块 01</div>
+        <div class="lesson-title">了解高压危害</div>
+      </div>
+      <p class="lesson-desc">高压电是推动现代生活运转的强大力量，但也带来独特而严峻的危险。在本课中，您将了解为何识别高压危害对于任何在电气系统内或其周围工作的人员都至关重要。</p>
+
+      <div class="objectives">
+        <div class="objectives-label">学习目标</div>
+        <ul>
+          <li>识别与高压电相关的主要危害，并说明其危险性。</li>
+          <li>描述高压事故可能导致的伤害类型和损害后果。</li>
+          <li>掌握与高压作业相关的核心术语和定义。</li>
+          <li>运用基本安全原则，降低在高压系统内或其附近工作时的风险。</li>
+        </ul>
+      </div>
+
+      <div class="section-heading">关键术语与定义</div>
+      <p class="section-body">在继续学习之前，请查阅每张闪卡，熟悉基本术语。点击即可翻转。</p>
+
+      <div class="flashcard-deck">
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">术语</div><p>高压</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">定义</div><p>根据行业标准和安全法规的定义，指超过 1,000 伏交流电或 1,500 伏直流电的电压。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">术语</div><p>标准电气作业</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">定义</div><p>涉及较低电压（通常低于 1,000 伏交流电）的任务，危害程度低于高压作业。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">术语</div><p>带电</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">定义</div><p>已连接至电源；能够输出危险电流。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">术语</div><p>断电</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">定义</div><p>未连接至任何电源，但不一定与所有危害完全隔离。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">术语</div><p>电弧闪光</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">定义</div><p>导体之间突然释放的能量，产生强烈的热量、光和压力，可能导致严重伤害。</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-heading">高压电的特殊危险性</div>
+      <p class="section-body">与标准电气系统相比，高压电具有更大的危险性。高压电的危害往往不会立即显现，因为风险可能是无形且无声的。即使短暂接触也可能导致严重伤害甚至死亡。</p>
+
+      <div class="section-heading">高压电的主要危害</div>
+      <p class="section-body">展开各部分，了解与高压系统相关的主要危害。每项危害均附有实际案例或后果。</p>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">严重烧伤（表面与内部）<span class="acc-arrow">▼</span></button>
+          <div class="acc-body"><p>高压电可导致皮肤和深层组织迅速升温，造成体表和体内严重烧伤。在能量水平低至每平方厘米每秒 1.2 卡路里的情况下，短暂暴露即可导致二度烧伤。</p><br><p><strong>案例：</strong>工人意外接触带电导体后，可能遭受需要大量医疗救治的深层组织烧伤。</p></div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">电弧闪光（能量释放、冲击波）<span class="acc-arrow">▼</span></button>
+          <div class="acc-body"><p>电弧闪光是导电物体之间突发的爆炸性能量释放，可产生强大的冲击波、高强度热量和飞散碎片，对附近人员造成严重威胁。</p><br><p><strong>案例：</strong>工具掉落在带电设备附近可能引发电弧闪光，导致周边多名工人烧伤和受伤。</p></div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">肌肉不自主收缩（无法松手）<span class="acc-arrow">▼</span></button>
+          <div class="acc-body"><p>高压电可引发肌肉快速不自主收缩，使人一旦接触带电导体便无法松开。这会延长触电时间并加重伤害程度。</p><br><p><strong>后果：</strong>工人被困，无法松手，电流持续流过其身体。</p></div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">火灾与爆炸（点燃、爆炸、损毁）<span class="acc-arrow">▼</span></button>
+          <div class="acc-body"><p>高压事故可点燃周围材料、引发爆炸，并对设备和基础设施造成重大损坏。释放的热能可点燃衣物和附近物品。</p><br><p><strong>案例：</strong>高压配电柜发生电气故障可能引发火灾，并在设施内迅速蔓延。</p></div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">间接接触 / 弧光放电（无需直接接触）<span class="acc-arrow">▼</span></button>
+          <div class="acc-body"><p>高压电可通过空气弧光放电，在电源与附近人员或物体之间形成危险的电气通路。这意味着即使未直接接触带电导体，也可能受到伤害。</p><br><p><strong>案例：</strong>工人站在带电设备附近，可能因弧光跨越间隙而受伤，即便没有发生实体接触。</p></div>
+        </div>
+      </div>
+
+      <div class="section-heading">电气安全基本原则</div>
+      <p class="section-body">理解并运用以下关键电气安全原则，对于任何从事高压系统工作的人员都至关重要。</p>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">假设所有线路均带电<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">在未经验证之前，始终将每条线路视为带电状态。这一理念可防止意外接触带电部件。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">使用正确的个人防护装备（PPE）<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">穿戴专为高压环境设计的绝缘手套、绝缘靴、面罩及阻燃服装。正确的个人防护装备可能是有惊无险与严重伤害之间的关键所在。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">遵循锁定-挂牌程序<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">在开始任何作业前，确保所有设备均已断电、上锁并挂牌。此程序可保护您和团队免受意外通电的危害。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">保持安全距离<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">高压电可通过空气弧光放电，因此请始终根据电压等级保持最小安全接近距离。切勿仅因未接触设备便认为自己处于安全状态。</div>
+        </div>
+      </div>
+
+      <div class="quiz-block" id="quiz-0-1">
+        <div class="quiz-label">知识检测</div>
+        <div class="quiz-question">判断正误：您应始终假设所有线路均带电，直至证明并非如此。</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-0-1', this, true)"><span class="opt-letter">A</span> 正确</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-0-1', this, false)"><span class="opt-letter">B</span> 错误</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-0-1-feedback"></div>
+        <button class="quiz-retry" id="quiz-0-1-retry" onclick="retryQuiz('quiz-0-1')">↺ 重新作答</button>
+      </div>
+
+      <div class="summary-box">
+        <div class="summary-label">课程小结</div>
+        <p>在本课中，您探讨了高压电的独特危害，包括严重烧伤、电弧闪光、肌肉不自主收缩以及火灾和爆炸的风险。您了解了高压电为何特别危险，以及间接接触仍可导致伤害的原因。</p>
+        <p>请记住，危害识别与防备是抵御电气事故的最强防线。</p>
+      </div>
+
+      <div class="module-nav">
+        <button class="nav-btn secondary" disabled>← 上一节</button>
+        <button class="nav-btn primary" onclick="showModule(1)">下一模块 →</button>
+      </div>
+    </div>
+
+    <!-- ══ 模块 2：工作场所准备与 DNOT 程序 ══ -->
+    <div class="module-panel" id="module-1">
+      <div class="lesson-header">
+        <div class="lesson-eyebrow">模块 02</div>
+        <div class="lesson-title">工作场所准备与 DNOT 程序</div>
+      </div>
+      <p class="lesson-desc">在任何高压作业开始之前，充分的准备和严格遵守操作规程是不可或缺的。在理解高压危害的基础上，您现在将学习在作业开始之前保障自身和团队安全的实际步骤。</p>
+
+      <div class="objectives">
+        <div class="objectives-label">学习目标</div>
+        <ul>
+          <li>识别关键准备步骤：了解开始高压作业前所需采取的基本措施。</li>
+          <li>开展作业安全分析：了解如何进行和参与作业安全分析及作业前检查。</li>
+          <li>掌握 DNOT 程序：正确执行断电、锁定/挂牌和测试步骤，确保安全的工作环境。</li>
+        </ul>
+      </div>
+
+      <div class="section-heading">工作场所准备的三大支柱</div>
+      <p class="section-body">了解在任何高压作业开始前必须到位的基础要素。展开各部分，了解具体要求及其重要性。</p>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">培训与能力<span class="acc-arrow">▼</span></button>
+          <div class="acc-body"><p>只有经过适当培训、获得授权且具备相应能力的人员，方可从事高压作业。这包括持有最新的现场入职培训记录，并能证明具备电气安全规程、救援及心肺复苏程序方面的知识。</p><br><p>如未获授权，您必须始终由已获授权的人员陪同并接受其监督。</p></div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">作业前检查<span class="acc-arrow">▼</span></button>
+          <div class="acc-body"><p>在开始任何作业前，必须与整个作业团队共同完成全面的作业安全分析。应对所有工具和个人防护装备（PPE）进行检查，确认其适合使用。</p><br><p>测试设备必须经过校准且运行正常，警示标志和隔离设施须到位且清晰可见。</p></div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">团队准备<span class="acc-arrow">▼</span></button>
+          <div class="acc-body"><p>高压作业从来不是个人任务。只有获授权人员方可参与，任何未完全获授权者必须始终处于监督之下。</p><br><p>团队沟通与准备至关重要，以确保每位成员了解自己的职责及现行安全程序。</p></div>
+        </div>
+      </div>
+
+      <div class="section-heading">作业前检查清单</div>
+      <p class="section-body">查阅每张闪卡，巩固全面作业前检查的关键要素。</p>
+
+      <div class="flashcard-deck">
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">检查项目</div><p>作业安全分析</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">含义</div><p>在开始任何高压任务之前，对作业进行结构化审查，以识别危害并制定控制措施。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">检查项目</div><p>工具与个人防护装备检查</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">含义</div><p>仔细检查所有工具和个人防护装备是否存在损坏或缺陷，确认其安全且适合使用。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">检查项目</div><p>校准与标识</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">含义</div><p>确认所有测试设备均已正确校准，且警告标志和隔离栏已到位并清晰可见。</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">⚠️</span>
+        <span>充分准备能够拯救生命。匆忙行事或跳过任何步骤都可能导致灾难性后果。</span>
+      </div>
+
+      <div class="section-heading">DNOT 程序：您的最后一道防线</div>
+      <p class="section-body">禁止操作标签（DNOT）程序是防止意外带电的关键保障措施。严格按照正确顺序执行每个步骤至关重要——在安全问题上没有任何走捷径的余地。</p>
+
+      <div class="steps">
+        <div class="step-card" data-num="1">
+          <div class="step-title">断开所有电源</div>
+          <div class="step-body">在开始任何作业之前，关闭并隔离所有电能来源。确认所有开关和断路器均处于断开位置，且无电力存在。</div>
+        </div>
+        <div class="step-card" data-num="2">
+          <div class="step-title">安装锁具和标签</div>
+          <div class="step-body">在所有开关和断路器上挂锁并加贴禁止操作标签，防止任何人在作业进行过程中意外使设备带电。</div>
+        </div>
+        <div class="step-card" data-num="3">
+          <div class="step-title">检测是否存在电压</div>
+          <div class="step-body">使用经批准的检测设备确认无电压存在。务必在断电并上锁/挂标签之后进行检测。</div>
+        </div>
+        <div class="step-card" data-num="4">
+          <div class="step-title">开始作业</div>
+          <div class="step-body">只有在所有前述步骤均已完成并确认后，方可开始作业。跳过或调换步骤顺序可能导致严重伤害甚至死亡。</div>
+        </div>
+      </div>
+
+      <div class="section-heading">可能出现什么问题？——跳过 DNOT 步骤的后果</div>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">跳过断电步骤<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">如果未能断开设备电源，可能仍存在带电电压，任何接触设备的人都将面临严重触电或电死的即时风险。即使短暂的疏忽也可能导致危及生命的伤害。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">跳过上锁/挂标签步骤<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">没有锁具和标签，其他人可能在您作业时无意中使设备带电，这可能导致突然、意外的带电，造成灾难性伤害。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">跳过电压检测步骤<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">在未经检测的情况下假设设备安全，可能导致"虚假安全"情况，即隐藏的电压仍然存在。此步骤是您在真正安全地开始作业前的最终确认。</div>
+        </div>
+      </div>
+
+      <div class="quiz-block" id="quiz-1-1">
+        <div class="quiz-label">知识检测</div>
+        <div class="quiz-question">您正准备对一个高压开关进行作业。现场已清场。DNOT 流程的第一步是什么？</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-1-1', this, false)"><span class="opt-letter">A</span> 安装锁具和标签</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-1-1', this, true)"><span class="opt-letter">B</span> 断开所有电源</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-1-1', this, false)"><span class="opt-letter">C</span> 检测是否存在电压</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-1-1', this, false)"><span class="opt-letter">D</span> 开始作业</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-1-1-feedback"></div>
+        <button class="quiz-retry" id="quiz-1-1-retry" onclick="retryQuiz('quiz-1-1')">↺ 重新作答</button>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">🔒</span>
+        <span>严格遵守 DNOT 程序是强制性要求——不得走捷径，不得有任何例外。</span>
+      </div>
+
+      <div class="summary-box">
+        <div class="summary-label">课程小结</div>
+        <p>在本课中，您了解了工作场所准备的三大支柱：培训与能力、全面的作业前检查以及团队准备状态。您还掌握了 DNOT 程序——断电、上锁/挂标签、检测和开始作业——并了解了跳过任何步骤可能带来的严重后果。</p>
+        <p>接下来，您将探讨控制层级以及如何选择合适的个人防护装备（PPE）。</p>
+      </div>
+
+      <div class="module-nav">
+        <button class="nav-btn secondary" onclick="showModule(0)">← 上一节</button>
+        <button class="nav-btn primary" onclick="showModule(2)">下一模块 →</button>
+      </div>
+    </div>
+
+    <!-- ══ 模块 3：控制层级与 PPE 选择 ══ -->
+    <div class="module-panel" id="module-2">
+      <div class="lesson-header">
+        <div class="lesson-eyebrow">模块 03</div>
+        <div class="lesson-title">控制层级与 PPE 选择</div>
+      </div>
+      <p class="lesson-desc">在本课中，您将了解如何通过结构化方法管理电气风险，以及为何个人防护装备（PPE）被视为最后一道防线。在高压系统作业中，理解并应用这些概念对于保障您和团队的安全至关重要。</p>
+
+      <div class="objectives">
+        <div class="objectives-label">学习目标</div>
+        <ul>
+          <li>解释电气安全的控制层级。</li>
+          <li>描述 PPE 的作用及其局限性。</li>
+          <li>应用 PPE 选择的五步流程。</li>
+          <li>识别高压作业的最低 PPE 要求。</li>
+          <li>将 PPE 物品与其所防护的危险相匹配。</li>
+        </ul>
+      </div>
+
+      <div class="section-heading">电气安全中的控制层级</div>
+      <p class="section-body">探索控制层级的每个级别，了解如何在高压环境中管理风险。每种控制方法在降低危险方面发挥着特定作用，PPE 始终是最后的手段。</p>
+
+      <div class="hierarchy">
+        <div class="hier-level">
+          <div class="hier-bar" style="background:#e03d3d;"></div>
+          <div class="hier-content">
+            <div class="hier-title" style="color:#e03d3d;">1. 消除</div>
+            <div class="hier-desc">从工作场所彻底清除电气危险。最有效的控制措施，但在运营环境中并非总是可行。例如：停用并拆除闲置的高压设备。</div>
+          </div>
+        </div>
+        <div class="hier-level">
+          <div class="hier-bar" style="background:#f5803d;"></div>
+          <div class="hier-content">
+            <div class="hier-title" style="color:#f5803d;">2. 替代</div>
+            <div class="hier-desc">用危险性较低的流程或设备替换危险的流程或设备，例如在可能的情况下使用低压设备。</div>
+          </div>
+        </div>
+        <div class="hier-level">
+          <div class="hier-bar" style="background:#f5b800;"></div>
+          <div class="hier-content">
+            <div class="hier-title" style="color:#f5b800;">3. 隔离</div>
+            <div class="hier-desc">将人员与危险源实体分离。安装隔离装置、加锁的开关室或远程切换装置，确保工作人员不暴露于带电高压部件。</div>
+          </div>
+        </div>
+        <div class="hier-level">
+          <div class="hier-bar" style="background:#4da6ff;"></div>
+          <div class="hier-content">
+            <div class="hier-title" style="color:#4da6ff;">4. 工程控制</div>
+            <div class="hier-desc">将风险降至最低的设计特性，例如联锁装置、绝缘和自动停机系统，内置于设备中提供持续保护。</div>
+          </div>
+        </div>
+        <div class="hier-level">
+          <div class="hier-bar" style="background:#8490a8;"></div>
+          <div class="hier-content">
+            <div class="hier-title" style="color:#8490a8;">5. 行政控制</div>
+            <div class="hier-desc">包括程序、培训、标识和监督，例如安全作业方法说明、许可证和定期安全简报。</div>
+          </div>
+        </div>
+        <div class="hier-level">
+          <div class="hier-bar" style="background:#2dd58a;"></div>
+          <div class="hier-content">
+            <div class="hier-title" style="color:#2dd58a;">6. 个人防护装备（PPE）</div>
+            <div class="hier-desc">工作人员与危险源之间的最后屏障。PPE 不能消除危险，但在所有其他控制措施失效时能提供保护。应始终与更高级别的控制措施配合使用。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">🛡️</span>
+        <span>PPE 是您的最后一道防线——切勿仅依赖 PPE 作为唯一保护。</span>
+      </div>
+
+      <div class="section-heading">PPE 选择的五步流程</div>
+      <p class="section-body">选择正确的 PPE 并非凭猜测——它需要系统化的方法。</p>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">第一步：了解危险<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">识别工作区域内的所有电气和电弧危险，包括识别高压来源、电弧闪络的可能性及其他风险。例如，在带电开关柜附近作业同时存在触电和电弧闪络危险。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">第二步：识别具有电弧危险潜力的资产<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">确定哪些设备或位置可能产生电弧闪络，重点关注开关柜、变压器和断路器等设备。并非所有设备的风险程度相同——优先考虑电弧危险潜力最高的区域。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">第三步：量化危险<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">计算每项已识别资产的事故能量或电弧闪络等级，通常以卡路里每平方厘米为单位，应由合格人员完成。了解确切的能量水平有助于您选择具有正确电弧额定值的 PPE。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">第四步：评估风险<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">使用您所在组织的风险管理框架，评估电弧闪络或电气事故发生的可能性和后果。考虑作业时长、距离和环境条件等因素。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">第五步：选择适当的 PPE<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">根据计算出的危险和风险评估结果，选择满足或超过所需电弧额定值且符合相关标准的 PPE。务必咨询合格人员，切勿凭假设选择 PPE。</div>
+        </div>
+      </div>
+
+      <div class="quiz-block" id="quiz-2-1">
+        <div class="quiz-label">知识检测</div>
+        <div class="quiz-question">PPE 选择流程中，哪个步骤涉及计算事故能量暴露水平？</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-2-1', this, false)"><span class="opt-letter">A</span> 了解危险</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-2-1', this, false)"><span class="opt-letter">B</span> 识别具有电弧危险潜力的资产</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-2-1', this, true)"><span class="opt-letter">C</span> 量化危险</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-2-1', this, false)"><span class="opt-letter">D</span> 选择适当的 PPE</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-2-1-feedback"></div>
+        <button class="quiz-retry" id="quiz-2-1-retry" onclick="retryQuiz('quiz-2-1')">↺ 重新作答</button>
+      </div>
+
+      <div class="section-heading">高压作业的最低 PPE 要求</div>
+      <p class="section-body">查阅每张闪卡，了解高压电气作业所需的基本 PPE 物品。</p>
+
+      <div class="flashcard-deck">
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">PPE 物品</div><p>腕部至踝部覆盖的服装</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">防护作用</div><p>防弧额定衬衫和裤子或工装，覆盖所有裸露皮肤，降低烧伤和电弧闪络伤害的风险。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">PPE 物品</div><p>带钢头的全包式鞋履</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">防护作用</div><p>带钢头且完全包裹的靴子或鞋子，保护双脚免受电气危险和坠落物体的伤害。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">PPE 物品</div><p>安全眼镜</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">防护作用</div><p>在电气作业中防护电弧闪络、飞溅碎片和飞射物的眼部防护装备。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">PPE 物品</div><p>安全头盔</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">防护作用</div><p>保护头部免受坠落物体和碰撞伤害的头部防护装备，还可提供电气绝缘保护。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">PPE 物品</div><p>防护手套</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">防护作用</div><p>专为保护双手免受电击、烧伤和割伤而设计的绝缘手套。</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">🔬</span>
+        <span>选择正确的个人防护装备是一门科学——请始终根据危险评估和相关标准做出决策，切勿凭主观臆断。</span>
+      </div>
+
+      <div class="summary-box">
+        <div class="summary-label">课程小结</div>
+        <p>在本课中，您了解了控制层级如何在高压环境中构建风险管理体系，以及个人防护装备作为最后一层防护的重要性。您探索了选择个人防护装备的五步流程，复习了高压作业的最低要求。</p>
+        <p>接下来，您将学习角色、职责和安全接近距离。</p>
+      </div>
+
+      <div class="module-nav">
+        <button class="nav-btn secondary" onclick="showModule(1)">← 上一节</button>
+        <button class="nav-btn primary" onclick="showModule(3)">下一模块 →</button>
+      </div>
+    </div>
+
+    <!-- ══ 模块 4：角色、职责与安全接近距离 ══ -->
+    <div class="module-panel" id="module-3">
+      <div class="lesson-header">
+        <div class="lesson-eyebrow">模块 04</div>
+        <div class="lesson-title">角色、职责与安全接近距离</div>
+      </div>
+      <p class="lesson-desc">真正的安全依赖于明确的角色分工、严格的授权以及对接近危险的严谨态度。在本课中，您将了解明确的职责分工和安全接近距离如何协同防止事故发生。</p>
+
+      <div class="objectives">
+        <div class="objectives-label">学习目标</div>
+        <ul>
+          <li>识别三种主要角色及其职责。</li>
+          <li>解释准入许可和隔离要求。</li>
+          <li>根据电压应用安全接近距离。</li>
+          <li>了解移动设备和机械的特殊注意事项。</li>
+          <li>理解监督和隔离的关键作用。</li>
+        </ul>
+      </div>
+
+      <div class="section-heading">高压作业的关键人员角色</div>
+      <p class="section-body">探索构成高压安全作业核心的三种基本角色。每种角色都有其特定的资质、职责和限制，必须充分理解并严格遵守。</p>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">授权人员<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">授权人员是指具备专业知识或丰富经验、经能力评估合格并获得正式批准、可在安全规则下执行特定职能的人员。他们负责签发准入许可、监督作业，并确保所有安全程序得到遵守。例如，授权人员可能在维护工作开始前负责监督设备的隔离和接地工作。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">受指导人员<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">受指导人员在授权人员的直接监督下工作。他们经过培训，能够避免电气危险，但不能独立从事高压系统作业。例如，受指导人员可在停电期间协助完成任务，但必须在密切监督下进行。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">安全观察员<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">安全观察员专门负责监督在电气设备附近进行的作业，对不安全的接近行为发出警告，并在必要时提供紧急援助。他们必须保持高度警觉，在执行观察职责期间不得承担其他任务。例如，如果人员或设备过于接近隔离区，安全观察员可能会叫停作业。</div>
+        </div>
+      </div>
+
+      <div class="section-heading">准入许可与隔离要求</div>
+
+      <div class="flashcard-deck">
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">概念</div><p>什么是准入许可？</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">答案</div><p>一份正式文件，确认所有隔离、断电和接地程序均已完成，准许作业继续进行。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">概念</div><p>隔离——是什么以及为什么？</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">答案</div><p>在作业期间，通过物理断开所有电源来防止任何可能的带电情况，确保环境安全。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">概念</div><p>验证断电与接地</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">答案</div><p>使用经批准的测试仪验证无电压状态，并在作业现场进行接地，以防止意外带电或感应电压。</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="quiz-block" id="quiz-3-1">
+        <div class="quiz-label">知识检测</div>
+        <div class="quiz-question">哪个角色负责签发准入许可？</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-3-1', this, false)"><span class="opt-letter">A</span> 受指导人员</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-3-1', this, false)"><span class="opt-letter">B</span> 安全观察员</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-3-1', this, true)"><span class="opt-letter">C</span> 授权人员</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-3-1', this, false)"><span class="opt-letter">D</span> 现场访客</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-3-1-feedback"></div>
+        <button class="quiz-retry" id="quiz-3-1-retry" onclick="retryQuiz('quiz-3-1')">↺ 重新作答</button>
+      </div>
+
+      <div class="section-heading">安全接近距离（SAD）：将人员与危险隔开</div>
+      <p class="section-body">安全接近距离（SAD）是电气安全的基石。这些受规管的距离在带电导体周围划定隔离区，确保任何人员或物体都不会近到足以引发电弧或意外接触的程度。</p>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>电压等级</th><th>人员接近距离</th><th>移动设备接近距离</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>300V 以下</td><td>300mm</td><td>—</td></tr>
+          <tr><td>15kV</td><td>640mm</td><td>—</td></tr>
+          <tr><td>138–145kV</td><td>1,300mm</td><td>—</td></tr>
+          <tr><td>500–550kV</td><td>3,350mm</td><td>—</td></tr>
+          <tr><td>765–800kV</td><td>4,670mm</td><td>10m</td></tr>
+        </tbody>
+      </table>
+
+      <div class="section-heading">移动设备和机械的特殊注意事项</div>
+
+      <div class="flashcard-deck">
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">移动设备</div><p>为何移动设备需要与高压导体保持更大距离？</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">答案</div><p>移动设备可能发生意外移动或晃动，增加了突破隔离区的风险。更大的距离可以应对这种移动情况，有助于防止意外接触。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">移动设备</div><p>如果移动设备没有可用的已建立接地装置，应如何处理？</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">答案</div><p>应将临时接地桩打入地面，以对移动设备进行连接接地，确保安全。</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="quiz-block" id="quiz-3-2">
+        <div class="quiz-label">知识检测</div>
+        <div class="quiz-question">安全观察员在负责观察安全接近距离期间，能否被分配其他任务？</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-3-2', this, false)"><span class="opt-letter">A</span> 可以，如果任务较为次要</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-3-2', this, false)"><span class="opt-letter">B</span> 可以，如果获得授权人员批准</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-3-2', this, true)"><span class="opt-letter">C</span> 不可以，观察员必须专注于观察工作</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-3-2', this, false)"><span class="opt-letter">D</span> 仅在工作间歇期间</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-3-2-feedback"></div>
+        <button class="quiz-retry" id="quiz-3-2-retry" onclick="retryQuiz('quiz-3-2')">↺ 重新作答</button>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">📏</span>
+        <span>保持安全接近距离和明确界定的职责分工，不仅仅是最佳实践——更是一项救命措施。</span>
+      </div>
+
+      <div class="summary-box">
+        <div class="summary-label">课程小结</div>
+        <p>在本课中，您了解了明确的职责分工、严格的授权制度和安全接近距离如何协同配合，共同保护高压作业现场的每一位人员。只有授权人员才能签发许可证并负责监督，受指导人员必须始终处于监督之下，而安全观察员在执行隔离区规定方面发挥着关键作用。</p>
+        <p>接下来，您将探索电磁感应危害和高级控制措施。</p>
+      </div>
+
+      <div class="module-nav">
+        <button class="nav-btn secondary" onclick="showModule(2)">← 上一节</button>
+        <button class="nav-btn primary" onclick="showModule(4)">下一模块 →</button>
+      </div>
+    </div>
+
+    <!-- ══ 模块 5：电磁感应危害与控制措施 ══ -->
+    <div class="module-panel" id="module-4">
+      <div class="lesson-header">
+        <div class="lesson-eyebrow">模块 05</div>
+        <div class="lesson-title">电磁感应危害与控制措施</div>
+      </div>
+      <p class="lesson-desc">在高压线附近作业，不仅仅要避免直接接触——某些最危险的危害是肉眼不可见的。电磁感应可能在设备和导体上产生致命电压，即使这些设备和导体看似已断电。</p>
+
+      <div class="objectives">
+        <div class="objectives-label">学习目标</div>
+        <ul>
+          <li>解释电磁感应危害。</li>
+          <li>区分电场与磁场。</li>
+          <li>识别暴露限值及其生理效应。</li>
+          <li>描述等电位区的建立步骤。</li>
+          <li>在作业前核实感应危害控制措施。</li>
+        </ul>
+      </div>
+
+      <div class="section-heading">了解电磁感应危害</div>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">什么是电磁感应？<span class="acc-arrow">▼</span></button>
+          <div class="acc-body"><p>当带电高压线路产生的电场和磁场在附近未带电或未投运的导体上感应出电压时，即发生电磁感应。例如，一条与带电线路平行的断电线路，即使未直接连接电源，也可能因此带上危险电压。</p><br><p>这一现象肉眼不可见，但可能对那些未预料到所谓安全设备上存在电压的工作人员造成危险。</p></div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">为何危险？<span class="acc-arrow">▼</span></button>
+          <div class="acc-body"><p>感应电压可能高到足以造成严重电击甚至死亡。这些电压可能出现在已断电的线路或设备上，从而产生虚假的安全感。若工作人员触碰带有感应电压的导体，电流可能经由其身体流向地面，导致严重伤害。</p><br><p>由于该危害并不总是显而易见，因此必须实施严格的控制措施并保持高度警觉。</p></div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">在何处出现？<span class="acc-arrow">▼</span></button>
+          <div class="acc-body"><p>感应危害最常见于带电与断电平行线路附近、展放线施工现场，以及导电物体与高压输电线路近距离平行的环境中。例如围栏、管道、铁路线，或在带电线路旁施工的新建线路等。</p></div>
+        </div>
+      </div>
+
+      <div class="section-heading">电场与磁场</div>
+
+      <div class="flashcard-deck">
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">场类型</div><p>电场</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">工作原理</div><p>由带电导体上的电压产生。可在附近物体上感应出电压，尤其是与地绝缘的物体。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">场类型</div><p>磁场</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">工作原理</div><p>由流经输电线路的电流产生。可在平行导电体（如管道或断电线路）中感应出电压。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">概念</div><p>等电位场</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">定义</div><p>导体周围空气中电压相等的等压线。了解这些有助于防止作业现场出现危险的电位差。</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-heading">暴露限值与生理效应</div>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">电场暴露限值<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">职业暴露电场限值为 <strong>10 kV/m</strong>，公众暴露限值为 <strong>5 kV/m</strong>。在带电导体附近，电场强度在高压线表面可达 16 kV/m。超过这些限值会增加工作人员和公众遭受电击及其他健康危害的风险。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">磁场暴露限值<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">磁场的职业暴露限值为 <strong>10,000 mG</strong>，公众暴露限值为 <strong>2,000 mG</strong>。例如，在距载有 500A 电流的导体 100mm 处，磁场强度可达 10,000 mG。职业限值较高，是因为工作人员通常耐受暴露的能力更强。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">生理效应<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">暴露于强电场和磁场中可引起神经和肌肉刺激、不适的皮肤放电感，以及一种称为磁闪光（眼前出现闪光）的视觉现象。了解这些效应有助于工作人员识别过度暴露的症状，并进一步强调严格实施控制措施的必要性。</div>
+        </div>
+      </div>
+
+      <div class="quiz-block" id="quiz-4-1">
+        <div class="quiz-label">知识检测</div>
+        <div class="quiz-question">在高压导体附近，电场的职业暴露限值是多少？</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-4-1', this, false)"><span class="opt-letter">A</span> 5 kV/m</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-4-1', this, true)"><span class="opt-letter">B</span> 10 kV/m</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-4-1', this, false)"><span class="opt-letter">C</span> 15 kV/m</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-4-1', this, false)"><span class="opt-letter">D</span> 20 kV/m</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-4-1-feedback"></div>
+        <button class="quiz-retry" id="quiz-4-1-retry" onclick="retryQuiz('quiz-4-1')">↺ 重新作答</button>
+      </div>
+
+      <div class="section-heading">等电位区建立六步骤</div>
+      <p class="section-body">按照以下六个步骤，在存在感应危害的作业现场建立安全的等电位区。每个步骤都不可或缺——跳过任何一步都可能危及安全。</p>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">第一步：在设备周围铺设接地垫<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">在所有机械设备的周边铺设接地垫。确保不存在工作人员可能从垫子踏入裸露地面的间隙，以提供连续的安全表面。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">第二步：将所有接地垫相互连接<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">使用专用接地耳和连接导线，将所有接地垫相互连接，并与接地桩和机械设备相连。这可确保所有表面处于相同电位，降低跨步电压和接触电压。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">第三步：安装内侧围栏<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">在接地垫内侧边缘设置围栏，防止人员意外踏出安全区域。该物理屏障可将工作人员限制在受保护区域内。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">第四步：安装外侧辅助围栏<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">在内侧围栏外设置辅助围栏。围栏的尺寸和形状应根据具体现场和设备布局进行调整，以提供额外防护。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">第五步：对围栏内所有导电物品进行等电位连接<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">确保围栏区域内所有导电物体均与接地垫进行等电位连接，防止工具或设备上出现危险电位差。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">第六步：设置带绝缘通道的出入口<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">在内外围栏之间的指定出入口铺设绝缘橡胶垫，为进出该区域的人员提供安全通道。</div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">⚡</span>
+        <span>有效控制电磁感应危害至关重要——对等电位区域进行全面设置和验证是确保安全、挽救生命的关键。</span>
+      </div>
+
+      <div class="summary-box">
+        <div class="summary-label">课程小结</div>
+        <p>在本课中，您探索了电磁感应中隐形但至关重要的风险，了解了电场和磁场如何在已断电的设备上产生危险电压。您现在理解了电场与磁场的区别、接触限值的重要性以及过度接触的生理影响。</p>
+        <p>在下一课中，您将学习如何响应电气事故和紧急情况。</p>
+      </div>
+
+      <div class="module-nav">
+        <button class="nav-btn secondary" onclick="showModule(3)">← 上一节</button>
+        <button class="nav-btn primary" onclick="showModule(5)">下一模块 →</button>
+      </div>
+    </div>
+
+    <!-- ══ 模块 6：紧急响应与事故处理程序 ══ -->
+    <div class="module-panel" id="module-5">
+      <div class="lesson-header">
+        <div class="lesson-eyebrow">模块 06</div>
+        <div class="lesson-title">紧急响应与事故处理程序</div>
+      </div>
+      <p class="lesson-desc">即使在最安全的工作场所，电气紧急情况也可能发生。知道如何快速、正确地响应，与预防事故本身同样重要。为紧急情况做好准备可以拯救生命并将伤害降至最低——您的响应至关重要。</p>
+
+      <div class="objectives">
+        <div class="objectives-label">学习目标</div>
+        <ul>
+          <li>识别安全救援行动的前提条件。</li>
+          <li>应用逐步受害者救援程序。</li>
+          <li>对移动设备电气接触事故做出适当响应。</li>
+          <li>理解并执行事故报告和现场保护。</li>
+          <li>回忆电气紧急情况中的关键行动。</li>
+        </ul>
+      </div>
+
+      <div class="section-heading">安全救援行动的前提条件</div>
+      <p class="section-body">在电气紧急情况下尝试任何救援之前，必须满足特定的安全条件。展开每个部分，了解关键前提条件。</p>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">隔离、验证断电及接地<span class="acc-arrow">▼</span></button>
+          <div class="acc-body"><p>在任何人尝试在安全接近距离内进行救援之前，授权人员必须对每个电源处的所有导体进行隔离、验证断电并接地。跳过此步骤会使救援人员面临极高的风险，可能使其本身也成为受害者。</p><br><p>切勿假设导体是安全的——始终遵循完整的隔离和接地程序。</p></div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">工作接地的应用<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">在验证区域已断电后，必须在该位置施加工作接地。这确保任何意外重新通电或残余电压都能安全分流，进一步保护所有相关人员。未能施加工作接地可能在救援行动中造成危险的意外情况。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">正常安全预防措施的应用<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">一旦紧急情况得到控制，应尽快恢复标准安全程序。这包括适当的文件记录、事故调查以及恢复既定的安全规程。</div>
+        </div>
+      </div>
+
+      <div class="section-heading">逐步受害者救援程序</div>
+
+      <div class="flashcard-deck">
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">第一步</div><p>不要直接触碰受害者</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">行动</div><p>切勿触碰与带电导体接触的受害者。使用非导电物体将其与电源分离。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">第二步</div><p>拨打紧急服务电话</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">行动</div><p>立即寻求专业帮助。提供有关事故地点和性质的清晰信息。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">第三步</div><p>安全地实施急救</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">行动</div><p>只有在消除电气危险后，才能开始进行心肺复苏或处理烧伤。切勿在受害者仍与电源接触时尝试急救。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">第四步</div><p>保护现场</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">行动</div><p>只采取防止进一步伤害所必需的行动。在确保所有人安全后，保持现场不被扰动以便调查。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">第五步</div><p>报告所有事故</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">行动</div><p>尽快向您的主管报告每一起事故，即使是轻微事故也不例外。适当的报告有助于防止未来事故的发生。</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="quiz-block" id="quiz-5-1">
+        <div class="quiz-label">知识检测</div>
+        <div class="quiz-question">在安全接近距离内尝试救援之前，必须完成哪些工作？</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-5-1', this, true)"><span class="opt-letter">A</span> 导体必须经过隔离、验证断电并接地</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-5-1', this, false)"><span class="opt-letter">B</span> 紧急服务人员必须到达现场</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-5-1', this, false)"><span class="opt-letter">C</span> 必须记录救援计划</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-5-1', this, false)"><span class="opt-letter">D</span> 必须移除所有个人防护装备</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-5-1-feedback"></div>
+        <button class="quiz-retry" id="quiz-5-1-retry" onclick="retryQuiz('quiz-5-1')">↺ 重新作答</button>
+      </div>
+
+      <div class="section-heading">移动设备接触事故的紧急响应</div>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">如安全则留在车辆内<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">如果您在车辆上，除非不安全，否则请留在原处。车辆可能已带电，下车可能会形成通往地面的回路，导致严重伤害或死亡。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">警告地面人员<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">提醒附近所有人远离车辆和周围区域。车辆周围的地面可能已带电，对任何靠近者构成跨步电压和接触电压危险。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">在确认隔离和接地之前不得尝试救援<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">在有资质的人员对电线和设备进行隔离和接地之前，任何人不得尝试救援或靠近车辆。在确认之前尝试救援会使所有人面临风险。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">必要时跳离车辆<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">如果由于紧迫危险（如火灾）必须离开车辆，应跳离足够远的距离，同时避免手脚同时接触车辆和地面。落地时双脚并拢，不抬脚拖步离开，以避免跨步电压。</div>
+        </div>
+      </div>
+
+      <div class="quiz-block" id="quiz-5-2">
+        <div class="quiz-label">知识检测</div>
+        <div class="quiz-question">移动设备意外接触了带电电气设备。操作人员应该怎么做？</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-5-2', this, false)"><span class="opt-letter">A</span> 立即离开车辆</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-5-2', this, true)"><span class="opt-letter">B</span> 如安全则留在车辆内，直至确认设备不再带电</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-5-2', this, false)"><span class="opt-letter">C</span> 在触碰车身的同时呼救</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-5-2', this, false)"><span class="opt-letter">D</span> 尝试倒车脱离接触点</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-5-2-feedback"></div>
+        <button class="quiz-retry" id="quiz-5-2-retry" onclick="retryQuiz('quiz-5-2')">↺ 重新作答</button>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">🚨</span>
+        <span>在电气紧急情况中，分秒必争——您的知识和有纪律的响应既能保护生命，也能保障生计。</span>
+      </div>
+
+      <div class="summary-box">
+        <div class="summary-label">课程小结</div>
+        <p>本课涵盖了应对电气紧急情况的基本步骤：了解救援前提条件、遵循逐步受害者救援程序、对移动设备接触事故应用正确规程，以及确保彻底的事故报告和现场保护。</p>
+        <p>在最后一课中，您将了解支撑所有高压电气安全实践的法规和标准。</p>
+      </div>
+
+      <div class="module-nav">
+        <button class="nav-btn secondary" onclick="showModule(4)">← 上一节</button>
+        <button class="nav-btn primary" onclick="showModule(6)">最终模块 →</button>
+      </div>
+    </div>
+
+    <!-- ══ 模块 7：法规、标准与课程评估 ══ -->
+    <div class="module-panel" id="module-6">
+      <div class="lesson-header">
+        <div class="lesson-eyebrow">模块 07 — 最终</div>
+        <div class="lesson-title">法规、标准与课程评估</div>
+      </div>
+      <p class="lesson-desc">高压电气安全建立在严格法规和行业标准的基础之上。这些规则不仅仅是指导方针——它们是保护生命和确保安全工作场所的法律和职业要求。掌握这些法规对每位电气工人、主管和安全专业人员都至关重要。</p>
+
+      <div class="objectives">
+        <div class="objectives-label">学习目标</div>
+        <ul>
+          <li>识别管理高压电气安全的主要组织和标准。</li>
+          <li>解释合规性和持续培训在维护安全工作环境中的重要性。</li>
+          <li>查找并理解与本工作场所相关的适用标准。</li>
+          <li>通过评估活动展示您对课程概念的理解。</li>
+        </ul>
+      </div>
+
+      <div class="section-heading">高压电气安全的主要组织与标准</div>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">IEC（国际电工委员会）<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">IEC 是一个全球性组织，负责制定电气、电子及相关技术领域的国际标准。其标准为众多国家的高压设备、安装及安全作业规范树立了基准。IEC 标准规定了高压作业中使用的电压阈值和测试程序。遵循 IEC 标准可确保设备和程序符合国际公认的安全水平。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">OSHA（职业安全与健康管理局）<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">OSHA 是美国工作场所安全的主要监管机构。OSHA 标准具有法律约束力，为雇主和员工规定了最低安全要求，包括与电气危害相关的要求。例如，OSHA 强制规定了上锁/挂牌程序以及高压作业的安全接近距离。遵守 OSHA 法规对所有美国工作场所均为强制性要求。</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">NFPA 70E（美国消防协会）<span class="acc-arrow">▼</span></button>
+          <div class="acc-body">NFPA 70E 是一项专门针对工作场所电气安全的标准。它就安全作业规范、个人防护装备（PPE）的选择以及电弧闪光危害评估提供了详细指导。NFPA 70E 概述了如何为各类电气作业确定正确的 PPE，以及如何评估电弧闪光边界。遵守 NFPA 70E 有助于组织将电气伤害风险降至最低。</div>
+        </div>
+      </div>
+
+      <div class="section-heading">在工作中应用标准与法规</div>
+
+      <div class="flashcard-deck">
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">问题</div><p>为何遵守标准与法规至关重要？</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">答案</div><p>出于法律、道德和实践层面的原因，遵守标准是不可商榷的。合规能够保护生命安全、避免处罚，并维护专业声誉。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">问题</div><p>如何获取最新的标准与法规？</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">答案</div><p>通过组织的安全资源获取最新标准，咨询主管或安全人员，并定期查阅官方更新内容。</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">问题</div><p>为何持续培训和能力评估对合规至关重要？</p><div class="card-hint">点击翻转 →</div></div>
+            <div class="card-back"><div class="card-label">答案</div><p>定期评估和复习培训对于确保您持续合规、及时了解最新安全要求至关重要。</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">📋</span>
+        <span>遵守法规和标准并非可选项，它是每个安全高压工作场所的基础。</span>
+      </div>
+
+      <!-- 课程评估 -->
+      <div class="section-heading">课程评估</div>
+      <p class="section-body">通过以下问题检验您对全部课程内容的掌握程度。</p>
+
+      <div class="quiz-block" id="quiz-6-1">
+        <div class="quiz-label">评估问题 1</div>
+        <div class="quiz-question">以下哪项是发布高压安全指南的法规或标准？</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-1', this, false)"><span class="opt-letter">A</span> ISO 9001</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-1', this, true)"><span class="opt-letter">B</span> NFPA 70E</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-1', this, false)"><span class="opt-letter">C</span> ANSI Z87.1</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-1', this, false)"><span class="opt-letter">D</span> EPA 标准</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-6-1-feedback"></div>
+        <button class="quiz-retry" id="quiz-6-1-retry" onclick="retryQuiz('quiz-6-1')">↺ 重新作答</button>
+      </div>
+
+      <div class="quiz-block" id="quiz-6-2">
+        <div class="quiz-label">评估问题 2</div>
+        <div class="quiz-question">以下哪项是高压电的主要危害？</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-2', this, true)"><span class="opt-letter">A</span> 严重烧伤</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-2', this, false)"><span class="opt-letter">B</span> 噪音过大</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-2', this, false)"><span class="opt-letter">C</span> 照明不足</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-2', this, false)"><span class="opt-letter">D</span> 地面湿滑</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-6-2-feedback"></div>
+        <button class="quiz-retry" id="quiz-6-2-retry" onclick="retryQuiz('quiz-6-2')">↺ 重新作答</button>
+      </div>
+
+      <div class="quiz-block" id="quiz-6-3">
+        <div class="quiz-label">评估问题 3</div>
+        <div class="quiz-question">高压作业中保护眼睛的最低 PPE 要求是什么？</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-3', this, false)"><span class="opt-letter">A</span> 高可见度背心</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-3', this, true)"><span class="opt-letter">B</span> 安全眼镜</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-3', this, false)"><span class="opt-letter">C</span> 呼吸器</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-3', this, false)"><span class="opt-letter">D</span> 耳塞</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-6-3-feedback"></div>
+        <button class="quiz-retry" id="quiz-6-3-retry" onclick="retryQuiz('quiz-6-3')">↺ 重新作答</button>
+      </div>
+
+      <div class="quiz-block" id="quiz-6-4">
+        <div class="quiz-label">评估问题 4</div>
+        <div class="quiz-question">DNOT 程序的第一步是什么？</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-4', this, true)"><span class="opt-letter">A</span> 断开所有电源</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-4', this, false)"><span class="opt-letter">B</span> 安装锁具和标签</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-4', this, false)"><span class="opt-letter">C</span> 检测是否存在电压</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-4', this, false)"><span class="opt-letter">D</span> 开始作业</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-6-4-feedback"></div>
+        <button class="quiz-retry" id="quiz-6-4-retry" onclick="retryQuiz('quiz-6-4')">↺ 重新作答</button>
+      </div>
+
+      <div class="quiz-block" id="quiz-6-5">
+        <div class="quiz-label">评估问题 5</div>
+        <div class="quiz-question">判断正误：根据行业标准，高于 1,000 伏交流电或 1,500 伏直流电即定义为高压。</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-5', this, true)"><span class="opt-letter">A</span> 正确——高压是指超过 1,000 V 交流电或 1,500 V 直流电</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-5', this, false)"><span class="opt-letter">B</span> 错误——高压仅适用于超过 10,000 V 的情况</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-6-5-feedback"></div>
+        <button class="quiz-retry" id="quiz-6-5-retry" onclick="retryQuiz('quiz-6-5')">↺ 重新作答</button>
+      </div>
+
+      <div class="completion-banner">
+        <h2>🎉 课程完成</h2>
+        <p>做得很好！您已展示了对高压电气安全的理解——您对学习的投入保障了您和团队的安全。</p>
+        <br>
+        <p>在本课程中，您探讨了高压电气安全的核心要素：识别危害、遵循严格程序、选择并正确使用个人防护装备、了解职责与责任、控制电磁感应等无形风险、有效应对紧急情况，以及遵守所有相关法规和标准。</p>
+        <br>
+        <p><em>请记住，安全并非一次性的成就，而是一项持续的承诺。请继续您的职业发展，定期查阅更新后的标准，并以身作则，在您的工作场所营造安全文化。</em></p>
+      </div>
+
+      <div class="module-nav">
+        <button class="nav-btn secondary" onclick="showModule(5)">← 上一节</button>
+        <button class="nav-btn primary" disabled>课程已完成 ✓</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  let currentModule = 0;
+
+  function showModule(idx) {
+    document.querySelectorAll('.module-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.module-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('module-' + idx).classList.add('active');
+    document.querySelectorAll('.module-btn')[idx].classList.add('active');
+    currentModule = idx;
+    document.getElementById('progress-pill').textContent = (idx + 1) + ' / 7';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (idx > 0) document.querySelectorAll('.module-btn')[idx - 1].classList.add('completed');
+  }
+
+  function toggleAcc(btn) {
+    const item = btn.closest('.acc-item');
+    const isOpen = item.classList.contains('open');
+    item.closest('.accordion').querySelectorAll('.acc-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  const feedbacks = {
+    'quiz-0-1': { correct: '正确。假设所有线路均带电是高压作业中最重要的安全原则。', incorrect: '错误。在验证线路已断电之前，切勿假设线路是安全的。' },
+    'quiz-1-1': { correct: '正确！第一步是在安装任何锁具或标签之前先断电。', incorrect: '不太对。断电必须始终是 DNOT 流程的第一步。' },
+    'quiz-2-1': { correct: '正确！量化危险是指计算事故能量，这对于选择正确的 PPE 至关重要。', incorrect: '不正确。量化危险才是计算事故能量暴露水平的具体步骤。' },
+    'quiz-3-1': { correct: '正确！只有授权人员才有权签发准入许可。', incorrect: '不正确。只有授权人员才可签发准入许可。' },
+    'quiz-3-2': { correct: '正确。观察员的唯一职责是对安全接近距离保持持续警觉。', incorrect: '不正确。观察员不得因任何其他任务而分散注意力。' },
+    'quiz-4-1': { correct: '正确。10 kV/m 是高压导体附近电场的职业暴露限值。', incorrect: '不正确。职业暴露限值为 10 kV/m，5 kV/m 是公众暴露限值。' },
+    'quiz-5-1': { correct: '正确！在授权人员对所有电源处的导体进行隔离、验证断电并接地之前，不得尝试救援。', incorrect: '不太正确。请复习救援前提条件，了解尝试救援之前的关键步骤。' },
+    'quiz-5-2': { correct: '正确！操作人员应在安全的情况下留在车辆内，直至确认设备已断电。离开车辆可能会形成通往地面的回路。', incorrect: '不太正确。在这种情况下最安全的做法是留在车辆内，直至确认可以安全离开。' },
+    'quiz-6-1': { correct: 'NFPA 70E 为工作场所电气安全（包括高压环境）提供了全面的指导方针。', incorrect: '不正确。NFPA 70E 才是专门针对电气安全的标准，其他选项涉及不同主题。' },
+    'quiz-6-2': { correct: '正确！严重烧伤是从事高压电工作时的重大风险之一。', incorrect: '不正确。严重烧伤才是高压电的主要危害。' },
+    'quiz-6-3': { correct: '正确！安全眼镜是高压作业中保护眼睛的最低 PPE 要求。', incorrect: '不正确。安全眼镜才是保护眼睛的正确最低 PPE 要求。' },
+    'quiz-6-4': { correct: '正确！断开所有电源始终是 DNOT 程序的第一步。', incorrect: '不正确。断电必须在安装锁具、标签或检测之前进行。' },
+    'quiz-6-5': { correct: '正确！根据行业标准，高压是指超过 1,000 V 交流电或 1,500 V 直流电。', incorrect: '不正确。阈值为 1,000 V 交流电或 1,500 V 直流电。' },
+  };
+
+  function answerQuiz(id, btn, isCorrect) {
+    const block = document.getElementById(id);
+    block.querySelectorAll('.quiz-option').forEach(o => o.disabled = true);
+    btn.classList.add(isCorrect ? 'correct' : 'incorrect');
+    const fb = document.getElementById(id + '-feedback');
+    fb.textContent = isCorrect ? feedbacks[id].correct : feedbacks[id].incorrect;
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'incorrect');
+    if (!isCorrect) document.getElementById(id + '-retry').classList.add('show');
+  }
+
+  function retryQuiz(id) {
+    const block = document.getElementById(id);
+    block.querySelectorAll('.quiz-option').forEach(o => { o.disabled = false; o.classList.remove('correct', 'incorrect'); });
+    document.getElementById(id + '-feedback').className = 'quiz-feedback';
+    document.getElementById(id + '-feedback').textContent = '';
+    document.getElementById(id + '-retry').classList.remove('show');
+  }
+</script>
+</body>
+</html>

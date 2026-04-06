@@ -154,6 +154,64 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Portfolio */}
+      <section className="max-w-6xl mx-auto px-6 py-20">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold text-gray-900 mb-3">See translated output in action</h2>
+          <p className="text-gray-500 text-sm max-w-xl mx-auto">
+            A real eLearning safety course translated from English to Simplified Chinese — same layout, fonts, and interactions, fully localised.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[
+            {
+              label: "Original · English",
+              lang: "EN",
+              langColor: "bg-blue-100 text-blue-700",
+              src: "/high-voltage-safety-course.html",
+              title: "High Voltage Electrical Safety",
+            },
+            {
+              label: "Translated · Simplified Chinese",
+              lang: "ZH-CN",
+              langColor: "bg-red-100 text-red-700",
+              src: "/high-voltage-safety-course-zh-CN.html",
+              title: "高压电气安全",
+            },
+          ].map((item) => (
+            <div key={item.lang} className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-white flex flex-col">
+              {/* Card header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${item.langColor}`}>{item.lang}</span>
+                  <span className="text-sm font-medium text-gray-700">{item.label}</span>
+                </div>
+                <a
+                  href={item.src}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-indigo-600 hover:underline"
+                >
+                  Open full screen ↗
+                </a>
+              </div>
+              {/* Iframe preview */}
+              <div className="relative" style={{ paddingBottom: "62.5%" }}>
+                <iframe
+                  src={item.src}
+                  title={item.title}
+                  className="absolute inset-0 w-full h-full border-0"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="text-center text-xs text-gray-400 mt-4">
+          Translated with Summon Translator · Claude claude-sonnet-4-6 · XLIFF source format
+        </p>
+      </section>
+
       {/* Pricing */}
       <section className="bg-gray-50 border-y border-gray-100 py-20">
         <div className="max-w-4xl mx-auto px-6">
