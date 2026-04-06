@@ -30,8 +30,8 @@ const securityHeaders = [
       "img-src 'self' data: https://*.stripe.com",
       // API calls: self only (all external API calls go through our server routes)
       "connect-src 'self'",
-      // Google OAuth frames
-      "frame-src https://accounts.google.com https://js.stripe.com",
+      // Google OAuth frames + same-origin iframes (portfolio page)
+      "frame-src 'self' https://accounts.google.com https://js.stripe.com",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -47,6 +47,27 @@ const nextConfig: NextConfig = {
       // Apply to all routes
       source: "/(.*)",
       headers: securityHeaders,
+    },
+    {
+      // Allow the portfolio HTML files to be embedded in iframes (same origin)
+      source: "/high-voltage-safety-course:path*",
+      headers: [
+        { key: "X-Frame-Options", value: "SAMEORIGIN" },
+        {
+          key: "Content-Security-Policy",
+          value: [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+            "font-src 'self' https://fonts.gstatic.com",
+            "img-src 'self' data:",
+            "connect-src 'self'",
+            "frame-src 'none'",
+            "object-src 'none'",
+            "base-uri 'self'",
+          ].join("; "),
+        },
+      ],
     },
   ],
 }
