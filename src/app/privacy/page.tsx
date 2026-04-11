@@ -143,6 +143,7 @@ export default function PrivacyPage() {
           <div className="flex gap-4 text-xs text-gray-400">
             <Link href="/privacy" className="hover:text-gray-600">Privacy</Link>
             <Link href="/terms" className="hover:text-gray-600">Terms</Link>
+            <Link href="/careers" className="hover:text-gray-600">Careers</Link>
           </div>
         </div>
       </footer>

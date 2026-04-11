@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation"
+import NextLink from "next/link"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 import { getTranslations } from "next-intl/server"
 
@@ -149,9 +150,13 @@ export default async function VisionPage() {
 
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8">
-        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <span className="font-bold text-indigo-600 tracking-tight">{tNav("brand")}</span>
-          <p className="text-xs text-gray-400">© {new Date().getFullYear()} Summon Translator. All rights reserved.</p>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Terms of Service</Link>
+            <NextLink href="/careers" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Careers</NextLink>
+          </div>
         </div>
       </footer>
     </div>
