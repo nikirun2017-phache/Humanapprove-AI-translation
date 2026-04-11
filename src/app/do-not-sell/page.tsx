@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { PublicFooter } from "@/components/public-footer"
 
 export const metadata = {
   title: "Do Not Sell or Share My Personal Data — Summon Translator",
@@ -90,7 +89,7 @@ export default function DoNotSellPage() {
         </div>
       </main>
 
-      <PublicFooter />
+      
     </div>
   )
 }

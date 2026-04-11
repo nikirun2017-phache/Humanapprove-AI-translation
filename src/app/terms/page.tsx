@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { PublicFooter } from "@/components/public-footer"
 
 export const metadata = {
   title: "Terms of Service — Summon Translator",
@@ -177,7 +176,7 @@ export default function TermsPage() {
         </div>
       </main>
 
-      <PublicFooter />
+      
     </div>
   )
 }

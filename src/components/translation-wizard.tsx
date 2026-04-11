@@ -882,6 +882,26 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             <p className="text-xs text-gray-400 mt-1">JSON · CSV · Markdown · TXT · PDF · HTML · XLIFF · .strings · .po · Android XML · .arb · .properties · Multiple files OK</p>
           </div>
 
+          {/* Data policy notice */}
+          <div className="flex items-start gap-2.5 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-xs text-blue-700">
+            <svg className="w-4 h-4 mt-0.5 shrink-0 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0-6v2m0-6v2M12 3a9 9 0 110 18A9 9 0 0112 3z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v4" />
+              <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none" />
+            </svg>
+            <span>
+              By uploading files you agree to our{" "}
+              <a href="/terms" target="_blank" rel="noreferrer" className="font-semibold underline underline-offset-2 hover:text-blue-900">
+                Terms of Use
+              </a>{" "}
+              and{" "}
+              <a href="/privacy" target="_blank" rel="noreferrer" className="font-semibold underline underline-offset-2 hover:text-blue-900">
+                Data Policy
+              </a>.{" "}
+              Your files are processed solely to deliver the translation and are <strong>permanently deleted 48 hours after job completion</strong>. They are never used to train AI models.
+            </span>
+          </div>
+
           {/* File list */}
           {entries.length > 0 && (
             <div className="space-y-2">

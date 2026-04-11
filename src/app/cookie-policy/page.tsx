@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { PublicFooter } from "@/components/public-footer"
 
 export const metadata = {
   title: "Cookie Policy — Summon Translator",
@@ -98,7 +97,7 @@ export default function CookiePolicyPage() {
         </div>
       </main>
 
-      <PublicFooter />
+      
     </div>
   )
 }

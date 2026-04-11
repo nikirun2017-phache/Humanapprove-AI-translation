@@ -2,7 +2,6 @@ import { Link } from "@/i18n/navigation"
 import NextLink from "next/link"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 import { getTranslations } from "next-intl/server"
-import { PublicFooter } from "@/components/public-footer"
 
 export default async function VisionPage() {
   const t = await getTranslations("vision")
@@ -148,8 +147,6 @@ export default async function VisionPage() {
           </div>
         </div>
       </section>
-
-      <PublicFooter showLocale LocaleSwitcherComponent={<LocaleSwitcher />} />
     </div>
   )
 }

@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { PublicFooter } from "@/components/public-footer"
 
 export const metadata = {
   title: "Refund Policy — Summon Translator",
@@ -84,7 +83,7 @@ export default function RefundPolicyPage() {
         </div>
       </main>
 
-      <PublicFooter />
+      
     </div>
   )
 }

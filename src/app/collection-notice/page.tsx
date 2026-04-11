@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { PublicFooter } from "@/components/public-footer"
 
 export const metadata = {
   title: "Notice at Collection — Summon Translator",
@@ -105,7 +104,7 @@ export default function CollectionNoticePage() {
         </div>
       </main>
 
-      <PublicFooter />
+      
     </div>
   )
 }

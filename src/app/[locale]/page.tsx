@@ -6,7 +6,6 @@ import { CostEstimator } from "@/components/cost-estimator"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 import { getTranslations } from "next-intl/server"
 import Image from "next/image"
-import { PublicFooter } from "@/components/public-footer"
 
 export default async function Home() {
   const session = await auth()
@@ -313,8 +312,6 @@ export default async function Home() {
         </div>
         <p className="text-xs text-gray-400 mt-4">Cancel anytime · Pay only for what you translate</p>
       </section>
-
-      <PublicFooter showLocale LocaleSwitcherComponent={<LocaleSwitcher />} />
     </div>
   )
 }
