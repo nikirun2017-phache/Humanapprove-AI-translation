@@ -19,6 +19,7 @@ export function Navbar() {
   const navLinks = [
     { href: "/translation-studio", label: "Translation Studio", match: "/translation-studio" },
     { href: "/jobs", label: "My Jobs", match: "/jobs" },
+    { href: "/portfolio", label: "Portfolio", match: "/portfolio" },
     ...(role === "admin" ? [{ href: "/admin/users", label: "Users", match: "/admin/users" }] : []),
     ...(role === "admin" ? [{ href: "/admin/applications", label: "Applications", match: "/admin/applications" }] : []),
     { href: "/billing", label: "Billing", match: "/billing" },

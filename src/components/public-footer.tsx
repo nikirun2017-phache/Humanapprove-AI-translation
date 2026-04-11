@@ -17,6 +17,7 @@ export function PublicFooter({ showLocale = false, LocaleSwitcherComponent }: Pu
             <ul className="space-y-3">
               <li><Link href="/about" className="text-sm hover:text-white transition-colors">About Us</Link></li>
               <li><Link href="/contact" className="text-sm hover:text-white transition-colors">Contact Us</Link></li>
+              <li><Link href="/portfolio" className="text-sm hover:text-white transition-colors">Portfolio</Link></li>
               <li><Link href="/blog" className="text-sm hover:text-white transition-colors">Blog</Link></li>
               <li><Link href="/faq" className="text-sm hover:text-white transition-colors">FAQ</Link></li>
               <li><Link href="/careers" className="text-sm hover:text-white transition-colors">Careers</Link></li>
