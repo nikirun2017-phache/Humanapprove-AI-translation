@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { PublicFooter } from "@/components/public-footer"
 
 export const metadata = {
   title: "Careers — Summon Translator",
@@ -169,17 +170,7 @@ export default function CareersPage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-100 py-8 mt-16">
-        <div className="max-w-4xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span className="font-bold text-indigo-600 tracking-tight">Summon Translator</span>
-          <div className="flex items-center gap-4">
-            <Link href="/privacy" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Terms of Service</Link>
-            <Link href="/careers" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Careers</Link>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   )
 }

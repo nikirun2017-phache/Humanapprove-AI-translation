@@ -6,6 +6,7 @@ import { CostEstimator } from "@/components/cost-estimator"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 import { getTranslations } from "next-intl/server"
 import Image from "next/image"
+import { PublicFooter } from "@/components/public-footer"
 
 export default async function Home() {
   const session = await auth()
@@ -313,24 +314,7 @@ export default async function Home() {
         <p className="text-xs text-gray-400 mt-4">Cancel anytime · Pay only for what you translate</p>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-100 py-8">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span className="font-bold text-indigo-600 tracking-tight">{t("nav.brand")}</span>
-          <div className="flex items-center gap-4">
-            <Link href="/privacy" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
-              Terms of Service
-            </Link>
-            <NextLink href="/careers" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
-              Careers
-            </NextLink>
-            <p className="text-xs text-gray-400">{t("footer.rights", { year: new Date().getFullYear() })}</p>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter showLocale LocaleSwitcherComponent={<LocaleSwitcher />} />
     </div>
   )
 }

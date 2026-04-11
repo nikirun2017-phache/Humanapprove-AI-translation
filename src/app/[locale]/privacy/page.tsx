@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { PublicFooter } from "@/components/public-footer"
 
 export const metadata = {
   title: "Privacy Policy — Summon Translator",
@@ -132,15 +133,7 @@ export default function PrivacyPage() {
         </div>
       </main>
 
-      <footer className="border-t border-gray-100 py-8 mt-16">
-        <div className="max-w-4xl mx-auto px-6 flex items-center justify-between">
-          <span className="font-bold text-indigo-600 tracking-tight">Summon Translator</span>
-          <div className="flex gap-4 text-xs text-gray-400">
-            <Link href="/privacy" className="hover:text-gray-600">Privacy</Link>
-            <Link href="/terms" className="hover:text-gray-600">Terms</Link>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   )
 }
