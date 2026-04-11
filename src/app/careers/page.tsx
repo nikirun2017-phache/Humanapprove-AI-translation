@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { auth } from "@/lib/auth"
 
 export const metadata = {
   title: "Careers — Summon Translator",
@@ -12,7 +13,10 @@ const LANGUAGES = [
   { region: "Middle Eastern", pairs: ["Arabic (AR)", "Hebrew (HE)", "Turkish (TR)"] },
 ]
 
-export default function CareersPage() {
+export default async function CareersPage() {
+  const session = await auth()
+  const applyHref = session?.user ? "/reviewer-signup" : "/login?callbackUrl=/reviewer-signup"
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -161,11 +165,14 @@ export default function CareersPage() {
             Complete our short application form — we typically respond within 5 business days.
           </p>
           <Link
-            href="/reviewer-signup"
+            href={applyHref}
             className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-6 py-3 rounded-lg transition-colors"
           >
             Apply now →
           </Link>
+          {!session?.user && (
+            <p className="text-xs text-gray-400 mt-3">You&apos;ll be asked to sign in before filling in the application.</p>
+          )}
         </div>
       </main>
 

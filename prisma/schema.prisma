@@ -164,6 +164,11 @@ model ReviewerApplication {
   mtExperience    Boolean  @default(false)
   bio             String
   profileUrl      String?
+  ratePerWord     Float?   // USD per source word
+  ratePerHour     Float?   // USD per hour
+  cvFileName      String?  // original uploaded filename
+  cvMimeType      String?  // e.g. application/pdf
+  cvData          String?  // base64-encoded file content
 
   status          String   @default("pending") // pending | approved | rejected
   resolvedUserId  String?  // set on approval to the created/updated User id
