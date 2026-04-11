@@ -60,6 +60,15 @@ export function Navbar() {
             </span>
           </span>
           <Link
+            href="/careers"
+            className={cn(
+              "text-sm transition-colors",
+              pathname === "/careers" ? "text-indigo-600 font-medium" : "text-gray-500 hover:text-gray-800"
+            )}
+          >
+            Careers
+          </Link>
+          <Link
             href="/account"
             className={cn(
               "text-sm transition-colors",
@@ -116,6 +125,18 @@ export function Navbar() {
             <div className="px-3 py-1.5 text-xs text-gray-400">
               {session.user.name} · {session.user.role}
             </div>
+            <Link
+              href="/careers"
+              onClick={() => setMenuOpen(false)}
+              className={cn(
+                "block px-3 py-2 rounded-md text-sm transition-colors",
+                pathname === "/careers"
+                  ? "bg-indigo-50 text-indigo-600 font-medium"
+                  : "text-gray-700 hover:bg-gray-50"
+              )}
+            >
+              Careers
+            </Link>
             <Link
               href="/account"
               onClick={() => setMenuOpen(false)}
