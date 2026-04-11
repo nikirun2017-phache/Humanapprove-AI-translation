@@ -1662,8 +1662,8 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
               </div>
             )}
 
-            {!hasCard ? (
-              /* ── No payment method: payment is the only CTA ── */
+            {!hasCard && !promoCoversAll ? (
+              /* ── No payment method and no free promo: require card ── */
               <div className="bg-white rounded-xl border-2 border-indigo-200 p-5 space-y-4">
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">💳</span>
@@ -1696,12 +1696,19 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                 </p>
               </div>
             ) : (
-              /* ── Card on file: show confirmation and start button ── */
+              /* ── Card on file OR promo covers 100%: show start button ── */
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                  <span>✓</span>
-                  <span>Payment method on file — you will be charged when this job completes.</span>
-                </div>
+                {promoCoversAll ? (
+                  <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                    <span>🎉</span>
+                    <span>Your promo code covers this job completely — <strong>no charge, no card required.</strong></span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                    <span>✓</span>
+                    <span>Payment method on file — you will be charged when this job completes.</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <button onClick={() => setStep(2)} className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
                     ← Back
@@ -1713,7 +1720,9 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                   >
                     {submitting
                       ? `Starting${entries.length > 1 ? "…" : "…"}`
-                      : `Start Translation${entries.length > 1 ? ` (${entries.length} jobs)` : ""}`}
+                      : promoCoversAll
+                        ? `Start Free Translation${entries.length > 1 ? ` (${entries.length} jobs)` : ""}`
+                        : `Start Translation${entries.length > 1 ? ` (${entries.length} jobs)` : ""}`}
                   </button>
                 </div>
               </div>

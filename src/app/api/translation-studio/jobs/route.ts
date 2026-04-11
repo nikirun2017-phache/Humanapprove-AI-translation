@@ -259,6 +259,21 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Require a payment method on file — unless the applied promo covers 100% of the cost
+  // (e.g. 1TIME promo: free for first 10k words). Admins are exempt.
+  if (session.user.role !== "admin" && discountPct < 100) {
+    const user = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { subscriptionStatus: true },
+    })
+    if (user?.subscriptionStatus !== "active") {
+      return NextResponse.json(
+        { error: "A payment method is required to start a translation job." },
+        { status: 402 }
+      )
+    }
+  }
+
   // Create job and tasks in a transaction
   const job = await db.$transaction(async (tx: Parameters<Parameters<typeof db.$transaction>[0]>[0]) => {
     const j = await tx.translationJob.create({
