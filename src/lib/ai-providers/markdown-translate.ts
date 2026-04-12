@@ -63,6 +63,10 @@ export async function translateMarkdownBatch(
   }
 }
 
+// 90 s per AI call — catches hanging providers without timing out legitimate large batches.
+// withRetry treats AbortError as retryable so transient hangs are retried automatically.
+const AI_CALL_TIMEOUT_MS = 90_000
+
 async function callAnthropic(
   markdown: string,
   systemPrompt: string,
@@ -71,6 +75,7 @@ async function callAnthropic(
 ): Promise<string> {
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
+    signal: AbortSignal.timeout(AI_CALL_TIMEOUT_MS),
     headers: {
       "Content-Type": "application/json",
       "x-api-key": apiKey,
@@ -110,6 +115,7 @@ async function callOpenAICompat(
 ): Promise<string> {
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
+    signal: AbortSignal.timeout(AI_CALL_TIMEOUT_MS),
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
@@ -143,6 +149,7 @@ async function callGemini(
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
   const response = await fetch(url, {
     method: "POST",
+    signal: AbortSignal.timeout(AI_CALL_TIMEOUT_MS),
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: systemPrompt }] },

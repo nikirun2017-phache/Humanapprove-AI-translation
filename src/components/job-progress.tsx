@@ -43,6 +43,10 @@ const STATUS_LABELS: Record<string, string> = {
   failed: "Failed",
 }
 
+// If a task stays "running" with no completedUnits progress for this long,
+// the current fetch is aborted and the task is auto-retried once.
+const STALL_TIMEOUT_MS = 8 * 60 * 1000 // 8 minutes
+
 export function JobProgress({ initialJob }: Props) {
   const [job, setJob] = useState<Job>(initialJob)
   const [paused, setPaused] = useState(false)
@@ -51,6 +55,10 @@ export function JobProgress({ initialJob }: Props) {
   const runningRef = useRef(false)
   const pausedRef = useRef(false)
   const autoDownloadedRef = useRef(false)
+  // Maps taskId → { lastUnits, lastChangedAt } for stall detection
+  const stallTrackerRef = useRef<Record<string, { lastUnits: number; lastChangedAt: number }>>({})
+  // Maps taskId → AbortController so the stall detector can abort the fetch
+  const abortControllersRef = useRef<Record<string, AbortController>>({})
 
   pausedRef.current = paused
 
@@ -110,28 +118,59 @@ export function JobProgress({ initialJob }: Props) {
     return null
   }
 
-  async function translateTask(task: Task) {
+  async function translateTask(task: Task, isAutoRetry = false): Promise<boolean> {
     setJob((j) => ({
       ...j,
       tasks: j.tasks.map((t: Task) => t.id === task.id ? { ...t, status: "running" } : t),
     }))
 
+    // Set up abort controller so stall detector can cancel a hung fetch
+    const controller = new AbortController()
+    abortControllersRef.current[task.id] = controller
+
+    // Initialise stall tracker for this task
+    stallTrackerRef.current[task.id] = { lastUnits: task.completedUnits, lastChangedAt: Date.now() }
+
     const pollInterval = setInterval(async () => {
       const updated = await fetchJob()
-      if (!updated) clearInterval(pollInterval)
+      if (!updated) { clearInterval(pollInterval); return }
+
+      // Stall detection: if completedUnits changed, reset the timer
+      const freshTask = updated.tasks.find((t: Task) => t.id === task.id)
+      if (freshTask) {
+        const tracker = stallTrackerRef.current[task.id]
+        if (tracker) {
+          if (freshTask.completedUnits !== tracker.lastUnits) {
+            stallTrackerRef.current[task.id] = { lastUnits: freshTask.completedUnits, lastChangedAt: Date.now() }
+          } else if (freshTask.status === "running" && Date.now() - tracker.lastChangedAt > STALL_TIMEOUT_MS) {
+            // Stalled — abort the fetch so the server marks it failed and we can retry
+            console.warn(`[job-progress] Task ${task.id} stalled for ${STALL_TIMEOUT_MS / 60000} min — aborting`)
+            clearInterval(pollInterval)
+            controller.abort()
+          }
+        }
+      }
     }, 2500)
 
     try {
       const res = await fetch(
         `/api/translation-studio/jobs/${job.id}/tasks/${task.id}/translate`,
-        { method: "POST" }
+        { method: "POST", signal: controller.signal }
       )
       clearInterval(pollInterval)
+      delete abortControllersRef.current[task.id]
       await fetchJob()
       return res.ok
-    } catch {
+    } catch (err) {
       clearInterval(pollInterval)
+      delete abortControllersRef.current[task.id]
+      const isAbort = (err as { name?: string }).name === "AbortError"
       await fetchJob()
+      // Auto-retry once if this was a stall abort (not a user-initiated pause abort)
+      if (isAbort && !isAutoRetry && !pausedRef.current) {
+        console.warn(`[job-progress] Auto-retrying stalled task ${task.id}`)
+        return translateTask(task, true)
+      }
       return false
     }
   }

@@ -19,9 +19,11 @@ export const maxDuration = 600 // 10 min timeout — large jobs + rate-limit ret
 const RETRYABLE_STATUSES = [429, 500, 503, 529]
 // Rate-limit delays: 429 / "rate limit" / "overload" get a 65s pause (Claude
 // quota windows are typically 60 s). Other transient errors (500/503) get a
-// shorter exponential back-off. Total max wait: ~3 attempts × 65 s = ~3 min.
+// shorter exponential back-off. Timeouts (AbortError) use a short delay then retry.
+// Total max wait: ~3 attempts × 65 s = ~3 min before giving up.
 const RATE_LIMIT_DELAYS_MS = [15000, 40000, 65000]
 const TRANSIENT_DELAYS_MS  = [3000,  8000,  20000]
+const TIMEOUT_DELAYS_MS    = [5000,  10000, 20000]
 
 async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   let lastError: Error = new Error("Unknown error")
@@ -30,16 +32,22 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
       return await fn()
     } catch (err) {
       lastError = err as Error
+      const errName = (lastError as { name?: string }).name ?? ""
+      const isTimeout = errName === "TimeoutError" || errName === "AbortError" ||
+        lastError.message.toLowerCase().includes("timed out") ||
+        lastError.message.toLowerCase().includes("aborted")
       const statusMatch = lastError.message.match(/error (\d{3})/)
       const status = statusMatch ? parseInt(statusMatch[1]) : 0
       const isRateLimit = status === 429 ||
         lastError.message.toLowerCase().includes("rate limit") ||
         lastError.message.toLowerCase().includes("overload")
-      const isTransient = RETRYABLE_STATUSES.includes(status) || isRateLimit
+      const isTransient = RETRYABLE_STATUSES.includes(status) || isRateLimit || isTimeout
       if (!isTransient || attempt === RATE_LIMIT_DELAYS_MS.length) break
       const delay = isRateLimit
         ? RATE_LIMIT_DELAYS_MS[attempt]
-        : TRANSIENT_DELAYS_MS[attempt]
+        : isTimeout
+          ? TIMEOUT_DELAYS_MS[attempt]
+          : TRANSIENT_DELAYS_MS[attempt]
       console.warn(`[translate] retry ${attempt + 1} after ${delay}ms — ${lastError.message.slice(0, 120)}`)
       await new Promise((r) => setTimeout(r, delay))
     }

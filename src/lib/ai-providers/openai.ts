@@ -28,6 +28,7 @@ function buildProvider(baseUrl: string, providerName: "openai" | "deepseek"): AI
 
       const response = await fetch(`${baseUrl}/chat/completions`, {
         method: "POST",
+        signal: AbortSignal.timeout(90_000),
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${apiKey}`,
