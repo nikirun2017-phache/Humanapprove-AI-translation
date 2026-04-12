@@ -42,8 +42,8 @@ steps:
     args:
       - -c
       - |
-        CRON_SECRET=$$(gcloud secrets versions access latest --secret=CRON_SECRET --project=$$PROJECT_ID)
-        gcloud scheduler jobs describe cleanup-old-jobs --location=us-central1 --project=$$PROJECT_ID > /dev/null 2>&1 \
+        CRON_SECRET=$$(gcloud secrets versions access latest --secret=CRON_SECRET --project=$PROJECT_ID)
+        gcloud scheduler jobs describe cleanup-old-jobs --location=us-central1 --project=$PROJECT_ID > /dev/null 2>&1 \
           && gcloud scheduler jobs update http cleanup-old-jobs \
                --schedule="0 3 * * *" \
                --uri="https://summontranslator.com/api/cron/cleanup-jobs" \
@@ -51,7 +51,7 @@ steps:
                --headers="Content-Type=application/json,Authorization=Bearer $${CRON_SECRET}" \
                --time-zone="UTC" \
                --location=us-central1 \
-               --project=$$PROJECT_ID \
+               --project=$PROJECT_ID \
           || gcloud scheduler jobs create http cleanup-old-jobs \
                --schedule="0 3 * * *" \
                --uri="https://summontranslator.com/api/cron/cleanup-jobs" \
@@ -59,7 +59,7 @@ steps:
                --headers="Content-Type=application/json,Authorization=Bearer $${CRON_SECRET}" \
                --time-zone="UTC" \
                --location=us-central1 \
-               --project=$$PROJECT_ID
+               --project=$PROJECT_ID
 
 options:
   logging: CLOUD_LOGGING_ONLY
