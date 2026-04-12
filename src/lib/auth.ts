@@ -7,23 +7,27 @@ import bcrypt from "bcryptjs"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   cookies: {
+    // OAuth flow cookies — must survive cross-site redirects (Google → our domain)
     pkceCodeVerifier: {
       name: "authjs.pkce.code_verifier",
-      options: {
-        httpOnly: true,
-        sameSite: "none",
-        path: "/",
-        secure: true,
-      },
+      options: { httpOnly: true, sameSite: "none", path: "/", secure: true },
     },
     state: {
       name: "authjs.state",
-      options: {
-        httpOnly: true,
-        sameSite: "none",
-        path: "/",
-        secure: true,
-      },
+      options: { httpOnly: true, sameSite: "none", path: "/", secure: true },
+    },
+    // Session & CSRF — lax is fine post-login (same-site navigations only)
+    sessionToken: {
+      name: "authjs.session-token",
+      options: { httpOnly: true, sameSite: "lax", path: "/", secure: true },
+    },
+    csrfToken: {
+      name: "authjs.csrf-token",
+      options: { httpOnly: true, sameSite: "lax", path: "/", secure: true },
+    },
+    callbackUrl: {
+      name: "authjs.callback-url",
+      options: { httpOnly: true, sameSite: "lax", path: "/", secure: true },
     },
   },
   providers: [

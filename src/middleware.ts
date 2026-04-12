@@ -78,6 +78,16 @@ const RULES: Array<{ prefix: string; limit: number; windowMs: number; label: str
 // ---------------------------------------------------------------------------
 
 export function middleware(req: NextRequest) {
+  // ── www → non-www canonical redirect ──────────────────────────────────────
+  // NextAuth derives the OAuth callback URL from the request host. If the user
+  // hits www.summontranslator.com the callback URL becomes www.*, which is not
+  // in Google's authorized redirect URIs and breaks PKCE cookie matching.
+  if (req.nextUrl.hostname === "www.summontranslator.com") {
+    const url = req.nextUrl.clone()
+    url.hostname = "summontranslator.com"
+    return NextResponse.redirect(url, { status: 301 })
+  }
+
   const { pathname } = req.nextUrl
 
   // Apply rate limiting to all API routes

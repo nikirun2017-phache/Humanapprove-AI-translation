@@ -25,7 +25,8 @@ function LoginForm() {
 
   async function handleSocialSignIn(provider: "google") {
     setSocialLoading(provider)
-    await signIn(provider, { callbackUrl: "/translation-studio" })
+    const callbackUrl = searchParams.get("callbackUrl") || "/translation-studio"
+    await signIn(provider, { callbackUrl })
   }
 
   async function handleResend(emailAddr: string) {
