@@ -32,8 +32,34 @@ steps:
       - --memory=1Gi
       - --cpu=1
       - --timeout=3600
-      - --set-secrets=DATABASE_URL=DATABASE_URL:latest,AUTH_SECRET=AUTH_SECRET:latest
+      - --set-secrets=DATABASE_URL=DATABASE_URL:latest,AUTH_SECRET=AUTH_SECRET:latest,CRON_SECRET=CRON_SECRET:latest
       - --update-env-vars=NODE_ENV=production,PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser,AUTH_URL=https://summontranslator.com,AUTH_TRUST_HOST=true,NEXT_PUBLIC_APP_URL=https://summontranslator.com,RESEND_FROM=Summon Translator <support@summontranslator.com>,AUTH_GOOGLE_ID=31067192249-i0vmagqo3bff0qna369bfdm5l1h6fr9h.apps.googleusercontent.com
+
+  # Create or update the Cloud Scheduler job that triggers daily job cleanup.
+  # Runs at 03:00 UTC every day; deletes requester jobs older than 7 days.
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        CRON_SECRET=$(gcloud secrets versions access latest --secret=CRON_SECRET --project=$PROJECT_ID)
+        gcloud scheduler jobs describe cleanup-old-jobs --location=us-central1 --project=$PROJECT_ID > /dev/null 2>&1 \
+          && gcloud scheduler jobs update http cleanup-old-jobs \
+               --schedule="0 3 * * *" \
+               --uri="https://summontranslator.com/api/cron/cleanup-jobs" \
+               --message-body="{}" \
+               --headers="Content-Type=application/json,Authorization=Bearer ${CRON_SECRET}" \
+               --time-zone="UTC" \
+               --location=us-central1 \
+               --project=$PROJECT_ID \
+          || gcloud scheduler jobs create http cleanup-old-jobs \
+               --schedule="0 3 * * *" \
+               --uri="https://summontranslator.com/api/cron/cleanup-jobs" \
+               --message-body="{}" \
+               --headers="Content-Type=application/json,Authorization=Bearer ${CRON_SECRET}" \
+               --time-zone="UTC" \
+               --location=us-central1 \
+               --project=$PROJECT_ID
 
 options:
   logging: CLOUD_LOGGING_ONLY

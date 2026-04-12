@@ -19,7 +19,6 @@ export function Navbar() {
   const navLinks = [
     { href: "/translation-studio", label: "Translation Studio", match: "/translation-studio" },
     { href: "/jobs", label: "My Jobs", match: "/jobs" },
-    { href: "/portfolio", label: "Portfolio", match: "/portfolio" },
     ...(role === "admin" ? [{ href: "/admin/users", label: "Users", match: "/admin/users" }] : []),
     ...(role === "admin" ? [{ href: "/admin/applications", label: "Applications", match: "/admin/applications" }] : []),
     { href: "/billing", label: "Billing", match: "/billing" },
@@ -60,15 +59,6 @@ export function Navbar() {
               {session.user.role}
             </span>
           </span>
-          <Link
-            href="/careers"
-            className={cn(
-              "text-sm transition-colors",
-              pathname === "/careers" ? "text-indigo-600 font-medium" : "text-gray-500 hover:text-gray-800"
-            )}
-          >
-            Careers
-          </Link>
           <Link
             href="/account"
             className={cn(
@@ -126,18 +116,6 @@ export function Navbar() {
             <div className="px-3 py-1.5 text-xs text-gray-400">
               {session.user.name} · {session.user.role}
             </div>
-            <Link
-              href="/careers"
-              onClick={() => setMenuOpen(false)}
-              className={cn(
-                "block px-3 py-2 rounded-md text-sm transition-colors",
-                pathname === "/careers"
-                  ? "bg-indigo-50 text-indigo-600 font-medium"
-                  : "text-gray-700 hover:bg-gray-50"
-              )}
-            >
-              Careers
-            </Link>
             <Link
               href="/account"
               onClick={() => setMenuOpen(false)}
