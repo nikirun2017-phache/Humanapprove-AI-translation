@@ -1672,6 +1672,39 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
               )}
             </div>
 
+            {/* ── What to expect ── */}
+            {(() => {
+              const totalOutputWords = totalWords * selectedLangs.size
+              const timingEstimate =
+                totalOutputWords < 3_000 ? "2–5 minutes" :
+                totalOutputWords < 20_000 ? "5–15 minutes" :
+                totalOutputWords < 80_000 ? "15–45 minutes" :
+                "45–90 minutes"
+              return (
+                <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3.5 space-y-2">
+                  <p className="text-xs font-semibold text-indigo-800 uppercase tracking-wide">What to expect</p>
+                  <ul className="text-xs text-indigo-700 space-y-1.5">
+                    <li className="flex items-start gap-2">
+                      <span className="mt-0.5 shrink-0">⏱</span>
+                      <span><strong>Estimated time: {timingEstimate}</strong> for {totalWords.toLocaleString()} words × {selectedLangs.size} language{selectedLangs.size !== 1 ? "s" : ""}. Larger files with many languages take longer due to AI API rate limits.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="mt-0.5 shrink-0">📧</span>
+                      <span><strong>You'll get an email when it's done</strong> — you can safely close this tab. Your files will also be waiting in <strong>My Jobs</strong>.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="mt-0.5 shrink-0">💳</span>
+                      <span><strong>You're only charged after the job completes</strong> — nothing is billed if it fails.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="mt-0.5 shrink-0">🔒</span>
+                      <span>Files are <strong>permanently deleted 48 hours</strong> after job completion and never used to train AI models.</span>
+                    </li>
+                  </ul>
+                </div>
+              )
+            })()}
+
             {submitError && (
               <div className="space-y-2">
                 <pre className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2 whitespace-pre-wrap">{submitError}</pre>

@@ -32,7 +32,8 @@ steps:
       - --memory=1Gi
       - --cpu=1
       - --timeout=3600
-      - --set-secrets=DATABASE_URL=DATABASE_URL:latest,AUTH_SECRET=AUTH_SECRET:latest,CRON_SECRET=CRON_SECRET:latest
+      - --set-secrets=DATABASE_URL=DATABASE_URL:latest,AUTH_SECRET=AUTH_SECRET:latest,CRON_SECRET=CRON_SECRET:latest,STRIPE_SECRET_KEY=STRIPE_SECRET_KEY:latest
+      - --remove-env-vars=STRIPE_SECRET_KEY
       - --update-env-vars=NODE_ENV=production,PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser,AUTH_URL=https://summontranslator.com,AUTH_TRUST_HOST=true,NEXT_PUBLIC_APP_URL=https://summontranslator.com,RESEND_FROM=Summon Translator <support@summontranslator.com>,AUTH_GOOGLE_ID=31067192249-i0vmagqo3bff0qna369bfdm5l1h6fr9h.apps.googleusercontent.com
 
   # Create or update the Cloud Scheduler job that triggers daily job cleanup.
