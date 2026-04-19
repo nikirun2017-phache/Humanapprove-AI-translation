@@ -17,8 +17,9 @@ steps:
     args: [push, gcr.io/$PROJECT_ID/jendee-ai:latest]
 
   # Apply any pending DB migrations before the new image goes live.
-  # Uses the node image so npx/prisma are available; DATABASE_URL is injected
-  # via Cloud Build's secret manager binding (see `availableSecrets` below).
+  # NOTE: Cloud Build workers cannot reach the Neon database (external network).
+  # This step is intentionally non-fatal (|| true) so the deploy is not blocked.
+  # Run migrations manually via: npx prisma migrate deploy (from a local env with DB access).
   - name: 'node:22-alpine'
     entrypoint: sh
     secretEnv: ['DATABASE_URL']
@@ -26,7 +27,7 @@ steps:
       - -c
       - |
         npm ci --prefer-offline --ignore-scripts
-        npx prisma migrate deploy
+        npx prisma migrate deploy || echo "Migration step skipped (Cloud Build cannot reach Neon DB — run migrations manually)"
 
   # Deploy to Cloud Run
   # NOTE: --set-secrets replaces ALL secrets; --update-env-vars only adds/updates named vars.
