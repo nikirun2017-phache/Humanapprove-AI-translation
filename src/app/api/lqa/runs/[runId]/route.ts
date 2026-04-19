@@ -32,6 +32,8 @@ export async function GET(
       errorMessage: true,
       createdAt: true,
       updatedAt: true,
+      // originalFile intentionally excluded — it is large (up to 5 MB) and not
+      // needed by the polling client; only the revise/report routes need it.
     },
   })
 

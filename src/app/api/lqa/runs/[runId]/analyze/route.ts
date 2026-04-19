@@ -1,3 +1,4 @@
+import { after } from "next/server"
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
@@ -52,14 +53,27 @@ export async function POST(
   }
 
   // Mark as running and respond immediately so the client can start polling.
-  // The analysis runs in the background — Cloud Run keeps the process alive.
   await db.lqaRun.update({ where: { id: runId }, data: { status: "running" } })
 
-  // Fire-and-forget: no await, result written to DB when done
-  void (async () => {
+  // after() is Next.js 15+'s guaranteed post-response hook — the framework keeps
+  // the process alive until the callback resolves, unlike a bare void IIFE which
+  // can be cancelled when the request context is torn down.
+  const fileContent = run.originalFile
+  const fileFormat = run.fileFormat
+  const sourceLang = run.sourceLanguage
+  const targetLang = run.targetLanguage
+
+  after(async () => {
     try {
-      const { units } = parseBilingualFile(run.originalFile, run.fileFormat)
-      const result = await analyzeLqa(units, run.sourceLanguage, run.targetLanguage, apiKey, provider, model)
+      const { units } = parseBilingualFile(fileContent, fileFormat)
+      if (units.length === 0) {
+        await db.lqaRun.update({
+          where: { id: runId },
+          data: { status: "failed", errorMessage: "File parsed successfully but contained no bilingual units." },
+        })
+        return
+      }
+      const result = await analyzeLqa(units, sourceLang, targetLang, apiKey, provider, model)
       await db.lqaRun.update({
         where: { id: runId },
         data: {
@@ -75,13 +89,13 @@ export async function POST(
       })
     } catch (err) {
       const message = (err as Error).message
-      console.error("[lqa/analyze] background error:", message)
+      console.error("[lqa/analyze] after() error:", message)
       await db.lqaRun.update({
         where: { id: runId },
         data: { status: "failed", errorMessage: message },
       })
     }
-  })()
+  })
 
   return NextResponse.json({ status: "running" }, { status: 202 })
 }
