@@ -78,13 +78,19 @@ const RULES: Array<{ prefix: string; limit: number; windowMs: number; label: str
 // ---------------------------------------------------------------------------
 
 export function middleware(req: NextRequest) {
-  // ── www → non-www canonical redirect ──────────────────────────────────────
-  // NextAuth derives the OAuth callback URL from the request host. If the user
-  // hits www.summontranslator.com the callback URL becomes www.*, which is not
-  // in Google's authorized redirect URIs and breaks PKCE cookie matching.
-  if (req.nextUrl.hostname === "www.summontranslator.com") {
+  // ── Canonical-domain redirect ──────────────────────────────────────────────
+  // NextAuth derives the OAuth callback URL and state cookie domain from the
+  // incoming request host. Any non-canonical host (www subdomain or raw Cloud
+  // Run URL) causes a state/PKCE cookie mismatch because Google redirects back
+  // to summontranslator.com while the cookie was set on a different domain.
+  const { hostname } = req.nextUrl
+  if (
+    hostname === "www.summontranslator.com" ||
+    hostname.endsWith(".run.app")
+  ) {
     const url = req.nextUrl.clone()
     url.hostname = "summontranslator.com"
+    url.port = ""
     return NextResponse.redirect(url, { status: 301 })
   }
 
@@ -126,22 +132,34 @@ export function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // Apply locale routing for non-API routes
-  return intlMiddleware(req)
+  // ── Locale routing ────────────────────────────────────────────────────────────
+  // Only apply intlMiddleware to paths that have locale-prefixed equivalents in
+  // src/app/[locale]/. All other paths (translation-studio, dashboard, admin,
+  // etc.) must pass through untouched — intlMiddleware would otherwise prepend
+  // the default locale and produce a 404.
+  const LOCALE_EXACT = new Set(["/", "/login", "/vision", "/privacy", "/terms", "/forgot-password", "/reset-password"])
+  const LOCALE_PREFIXES = [
+    "/en-US", "/en-CA", "/en-GB", "/en-AU", "/en-IN",
+    "/es-ES", "/es-419", "/pt-BR", "/fr-FR", "/fr-CA",
+    "/de-DE", "/it-IT", "/nl-NL", "/sv-SE",
+    "/ja-JP", "/zh-CN", "/zh-TW", "/ko-KR", "/th-TH",
+  ]
+
+  if (
+    LOCALE_EXACT.has(pathname) ||
+    LOCALE_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"))
+  ) {
+    return intlMiddleware(req)
+  }
+
+  return NextResponse.next()
 }
 
 export const config = {
   matcher: [
-    // API routes — rate limiting
-    "/api/:path*",
-    // Locale routes (from proxy.ts)
-    "/",
-    "/login",
-    "/vision",
-    "/privacy",
-    "/terms",
-    "/forgot-password",
-    "/reset-password",
-    "/(en-US|en-CA|en-GB|en-AU|en-IN|es-ES|es-419|pt-BR|fr-FR|fr-CA|de-DE|it-IT|nl-NL|sv-SE|ja-JP|zh-CN|zh-TW|ko-KR|th-TH)/:path*",
+    // Catch all routes except Next.js internals and static assets.
+    // This ensures the canonical-domain redirect (www / *.run.app → summontranslator.com)
+    // fires on every path, including /api/auth/... OAuth callbacks.
+    "/((?!_next/static|_next/image|favicon\\.ico|favicon\\.png|apple-touch-icon\\.png|icon\\.png).*)",
   ],
 }

@@ -42,6 +42,8 @@ interface FileEntry {
   probePending?: boolean
   xliffMeta?: XliffMeta
   sizeWarning?: string  // shown for large .txt files
+  csvColumns?: string[]         // CSV header columns (multi-column mode)
+  csvTranslateColumns?: string[] // which CSV columns to translate
 }
 
 function fileKey(f: File) {
@@ -228,6 +230,18 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
   const [langSearch, setLangSearch] = useState("")
   const [regionFilter, setRegionFilter] = useState("")
 
+  // CSV column selection state
+  const [csvColsOpen, setCsvColsOpen] = useState(false)
+
+  function toggleCsvColumn(entryKey: string, col: string) {
+    setEntries(prev => prev.map((e: FileEntry) => {
+      if (e.key !== entryKey) return e
+      const current = e.csvTranslateColumns ?? []
+      const next = current.includes(col) ? current.filter((c: string) => c !== col) : [...current, col]
+      return { ...e, csvTranslateColumns: next }
+    }))
+  }
+
   // Terminology / glossary state
   type GlossaryTerm = { source: string; target: string }
   const [glossary, setGlossary] = useState<Record<string, GlossaryTerm[]>>({})
@@ -360,17 +374,22 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             const units = parseResourcePreview(content, f.name)
             resolve({ key, file: f, preview: units, parseError: "" })
           } else {
-            let units: SourceUnit[]
             if (f.name.endsWith(".json")) {
-              units = flattenForPreview(JSON.parse(content) as unknown)
+              const units = flattenForPreview(JSON.parse(content) as unknown)
+              resolve({ key, file: f, preview: units, parseError: "" })
             } else if (f.name.endsWith(".md") || f.name.endsWith(".txt")) {
-              units = parseMarkdownPreview(content)
+              const units = parseMarkdownPreview(content)
+              resolve({ key, file: f, preview: units, parseError: "" })
             } else if (f.name.endsWith(".html") || f.name.endsWith(".htm")) {
-              units = parseHtmlPreview(content)
+              const units = parseHtmlPreview(content)
+              resolve({ key, file: f, preview: units, parseError: "" })
             } else {
-              units = parseCsvPreview(content)
+              // CSV: extract headers for column selection UI
+              const { units, headers } = parseCsvPreview(content)
+              // Default: translate all non-ID columns
+              const csvTranslateColumns = headers.length > 1 ? headers.slice(1) : []
+              resolve({ key, file: f, preview: units, parseError: "", csvColumns: headers, csvTranslateColumns })
             }
-            resolve({ key, file: f, preview: units, parseError: "" })
           }
         } catch {
           resolve({ key, file: f, preview: [], parseError: "Couldn't read this file. Check that it's a valid format." })
@@ -565,6 +584,10 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
         if (Object.keys(glossary).length > 0) fd.append("glossaryData", JSON.stringify(glossary))
         // Pass probe cache key so job creation can skip re-parsing the PDF
         if (entry.pdfProbe?.cacheKey) fd.append("pdfCacheKey", entry.pdfProbe.cacheKey)
+        // CSV multi-column: pass selected columns (only when there are 3+ columns)
+        if (entry.file.name.toLowerCase().endsWith(".csv") && (entry.csvColumns?.length ?? 0) >= 3 && entry.csvTranslateColumns) {
+          fd.append("csvTranslateColumns", JSON.stringify(entry.csvTranslateColumns))
+        }
 
         const res = await fetch("/api/translation-studio/jobs", { method: "POST", body: fd })
         const data = await res.json() as { jobId?: string; error?: string }
@@ -638,13 +661,18 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     return units
   }
 
-  function parseCsvPreview(content: string): SourceUnit[] {
-    return content.split(/\r?\n/).slice(1, 11)
+  function parseCsvPreview(content: string): { units: SourceUnit[]; headers: string[] } {
+    const lines = content.split(/\r?\n/).filter((l: string) => l.trim())
+    const headers = lines.length > 0
+      ? lines[0].split(",").map((c: string) => c.trim().replace(/"/g, ""))
+      : []
+    const units = lines.slice(1, 11)
       .map((line: string) => {
         const [id, ...rest] = line.split(",")
         return { id: id?.trim().replace(/"/g, ""), sourceText: rest.join(",").trim().replace(/^"|"$/g, "") }
       })
       .filter((u: { id: string | undefined; sourceText: string }) => u.id && u.sourceText)
+    return { units, headers }
   }
 
   // ── derived ────────────────────────────────────────────────────────────────
@@ -652,6 +680,14 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
   const hasFiles = entries.length > 0
   const hasErrors = entries.some((e: FileEntry) => e.parseError)
   const canProceed = hasFiles && !hasErrors
+
+  // A CSV with 3+ columns must have at least one translate column selected
+  const hasCsvColumnIssue = entries.some(
+    (e: FileEntry) =>
+      e.file.name.toLowerCase().endsWith(".csv") &&
+      (e.csvColumns?.length ?? 0) >= 3 &&
+      (e.csvTranslateColumns?.length ?? 0) === 0
+  )
 
   // ── render ─────────────────────────────────────────────────────────────────
 
@@ -1362,14 +1398,14 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                                 value={term.source}
                                 onChange={e => updateTerm(activeLang, i, "source", e.target.value)}
                                 placeholder="e.g. l10n"
-                                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-gray-300"
+                                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-gray-400"
                               />
                               <span className="text-gray-300 text-sm text-center">→</span>
                               <input
                                 value={term.target}
                                 onChange={e => updateTerm(activeLang, i, "target", e.target.value)}
                                 placeholder="e.g. 本地化"
-                                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-gray-300"
+                                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-gray-400"
                               />
                               <button
                                 type="button"
@@ -1407,6 +1443,84 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             )}
           </div>
 
+          {/* CSV Column Selection — only shown when a CSV has 3+ columns */}
+          {entries.some((e: FileEntry) => e.file.name.toLowerCase().endsWith(".csv") && (e.csvColumns?.length ?? 0) >= 3) && (
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setCsvColsOpen(o => !o)}
+                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-medium text-gray-900">CSV columns</h2>
+                    <span className="text-xs text-gray-400 font-normal">optional</span>
+                    {hasCsvColumnIssue && (
+                      <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+                        No columns selected
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Choose which columns to translate. All others pass through unchanged.
+                  </p>
+                </div>
+                <span className="text-gray-400 text-sm ml-4 shrink-0">{csvColsOpen ? "▲" : "▼"}</span>
+              </button>
+
+              {csvColsOpen && (
+                <div className="border-t border-gray-100 px-5 pb-5 pt-4 space-y-5">
+                  {entries
+                    .filter((e: FileEntry) => e.file.name.toLowerCase().endsWith(".csv") && (e.csvColumns?.length ?? 0) >= 3)
+                    .map((entry: FileEntry) => {
+                      const csvEntries = entries.filter((e: FileEntry) => e.file.name.toLowerCase().endsWith(".csv") && (e.csvColumns?.length ?? 0) >= 3)
+                      return (
+                        <div key={entry.key} className="space-y-2">
+                          {csvEntries.length > 1 && (
+                            <p className="text-xs font-medium text-gray-600">{entry.file.name}</p>
+                          )}
+                          <div className="flex flex-wrap gap-2">
+                            {(entry.csvColumns ?? []).map((col: string, idx: number) => {
+                              const isId = idx === 0
+                              const isChecked = !isId && (entry.csvTranslateColumns?.includes(col) ?? true)
+                              return (
+                                <label
+                                  key={col}
+                                  className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border select-none transition-colors ${
+                                    isId
+                                      ? "bg-gray-50 text-gray-400 border-gray-200 cursor-default"
+                                      : isChecked
+                                      ? "bg-indigo-600 text-white border-indigo-600 cursor-pointer"
+                                      : "bg-white text-gray-600 border-gray-200 hover:border-indigo-300 cursor-pointer"
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    className="sr-only"
+                                    disabled={isId}
+                                    checked={isChecked}
+                                    onChange={() => !isId && toggleCsvColumn(entry.key, col)}
+                                  />
+                                  {col}
+                                  {isId && <span className="text-gray-400 ml-1">(ID)</span>}
+                                </label>
+                              )
+                            })}
+                          </div>
+                          {(entry.csvTranslateColumns?.length ?? 0) === 0 && (
+                            <p className="text-xs text-amber-600">Select at least one column to translate.</p>
+                          )}
+                        </div>
+                      )
+                    })}
+                  <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2.5 leading-relaxed">
+                    The first column is the row key (ID) and is always kept as-is. Deselected columns are copied unchanged into the output file.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           {entries.some((e: FileEntry) => e.probePending) && (
             <p className="text-xs text-amber-600 text-right">
               Analysing PDF… please wait before proceeding.
@@ -1418,9 +1532,9 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             </button>
             <button
               onClick={() => setStep(3)}
-              disabled={!jobName.trim() || selectedLangs.size === 0 || entries.some((e: FileEntry) => e.probePending || e.parseError)}
+              disabled={!jobName.trim() || selectedLangs.size === 0 || hasCsvColumnIssue || entries.some((e: FileEntry) => e.probePending || e.parseError)}
               className="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-40"
-              title={entries.some((e: FileEntry) => e.probePending) ? "Wait for PDF analysis to complete" : undefined}
+              title={entries.some((e: FileEntry) => e.probePending) ? "Wait for PDF analysis to complete" : hasCsvColumnIssue ? "Select at least one CSV column to translate" : undefined}
             >
               Next: Confirm →
             </button>

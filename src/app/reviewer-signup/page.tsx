@@ -1,20 +1,24 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
 import { STUDIO_LANGUAGES, STUDIO_LANGUAGE_REGIONS } from "@/lib/languages"
 
 const CAT_TOOL_OPTIONS = ["Trados", "memoQ", "Phrase", "Memsource", "Wordfast", "OmegaT", "Other"]
 const ALLOWED_CV_EXTS = [".pdf", ".doc", ".docx", ".txt"]
 
+type ExistingApp = {
+  id: string
+  status: string
+  createdAt: string
+  adminNote: string | null
+} | null
+
 export default function ReviewerSignupPage() {
   const { data: session, status } = useSession()
-  const router = useRouter()
 
   const [fullName, setFullName] = useState("")
-  const [email, setEmail] = useState("")
   const [selectedLangs, setSelectedLangs] = useState<Set<string>>(new Set())
   const [langSearch, setLangSearch] = useState("")
   const [yearsExperience, setYearsExperience] = useState("")
@@ -30,6 +34,11 @@ export default function ReviewerSignupPage() {
   const [success, setSuccess] = useState(false)
   const cvInputRef = useRef<HTMLInputElement>(null)
 
+  // "loading" = waiting for API response; null = no existing app
+  const [existingApp, setExistingApp] = useState<ExistingApp | "loading">("loading")
+
+  const sessionEmail = session?.user?.email ?? ""
+
   const regions = STUDIO_LANGUAGE_REGIONS
   const filteredLangs = STUDIO_LANGUAGES.filter(
     (l) =>
@@ -37,8 +46,15 @@ export default function ReviewerSignupPage() {
       l.code.toLowerCase().includes(langSearch.toLowerCase())
   )
 
-  // Pre-fill email from session
-  const sessionEmail = session?.user?.email ?? ""
+  // Check for an existing application once the session is ready
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetch("/api/reviewer-applications?mine=true")
+        .then((r) => r.json())
+        .then((data) => setExistingApp(data.application ?? null))
+        .catch(() => setExistingApp(null))
+    }
+  }, [status])
 
   function toggleLang(code: string) {
     setSelectedLangs((prev) => {
@@ -89,7 +105,7 @@ export default function ReviewerSignupPage() {
 
     const fd = new FormData()
     fd.append("fullName", fullName.trim())
-    fd.append("email", (email.trim() || sessionEmail).toLowerCase())
+    fd.append("email", sessionEmail.toLowerCase())
     fd.append("languagePairs", JSON.stringify(Array.from(selectedLangs)))
     fd.append("yearsExperience", yearsExperience)
     fd.append("catTools", JSON.stringify(Array.from(catTools)))
@@ -113,7 +129,7 @@ export default function ReviewerSignupPage() {
     }
   }
 
-  // Auth gate — redirect to login if not authenticated
+  // ── Auth gate ──────────────────────────────────────────────────────────────
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -156,6 +172,140 @@ export default function ReviewerSignupPage() {
     )
   }
 
+  // ── Already a reviewer ────────────────────────────────────────────────────
+  if (session?.user?.role === "reviewer") {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <header className="border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-4xl mx-auto w-full">
+          <Link href="/" className="font-bold text-indigo-600 text-xl tracking-tight">Summon Translator</Link>
+        </header>
+        <main className="flex-1 flex items-center justify-center px-6 py-16">
+          <div className="text-center max-w-md">
+            <div className="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-5 text-2xl">✓</div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">You&apos;re already a reviewer</h1>
+            <p className="text-gray-500 leading-relaxed mb-6">
+              Your account has reviewer access. Head to the dashboard to start reviewing translation projects.
+            </p>
+            <Link
+              href="/translation-studio"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-6 py-3 rounded-lg transition-colors inline-block"
+            >
+              Go to dashboard →
+            </Link>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // ── Checking existing application ─────────────────────────────────────────
+  if (existingApp === "loading") {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-sm text-gray-400">Loading…</div>
+      </div>
+    )
+  }
+
+  // ── Application pending ───────────────────────────────────────────────────
+  if (existingApp && existingApp.status === "pending") {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <header className="border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-4xl mx-auto w-full">
+          <Link href="/" className="font-bold text-indigo-600 text-xl tracking-tight">Summon Translator</Link>
+        </header>
+        <main className="flex-1 flex items-center justify-center px-6 py-16">
+          <div className="text-center max-w-md">
+            <div className="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-5 text-xl">⏳</div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Application under review</h1>
+            <p className="text-gray-500 leading-relaxed mb-2">
+              We received your application on{" "}
+              <strong>
+                {new Date(existingApp.createdAt).toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </strong>.
+            </p>
+            <p className="text-gray-500 text-sm leading-relaxed mb-6">
+              We typically respond within 5 business days. We&apos;ll email <strong>{sessionEmail}</strong> once a decision has been made.
+            </p>
+            <Link href="/" className="text-sm text-indigo-600 hover:underline">← Back to home</Link>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // ── Application rejected ──────────────────────────────────────────────────
+  if (existingApp && existingApp.status === "rejected") {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <header className="border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-4xl mx-auto w-full">
+          <Link href="/" className="font-bold text-indigo-600 text-xl tracking-tight">Summon Translator</Link>
+          <Link href="/careers" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">← Careers</Link>
+        </header>
+        <main className="flex-1 flex items-center justify-center px-6 py-16">
+          <div className="text-center max-w-md">
+            <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-5 text-xl">✕</div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Application not approved</h1>
+            <p className="text-gray-500 leading-relaxed mb-4">
+              Unfortunately your application was not approved at this time.
+            </p>
+            {existingApp.adminNote && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-700 text-left mb-4">
+                <p className="font-semibold text-gray-500 text-xs uppercase tracking-wide mb-1">Feedback</p>
+                <p className="leading-relaxed">{existingApp.adminNote}</p>
+              </div>
+            )}
+            <p className="text-gray-500 text-sm leading-relaxed mb-6">
+              If you have questions, please contact us at{" "}
+              <a href="mailto:support@summontranslator.com" className="text-indigo-600 hover:underline">
+                support@summontranslator.com
+              </a>.
+            </p>
+            <Link href="/" className="text-sm text-indigo-600 hover:underline">← Back to home</Link>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // ── Access revoked ────────────────────────────────────────────────────────
+  if (existingApp && existingApp.status === "revoked") {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <header className="border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-4xl mx-auto w-full">
+          <Link href="/" className="font-bold text-indigo-600 text-xl tracking-tight">Summon Translator</Link>
+        </header>
+        <main className="flex-1 flex items-center justify-center px-6 py-16">
+          <div className="text-center max-w-md">
+            <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-5 text-xl">🚫</div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Reviewer access revoked</h1>
+            <p className="text-gray-500 leading-relaxed mb-4">
+              Your reviewer access has been revoked.
+            </p>
+            {existingApp.adminNote && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-700 text-left mb-4">
+                <p className="font-semibold text-gray-500 text-xs uppercase tracking-wide mb-1">Note</p>
+                <p className="leading-relaxed">{existingApp.adminNote}</p>
+              </div>
+            )}
+            <p className="text-gray-500 text-sm leading-relaxed mb-6">
+              If you believe this was a mistake, please contact{" "}
+              <a href="mailto:support@summontranslator.com" className="text-indigo-600 hover:underline">
+                support@summontranslator.com
+              </a>.
+            </p>
+            <Link href="/" className="text-sm text-indigo-600 hover:underline">← Back to home</Link>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // ── Just submitted ─────────────────────────────────────────────────────────
   if (success) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
@@ -167,7 +317,7 @@ export default function ReviewerSignupPage() {
             <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5 text-2xl">✓</div>
             <h1 className="text-2xl font-bold text-gray-900 mb-3">Application submitted</h1>
             <p className="text-gray-500 leading-relaxed mb-6">
-              Thank you for applying! We have sent a confirmation to <strong>{email || sessionEmail}</strong>.
+              Thank you for applying! We have sent a confirmation to <strong>{sessionEmail}</strong>.
               We typically respond within 5 business days.
             </p>
             <Link href="/" className="text-sm text-indigo-600 hover:underline">← Back to home</Link>
@@ -177,6 +327,7 @@ export default function ReviewerSignupPage() {
     )
   }
 
+  // ── Application form ───────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-white">
       <header className="border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-4xl mx-auto">
@@ -206,12 +357,12 @@ export default function ReviewerSignupPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email address <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
               <input
-                type="email" required value={email || sessionEmail} onChange={(e) => setEmail(e.target.value)}
-                placeholder="jane@example.com"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                type="email" readOnly value={sessionEmail}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
               />
+              <p className="text-xs text-gray-400 mt-1">Tied to your account</p>
             </div>
           </div>
 

@@ -37,75 +37,104 @@ export async function PATCH(
   }
 
   const { id } = await params
-  const { action } = (await req.json()) as { action: string }
+  const body = (await req.json()) as { action: string; adminNote?: string }
+  const { action, adminNote } = body
 
-  if (action !== "approve" && action !== "reject") {
-    return NextResponse.json({ error: "action must be 'approve' or 'reject'" }, { status: 400 })
+  if (!["approve", "reject", "revoke"].includes(action)) {
+    return NextResponse.json({ error: "action must be 'approve', 'reject', or 'revoke'" }, { status: 400 })
   }
 
   const application = await db.reviewerApplication.findUnique({ where: { id } })
   if (!application) return NextResponse.json({ error: "Not found" }, { status: 404 })
+
+  // ── REVOKE ───────────────────────────────────────────────────────────────
+  // Demotes an approved reviewer back to requester. Does not require pending status.
+  if (action === "revoke") {
+    if (application.status !== "approved") {
+      return NextResponse.json({ error: "Can only revoke approved applications" }, { status: 409 })
+    }
+    const targetUserId = application.resolvedUserId ?? application.userId
+    if (targetUserId) {
+      await db.user.update({
+        where: { id: targetUserId },
+        data: { role: "requester", isPlatformReviewer: false },
+      })
+    }
+    await db.reviewerApplication.update({
+      where: { id },
+      data: { status: "revoked", revokedAt: new Date(), adminNote: adminNote ?? null },
+    })
+    return NextResponse.json({ ok: true, status: "revoked" })
+  }
+
   if (application.status !== "pending") {
     return NextResponse.json({ error: "Application has already been processed" }, { status: 409 })
   }
 
-  // ── REJECT ──────────────────────────────────────────────────────────────
+  // ── REJECT ───────────────────────────────────────────────────────────────
   if (action === "reject") {
     await db.reviewerApplication.update({
       where: { id },
-      data: { status: "rejected" },
+      data: { status: "rejected", adminNote: adminNote ?? null },
     })
     void sendReviewerRejectionEmail(application.fullName, application.email)
     return NextResponse.json({ ok: true, status: "rejected" })
   }
 
-  // ── APPROVE ─────────────────────────────────────────────────────────────
-  const existingUser = await db.user.findUnique({ where: { email: application.email } })
+  // ── APPROVE ──────────────────────────────────────────────────────────────
+  // Prefer looking up by userId (direct FK) then fall back to email
+  const existingUser = application.userId
+    ? await db.user.findUnique({ where: { id: application.userId } })
+    : await db.user.findUnique({ where: { email: application.email } })
 
   let resolvedUserId: string
   let setPasswordUrl: string | null = null
 
+  // Token TTL: 48 hours — gives new reviewers enough time to check email and set password
+  const TOKEN_TTL_MS = 48 * 60 * 60 * 1000
+
   if (existingUser) {
-    // Already a reviewer — nothing to do role-wise
     if (existingUser.role === "reviewer") {
+      // Already a reviewer — update languages and re-send approval email
+      const existingLangs: string[] = JSON.parse(existingUser.languages ?? "[]")
+      const newLangs: string[] = JSON.parse(application.languagePairs)
+      const mergedLangs = Array.from(new Set([...existingLangs, ...newLangs]))
+      await db.user.update({
+        where: { id: existingUser.id },
+        data: { languages: JSON.stringify(mergedLangs) },
+      })
       await db.reviewerApplication.update({
         where: { id },
-        data: { status: "approved", resolvedUserId: existingUser.id },
+        data: { status: "approved", resolvedUserId: existingUser.id, adminNote: adminNote ?? null },
       })
-      // Still send approval email (they may be waiting to hear back)
       void sendReviewerApprovalEmail(application.fullName, application.email, null)
       return NextResponse.json({ ok: true, status: "approved", note: "User was already a reviewer" })
     }
 
-    // Promote existing user to reviewer; also set their language pairs
+    // Promote existing requester → reviewer
     const existingLangs: string[] = JSON.parse(existingUser.languages ?? "[]")
     const newLangs: string[] = JSON.parse(application.languagePairs)
     const mergedLangs = Array.from(new Set([...existingLangs, ...newLangs]))
 
     await db.user.update({
       where: { id: existingUser.id },
-      data: {
-        role: "reviewer",
-        isPlatformReviewer: true,
-        languages: JSON.stringify(mergedLangs),
-      },
+      data: { role: "reviewer", isPlatformReviewer: true, languages: JSON.stringify(mergedLangs) },
     })
     resolvedUserId = existingUser.id
 
-    // If they have no password and no OAuth account, create a reset token
+    // Only create a password-set token if they have no login method
     const hasOAuth = await db.account.findFirst({ where: { userId: existingUser.id } })
     if (!existingUser.hashedPassword && !hasOAuth) {
       const token = crypto.randomBytes(32).toString("hex")
       await db.passwordResetToken.create({
-        data: { email: application.email, token, expires: new Date(Date.now() + 60 * 60 * 1000) },
+        data: { email: application.email, token, expires: new Date(Date.now() + TOKEN_TTL_MS) },
       })
       setPasswordUrl = `${APP_URL}/reset-password?token=${token}`
     }
   } else {
-    // Create new user with reviewer role
+    // No existing account — create new user with reviewer role
     const tempPassword = crypto.randomBytes(16).toString("hex")
     const hashedPassword = await bcrypt.hash(tempPassword, 12)
-
     const newUser = await db.user.create({
       data: {
         name: application.fullName,
@@ -113,25 +142,24 @@ export async function PATCH(
         hashedPassword,
         role: "reviewer",
         isPlatformReviewer: true,
-        languages: application.languagePairs, // already JSON string
+        languages: application.languagePairs,
       },
     })
     resolvedUserId = newUser.id
 
-    // Create set-password token (expires 1 hour)
+    // Create set-password token (48 hours)
     const token = crypto.randomBytes(32).toString("hex")
     await db.passwordResetToken.create({
-      data: { email: application.email, token, expires: new Date(Date.now() + 60 * 60 * 1000) },
+      data: { email: application.email, token, expires: new Date(Date.now() + TOKEN_TTL_MS) },
     })
     setPasswordUrl = `${APP_URL}/reset-password?token=${token}`
   }
 
   await db.reviewerApplication.update({
     where: { id },
-    data: { status: "approved", resolvedUserId },
+    data: { status: "approved", resolvedUserId, adminNote: adminNote ?? null },
   })
 
-  // Await the approval email so we can report failure
   try {
     await sendReviewerApprovalEmail(application.fullName, application.email, setPasswordUrl)
   } catch (err) {

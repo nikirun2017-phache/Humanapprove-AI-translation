@@ -89,9 +89,12 @@ export async function POST(req: NextRequest) {
   const cvBuffer = Buffer.from(await cvFile.arrayBuffer())
   const cvData = cvBuffer.toString("base64")
 
-  // Reject duplicate pending applications
+  // Reject duplicate pending applications (check by userId first, then email)
   const existing = await db.reviewerApplication.findFirst({
-    where: { email, status: "pending" },
+    where: {
+      status: "pending",
+      OR: [{ userId: session.user.id }, { email }],
+    },
   })
   if (existing) {
     return NextResponse.json(
@@ -104,6 +107,7 @@ export async function POST(req: NextRequest) {
     data: {
       fullName,
       email,
+      userId: session.user.id,   // link to authenticated user account
       languagePairs: JSON.stringify(languagePairs),
       yearsExperience,
       catTools: JSON.stringify(catTools),
@@ -135,20 +139,34 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true, id: application.id }, { status: 201 })
 }
 
-// GET /api/reviewer-applications — admin only
+// GET /api/reviewer-applications
+//   ?mine=true  — returns the current user's own latest application (any auth)
+//   (no param)  — admin only, returns all applications with optional ?status= filter
 export async function GET(req: NextRequest) {
   const session = await auth()
-  if (!session?.user || session.user.role !== "admin") {
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const { searchParams } = new URL(req.url)
+
+  // User checking their own application status
+  if (searchParams.get("mine") === "true") {
+    const app = await db.reviewerApplication.findFirst({
+      where: { OR: [{ userId: session.user.id }, { email: session.user.email! }] },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, status: true, createdAt: true, adminNote: true },
+    })
+    return NextResponse.json({ application: app ?? null })
+  }
+
+  // Admin list view
+  if (session.user.role !== "admin") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  const { searchParams } = new URL(req.url)
-  const status = searchParams.get("status") // optional filter
-
+  const status = searchParams.get("status")
   const applications = await db.reviewerApplication.findMany({
     where: status ? { status } : undefined,
     orderBy: { createdAt: "desc" },
   })
-
   return NextResponse.json(applications)
 }

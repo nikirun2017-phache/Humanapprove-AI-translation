@@ -18,6 +18,7 @@ interface Application {
   cvFileName: string | null
   status: string
   resolvedUserId: string | null
+  adminNote: string | null
   createdAt: Date | string
 }
 
@@ -31,6 +32,7 @@ const STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700",
   approved: "bg-green-100 text-green-700",
   rejected: "bg-red-100 text-red-700",
+  revoked: "bg-gray-100 text-gray-500",
 }
 
 function DetailPanel({
@@ -38,10 +40,11 @@ function DetailPanel({
   onAction,
 }: {
   app: Application
-  onAction: (id: string, action: "approve" | "reject", result: Application) => void
+  onAction: (id: string, action: "approve" | "reject" | "revoke", result: Application) => void
 }) {
-  const [loading, setLoading] = useState<"approve" | "reject" | null>(null)
+  const [loading, setLoading] = useState<"approve" | "reject" | "revoke" | null>(null)
   const [error, setError] = useState("")
+  const [adminNote, setAdminNote] = useState(app.adminNote ?? "")
 
   let langs: string[] = []
   try { langs = JSON.parse(app.languagePairs) } catch {}
@@ -49,24 +52,29 @@ function DetailPanel({
   let tools: string[] = []
   try { tools = JSON.parse(app.catTools) } catch {}
 
-  async function handleAction(action: "approve" | "reject") {
+  async function handleAction(action: "approve" | "reject" | "revoke") {
     setLoading(action)
     setError("")
     try {
       const res = await fetch(`/api/reviewer-applications/${app.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action, adminNote: adminNote.trim() || undefined }),
       })
-      const data = await res.json() as { ok?: boolean; status?: string; error?: string; emailFailed?: boolean }
+      const data = await res.json() as { ok?: boolean; status?: string; error?: string; note?: string }
       if (!res.ok) { setError(data.error ?? "Request failed"); return }
-      onAction(app.id, action, { ...app, status: data.status ?? action === "approve" ? "approved" : "rejected" })
+      const newStatus = data.status ?? (action === "approve" ? "approved" : action === "reject" ? "rejected" : "revoked")
+      onAction(app.id, action, { ...app, status: newStatus, adminNote: adminNote.trim() || null })
     } catch {
       setError("Network error — please try again.")
     } finally {
       setLoading(null)
     }
   }
+
+  const isPending = app.status === "pending"
+  const isApproved = app.status === "approved"
+  const showActions = isPending || isApproved
 
   return (
     <div className="bg-gray-50 border-t border-gray-100 px-6 py-5 space-y-4">
@@ -159,23 +167,60 @@ function DetailPanel({
         </div>
       )}
 
+      {/* Resolved user info */}
+      {app.resolvedUserId && (
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">User account</p>
+          <p className="text-xs text-gray-500 font-mono">{app.resolvedUserId}</p>
+        </div>
+      )}
+
       {/* Actions */}
-      {app.status === "pending" && (
-        <div className="flex gap-3 pt-1">
-          <button
-            onClick={() => handleAction("approve")}
-            disabled={loading !== null}
-            className="px-4 py-2 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50 transition-colors"
-          >
-            {loading === "approve" ? "Approving…" : "Approve"}
-          </button>
-          <button
-            onClick={() => handleAction("reject")}
-            disabled={loading !== null}
-            className="px-4 py-2 text-sm font-semibold bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg disabled:opacity-50 transition-colors"
-          >
-            {loading === "reject" ? "Rejecting…" : "Reject"}
-          </button>
+      {showActions && (
+        <div className="pt-2 space-y-3 border-t border-gray-200">
+          {/* Admin note */}
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">
+              Internal note <span className="text-gray-400 font-normal">(optional — shown to applicant on reject/revoke)</span>
+            </label>
+            <textarea
+              value={adminNote}
+              onChange={(e) => setAdminNote(e.target.value)}
+              rows={2}
+              placeholder="e.g. Missing relevant language pair experience…"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            {isPending && (
+              <>
+                <button
+                  onClick={() => handleAction("approve")}
+                  disabled={loading !== null}
+                  className="px-4 py-2 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50 transition-colors"
+                >
+                  {loading === "approve" ? "Approving…" : "Approve"}
+                </button>
+                <button
+                  onClick={() => handleAction("reject")}
+                  disabled={loading !== null}
+                  className="px-4 py-2 text-sm font-semibold bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg disabled:opacity-50 transition-colors"
+                >
+                  {loading === "reject" ? "Rejecting…" : "Reject"}
+                </button>
+              </>
+            )}
+            {isApproved && (
+              <button
+                onClick={() => handleAction("revoke")}
+                disabled={loading !== null}
+                className="px-4 py-2 text-sm font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 rounded-lg disabled:opacity-50 transition-colors"
+              >
+                {loading === "revoke" ? "Revoking…" : "Revoke reviewer access"}
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -202,9 +247,10 @@ export function ApplicationManager({ initialApplications }: { initialApplication
     pending: applications.filter((a) => a.status === "pending").length,
     approved: applications.filter((a) => a.status === "approved").length,
     rejected: applications.filter((a) => a.status === "rejected").length,
+    revoked: applications.filter((a) => a.status === "revoked").length,
   }
 
-  function handleAction(id: string, _action: "approve" | "reject", result: Application) {
+  function handleAction(id: string, _action: "approve" | "reject" | "revoke", result: Application) {
     setApplications((prev) => prev.map((a) => (a.id === id ? result : a)))
     setExpanded(null)
   }
@@ -212,8 +258,8 @@ export function ApplicationManager({ initialApplications }: { initialApplication
   return (
     <div className="space-y-5">
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        {(["pending", "approved", "rejected"] as const).map((s) => (
+      <div className="grid grid-cols-4 gap-3">
+        {(["pending", "approved", "rejected", "revoked"] as const).map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s === statusFilter ? "" : s)}
@@ -246,6 +292,7 @@ export function ApplicationManager({ initialApplications }: { initialApplication
           <option value="pending">Pending</option>
           <option value="approved">Approved</option>
           <option value="rejected">Rejected</option>
+          <option value="revoked">Revoked</option>
         </select>
       </div>
 

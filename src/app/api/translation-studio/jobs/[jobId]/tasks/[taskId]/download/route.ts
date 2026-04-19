@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { readFile } from "fs/promises"
 import { parseXliff } from "@/lib/xliff-parser"
+import { parseCsvFull } from "@/lib/source-parser"
 import { generateTranslatedPdf, generateTranslatedTxt, generatePdfFromMarkdown } from "@/lib/pdf-generator"
 import {
   exportAsStrings, exportAsStringsDict, exportAsXcstrings,
@@ -142,6 +143,36 @@ export async function GET(
   }
 
   if (fmt === "csv") {
+    function escCsvCell(val: string): string {
+      return `"${val.replace(/"/g, '""')}"`
+    }
+
+    // Multi-column mode: reconstruct full CSV preserving all original columns
+    if (job.csvTranslateColumns) {
+      const translateCols = JSON.parse(job.csvTranslateColumns) as string[]
+      const { headers, rows } = parseCsvFull(sourceContent)
+      const outLines = [headers.map(h => escCsvCell(h)).join(",")]
+      for (const row of rows) {
+        const rowKey = row[0] ?? ""
+        const outRow = headers.map((colName: string, colIdx: number) => {
+          if (colIdx === 0) return escCsvCell(row[0] ?? "")
+          if (translateCols.includes(colName)) {
+            const unitId = `${rowKey}__COL__${colName}`
+            return escCsvCell(translations.get(unitId) ?? row[colIdx] ?? "")
+          }
+          return escCsvCell(row[colIdx] ?? "")
+        })
+        outLines.push(outRow.join(","))
+      }
+      return new NextResponse(outLines.join("\n"), {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${safeName}.csv"`,
+        },
+      })
+    }
+
+    // Legacy 2-column mode (id, value)
     const unitsContent = job.unitsData ?? await readFile(job.unitsFileUrl, "utf-8")
     const units = JSON.parse(unitsContent) as Array<{ id: string; sourceText: string }>
     const lines = ["id,value"]

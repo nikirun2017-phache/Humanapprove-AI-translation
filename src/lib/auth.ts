@@ -5,29 +5,33 @@ import Apple from "next-auth/providers/apple"
 import { db } from "@/lib/db"
 import bcrypt from "bcryptjs"
 
+const isProd = process.env.NODE_ENV === "production"
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   cookies: {
-    // OAuth flow cookies — must survive cross-site redirects (Google → our domain)
+    // OAuth flow cookies — must survive cross-site redirects (Google → our domain).
+    // sameSite:"none" requires secure:true in production; in dev (HTTP localhost)
+    // secure must be false or the browser silently drops the cookie.
     pkceCodeVerifier: {
       name: "authjs.pkce.code_verifier",
-      options: { httpOnly: true, sameSite: "none", path: "/", secure: true },
+      options: { httpOnly: true, sameSite: isProd ? "none" : "lax", path: "/", secure: isProd },
     },
     state: {
       name: "authjs.state",
-      options: { httpOnly: true, sameSite: "none", path: "/", secure: true },
+      options: { httpOnly: true, sameSite: isProd ? "none" : "lax", path: "/", secure: isProd },
     },
-    // Session & CSRF — lax is fine post-login (same-site navigations only)
+    // Session & CSRF
     sessionToken: {
       name: "authjs.session-token",
-      options: { httpOnly: true, sameSite: "lax", path: "/", secure: true },
+      options: { httpOnly: true, sameSite: "lax", path: "/", secure: isProd },
     },
     csrfToken: {
       name: "authjs.csrf-token",
-      options: { httpOnly: true, sameSite: "lax", path: "/", secure: true },
+      options: { httpOnly: true, sameSite: "lax", path: "/", secure: isProd },
     },
     callbackUrl: {
       name: "authjs.callback-url",
-      options: { httpOnly: true, sameSite: "lax", path: "/", secure: true },
+      options: { httpOnly: true, sameSite: "lax", path: "/", secure: isProd },
     },
   },
   providers: [
@@ -102,8 +106,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async jwt({ token, user, account }) {
       if (user) {
+        // ── First sign-in: populate token from DB ─────────────────────────
         if (account?.provider === "google" || account?.provider === "apple") {
-          // OAuth: look up our DB user to get id, role, etc.
           const dbUser = await db.user.findUnique({ where: { email: token.email! } })
           if (dbUser) {
             token.id = dbUser.id
@@ -113,12 +117,38 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             token.subscriptionStatus = dbUser.subscriptionStatus
           }
         } else {
-          // Credentials: user object already has everything
           token.id = user.id
           token.role = (user as { role?: string }).role
           token.languages = (user as { languages?: string }).languages
           token.plan = (user as { plan?: string }).plan
           token.subscriptionStatus = (user as { subscriptionStatus?: string }).subscriptionStatus
+        }
+      } else if (token.id) {
+        // ── Subsequent requests: re-sync role/plan from DB ────────────────
+        // Throttled to once every 5 minutes to avoid a DB round-trip on every
+        // page load. Wrapped in try-catch so a transient DB error (e.g. Neon
+        // waking from sleep, connection pool exhausted) never invalidates an
+        // otherwise-valid session — NextAuth swallows JWT callback exceptions
+        // silently and returns null for the session.
+        const now = Math.floor(Date.now() / 1000)
+        const lastSync = (token.dbSyncedAt as number | undefined) ?? 0
+        if (now - lastSync > 300) {
+          try {
+            const dbUser = await db.user.findUnique({
+              where: { id: token.id as string },
+              select: { role: true, languages: true, plan: true, subscriptionStatus: true },
+            })
+            if (dbUser) {
+              token.role = dbUser.role
+              token.languages = dbUser.languages
+              token.plan = dbUser.plan
+              token.subscriptionStatus = dbUser.subscriptionStatus
+              token.dbSyncedAt = now
+            }
+          } catch (err) {
+            console.error("[jwt] DB re-sync failed — keeping cached token values:", err)
+            // Do NOT rethrow: a DB error must not log users out
+          }
         }
       }
       return token

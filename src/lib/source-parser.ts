@@ -618,6 +618,60 @@ export function parseCsvSource(content: string): SourceUnit[] {
 }
 
 /**
+ * Parse a CSV file returning all columns.
+ * The first row is treated as a header if its first field is "id", "key", or "name"
+ * (same heuristic as parseCsvSource). Otherwise auto-generates col0, col1, … headers.
+ * Used for multi-column CSV translation where passthrough columns must be preserved.
+ */
+export function parseCsvFull(content: string): { headers: string[]; rows: Array<string[]> } {
+  const lines = content.split(/\r?\n/).filter((l: string) => l.trim())
+  if (lines.length === 0) return { headers: [], rows: [] }
+
+  const firstParsed = parseCsvLine(lines[0]).map((c: string) => c.trim().replace(/^"|"$/g, ""))
+  const hasHeader =
+    firstParsed[0].toLowerCase() === "id" ||
+    firstParsed[0].toLowerCase() === "key" ||
+    firstParsed[0].toLowerCase() === "name"
+
+  const headers: string[] = hasHeader ? firstParsed : firstParsed.map((_: string, i: number) => `col${i}`)
+  const dataLines = hasHeader ? lines.slice(1) : lines
+
+  const rows = dataLines
+    .map((line: string) => parseCsvLine(line).map((c: string) => c.trim().replace(/^"|"$/g, "")))
+    .filter((row: string[]) => row.some((c: string) => c))
+
+  return { headers, rows }
+}
+
+/**
+ * Parse a CSV with explicit column selection.
+ * Creates one unit per row per selected column, with ID: `{rowKey}__COL__{colName}`.
+ * The first column is always the row key and is never translated.
+ * Falls back to parseCsvSource() if translateColumns is empty.
+ */
+export function parseCsvSourceWithColumns(content: string, translateColumns: string[]): SourceUnit[] {
+  if (translateColumns.length === 0) return parseCsvSource(content)
+
+  const { headers, rows } = parseCsvFull(content)
+  const units: SourceUnit[] = []
+
+  for (const row of rows) {
+    const rowKey = row[0] ?? ""
+    if (!rowKey) continue
+
+    for (const colName of translateColumns) {
+      const colIdx = headers.indexOf(colName)
+      if (colIdx <= 0) continue  // skip unknown or ID column (index 0)
+      const text = row[colIdx] ?? ""
+      if (!text) continue
+      units.push({ id: `${rowKey}__COL__${colName}`, sourceText: text })
+    }
+  }
+
+  return units
+}
+
+/**
  * Parse a Markdown file into translatable units.
  * Fenced code blocks (``` ... ```) and indented code blocks are skipped.
  * Each heading, paragraph, and list item becomes one unit.

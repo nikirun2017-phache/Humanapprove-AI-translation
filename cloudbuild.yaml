@@ -16,6 +16,18 @@ steps:
   - name: gcr.io/cloud-builders/docker
     args: [push, gcr.io/$PROJECT_ID/jendee-ai:latest]
 
+  # Apply any pending DB migrations before the new image goes live.
+  # Uses the node image so npx/prisma are available; DATABASE_URL is injected
+  # via Cloud Build's secret manager binding (see `availableSecrets` below).
+  - name: 'node:22-alpine'
+    entrypoint: sh
+    secretEnv: ['DATABASE_URL']
+    args:
+      - -c
+      - |
+        npm ci --prefer-offline --ignore-scripts
+        npx prisma migrate deploy
+
   # Deploy to Cloud Run
   # NOTE: --set-secrets replaces ALL secrets; --update-env-vars only adds/updates named vars.
   # All required non-secret env vars are listed here so they survive every deploy.
@@ -32,7 +44,7 @@ steps:
       - --memory=1Gi
       - --cpu=1
       - --timeout=3600
-      - --set-secrets=DATABASE_URL=DATABASE_URL:latest,AUTH_SECRET=AUTH_SECRET:latest,CRON_SECRET=CRON_SECRET:latest,STRIPE_SECRET_KEY=STRIPE_SECRET_KEY:latest
+      - --set-secrets=DATABASE_URL=DATABASE_URL:latest,AUTH_SECRET=AUTH_SECRET:latest,CRON_SECRET=CRON_SECRET:latest,STRIPE_SECRET_KEY=STRIPE_SECRET_KEY:latest,ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest,RESEND_API_KEY=RESEND_API_KEY:latest
       - --remove-env-vars=STRIPE_SECRET_KEY
       - --update-env-vars=NODE_ENV=production,PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser,AUTH_URL=https://summontranslator.com,AUTH_TRUST_HOST=true,NEXT_PUBLIC_APP_URL=https://summontranslator.com,RESEND_FROM=Summon Translator <support@summontranslator.com>,AUTH_GOOGLE_ID=31067192249-i0vmagqo3bff0qna369bfdm5l1h6fr9h.apps.googleusercontent.com
 
@@ -54,6 +66,11 @@ steps:
           --time-zone="UTC" \
           --location=us-central1 \
           --project=$PROJECT_ID
+
+availableSecrets:
+  secretManager:
+  - versionName: projects/$PROJECT_ID/secrets/DATABASE_URL/versions/latest
+    env: DATABASE_URL
 
 options:
   logging: CLOUD_LOGGING_ONLY

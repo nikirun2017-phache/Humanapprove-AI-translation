@@ -18,6 +18,7 @@ export function Navbar() {
 
   const navLinks = [
     { href: "/translation-studio", label: "Translation Studio", match: "/translation-studio" },
+    { href: "/lqa-studio", label: "LQA Studio", match: "/lqa-studio" },
     { href: "/jobs", label: "My Jobs", match: "/jobs" },
     ...(role === "admin" ? [{ href: "/admin/users", label: "Users", match: "/admin/users" }] : []),
     ...(role === "admin" ? [{ href: "/admin/applications", label: "Applications", match: "/admin/applications" }] : []),

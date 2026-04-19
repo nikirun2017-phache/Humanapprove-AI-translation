@@ -11,7 +11,7 @@ model User {
   email          String    @unique
   name           String
   hashedPassword String?
-  role               String    @default("reviewer") // admin | reviewer | requester
+  role               String    @default("requester") // admin | reviewer | requester
   languages          String    @default("[]") // JSON array of BCP-47 codes e.g. ["ja-JP","zh-CN"]
   isPlatformReviewer Boolean   @default(false)
   createdAt      DateTime  @default(now())
@@ -23,16 +23,18 @@ model User {
   subscriptionStatus String  @default("none") // none | active | canceled | past_due | trialing
   subscriptionId     String? // stores Stripe PaymentMethod ID (field name is legacy)
 
-  projectsCreated  Project[]       @relation("ProjectCreator")
-  projectsAssigned Project[]       @relation("ProjectReviewer")
-  comments         Comment[]
-  reviewSessions   ReviewSession[]
-  accounts         Account[]
-  sessions         Session[]
-  translationJobs  TranslationJob[]
-  auditLogs        AuditLog[]
-  apiKeys          ApiKey[]
-  monthlyCharges   MonthlyCharge[]
+  projectsCreated        Project[]              @relation("ProjectCreator")
+  projectsAssigned       Project[]              @relation("ProjectReviewer")
+  comments               Comment[]
+  reviewSessions         ReviewSession[]
+  accounts               Account[]
+  sessions               Session[]
+  translationJobs        TranslationJob[]
+  auditLogs              AuditLog[]
+  apiKeys                ApiKey[]
+  monthlyCharges         MonthlyCharge[]
+  reviewerApplications   ReviewerApplication[]
+  lqaRuns                LqaRun[]
 }
 
 model Account {
@@ -170,14 +172,22 @@ model ReviewerApplication {
   cvMimeType      String?  // e.g. application/pdf
   cvData          String?  // base64-encoded file content
 
-  status          String   @default("pending") // pending | approved | rejected
+  status          String   @default("pending") // pending | approved | rejected | revoked
   resolvedUserId  String?  // set on approval to the created/updated User id
+
+  // Direct FK to the User who submitted this application (null for pre-migration rows)
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+
+  adminNote       String?  // internal note from admin on approve/reject
+  revokedAt       DateTime? // set when reviewer access is revoked
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   @@index([status, createdAt])
   @@index([email])
+  @@index([userId])
 }
 
 // Key-value store for system-wide admin settings (e.g. AI provider API keys)
@@ -211,6 +221,10 @@ model TranslationJob {
   promoCode    String?  // coupon code applied at job creation
   discountPct  Int      @default(0)  // 0-100, e.g. 50 = 50% off
   glossaryData String?  // JSON: { [langCode]: { source: string; target: string }[] }
+
+  // CSV multi-column translation (optional — null means legacy 2-column mode)
+  csvColumns          String?  // JSON: ordered list of all column names for reconstruction
+  csvTranslateColumns String?  // JSON: which columns to translate
 
   // API integration fields
   callbackUrl  String?  // webhook URL called when all tasks complete
@@ -290,6 +304,35 @@ model ApiKey {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// Language Quality Assessment run — one per uploaded bilingual file
+model LqaRun {
+  id             String    @id @default(cuid())
+  userId         String
+  fileName       String
+  fileFormat     String    // "xliff" | "xlf" | "tmx"
+  sourceLanguage String
+  targetLanguage String
+  status         String    @default("pending")
+  // pending | running | completed | failed
+  totalUnits     Int       @default(0)
+  qualityScore   Int?
+  qualityBand    String?   // "High" | "Medium" | "Low"
+  accuracyErrors Int       @default(0)
+  languageErrors Int       @default(0)
+  styleErrors    Int       @default(0)
+  findings       String?   // JSON: LqaFinding[]
+  originalFile   String    // original uploaded file content
+  revisedFile    String?   // revised file content after AI fix
+  revisionStatus String?   // null | "running" | "completed" | "failed"
+  errorMessage   String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 // Tracks monthly billing charges to prevent double-charging

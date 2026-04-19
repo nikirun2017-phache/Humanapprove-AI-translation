@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { parseJsonSource, parseCsvSource, parseMarkdownSource, parseTxtSource, parsePdfSource, parseXliffSource, parseStringsSource, parseStringsDictSource, parseXcstringsSource, parsePoSource, parseAndroidXmlSource, parseArbSource, parsePropertiesSource, type SourceUnit, type PdfParseResult } from "@/lib/source-parser"
+import { parseJsonSource, parseCsvSource, parseCsvSourceWithColumns, parseCsvFull, parseMarkdownSource, parseTxtSource, parsePdfSource, parseXliffSource, parseStringsSource, parseStringsDictSource, parseXcstringsSource, parsePoSource, parseAndroidXmlSource, parseArbSource, parsePropertiesSource, type SourceUnit, type PdfParseResult } from "@/lib/source-parser"
 import { parseHtmlSource } from "@/lib/html-source-parser"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
@@ -57,6 +57,13 @@ export async function POST(req: NextRequest) {
   const glossaryRaw = (formData.get("glossaryData") as string | null) || null
   const pdfCacheKey = (formData.get("pdfCacheKey") as string | null) || null
   let sourceLanguage = (formData.get("sourceLanguage") as string) || "en-US"
+  const csvTranslateColumnsRaw = (formData.get("csvTranslateColumns") as string | null) || null
+  let csvTranslateColumns: string[] | null = null
+  if (csvTranslateColumnsRaw) {
+    try { csvTranslateColumns = JSON.parse(csvTranslateColumnsRaw) as string[] } catch { /* ignore */ }
+  }
+  let jobCsvColumns: string | null = null
+  let jobCsvTranslateColumns: string | null = csvTranslateColumns ? JSON.stringify(csvTranslateColumns) : null
 
   if (!file || !name || !provider || !model || !targetLanguagesRaw) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
@@ -180,7 +187,14 @@ export async function POST(req: NextRequest) {
         case "json":        units = parseJsonSource(content); break
         case "md":          units = parseMarkdownSource(content); break
         case "txt":         units = parseTxtSource(content); break
-        case "csv":         units = parseCsvSource(content); break
+        case "csv":
+          if (csvTranslateColumns && csvTranslateColumns.length > 0) {
+            units = parseCsvSourceWithColumns(content, csvTranslateColumns)
+            jobCsvColumns = JSON.stringify(parseCsvFull(content).headers)
+          } else {
+            units = parseCsvSource(content)
+          }
+          break
         case "strings":     units = parseStringsSource(content); break
         case "stringsdict": units = parseStringsDictSource(content); break
         case "xcstrings":   units = parseXcstringsSource(content); break
@@ -294,6 +308,8 @@ export async function POST(req: NextRequest) {
         promoCode: appliedPromoCode,
         discountPct,
         glossaryData: glossaryRaw,
+        csvColumns: jobCsvColumns,
+        csvTranslateColumns: jobCsvTranslateColumns,
       },
     })
 
