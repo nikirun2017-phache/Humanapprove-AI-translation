@@ -88,11 +88,17 @@ export async function POST(
 
   // Per-user concurrency limit: max 3 tasks running simultaneously across all jobs.
   // Admins are exempt. This prevents a single user from overwhelming AI API rate limits.
+  // Excludes: (1) the current task itself — so retrying a stale "running" task doesn't
+  // count against the limit; (2) tasks with no DB update for > 10 min — these are almost
+  // certainly from a dead browser session and should not block new translations forever.
   const MAX_CONCURRENT_PER_USER = 3
   if (role !== "admin") {
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000)
     const runningCount = await db.translationTask.count({
       where: {
         status: "running",
+        id: { not: taskId },
+        updatedAt: { gte: tenMinutesAgo },
         job: { createdById: userId },
       },
     })

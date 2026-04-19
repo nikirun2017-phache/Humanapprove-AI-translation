@@ -118,7 +118,7 @@ export function JobProgress({ initialJob }: Props) {
     return null
   }
 
-  async function translateTask(task: Task, isAutoRetry = false): Promise<boolean> {
+  async function translateTask(task: Task, isAutoRetry = false): Promise<number> {
     setJob((j) => ({
       ...j,
       tasks: j.tasks.map((t: Task) => t.id === task.id ? { ...t, status: "running" } : t),
@@ -160,7 +160,7 @@ export function JobProgress({ initialJob }: Props) {
       clearInterval(pollInterval)
       delete abortControllersRef.current[task.id]
       await fetchJob()
-      return res.ok
+      return res.status
     } catch (err) {
       clearInterval(pollInterval)
       delete abortControllersRef.current[task.id]
@@ -171,11 +171,11 @@ export function JobProgress({ initialJob }: Props) {
         console.warn(`[job-progress] Auto-retrying stalled task ${task.id}`)
         return translateTask(task, true)
       }
-      return false
+      return 0
     }
   }
 
-  async function runTranslation() {
+  async function runTranslation(retryRound = 0) {
     if (runningRef.current) return
     runningRef.current = true
 
@@ -193,13 +193,37 @@ export function JobProgress({ initialJob }: Props) {
       while (i < pending.length) {
         if (pausedRef.current) break
         const task = pending[i++]
-        await translateTask(task)
+        // Retry the same task if the server concurrency limit returns 429.
+        // This happens when all slots are occupied by other workers; we back off
+        // and wait for one to free up. Up to 5 attempts (up to ~45 s total wait).
+        let status = await translateTask(task)
+        for (let attempt = 1; status === 429 && attempt <= 5 && !pausedRef.current; attempt++) {
+          console.warn(`[job-progress] Task ${task.id} got 429 — retrying in ${attempt * 5}s (attempt ${attempt})`)
+          await new Promise(r => setTimeout(r, attempt * 5000))
+          status = await translateTask(task)
+        }
         if (!pausedRef.current) await runNext()
       }
     }
     await Promise.all(Array.from({ length: Math.min(CONCURRENCY, pending.length) }, runNext))
 
     runningRef.current = false
+
+    // After all workers finish, check if any tasks are still pending. This can happen
+    // when a server-side 429 (concurrency exceeded) silently dropped a task — the task
+    // stays "pending" in the DB but the client already moved past it. Retry up to 3
+    // rounds with a short delay so the remaining tasks are not left stranded.
+    if (!pausedRef.current && retryRound < 3) {
+      const refreshed = await fetchJob()
+      if (refreshed) {
+        const stillPending = refreshed.tasks.filter((t: Task) => t.status === "pending")
+        if (stillPending.length > 0) {
+          console.warn(`[job-progress] ${stillPending.length} task(s) still pending after run — retrying (round ${retryRound + 1})`)
+          await new Promise(r => setTimeout(r, 5000))
+          runTranslation(retryRound + 1)
+        }
+      }
+    }
   }
 
   useEffect(() => {
