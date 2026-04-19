@@ -714,23 +714,29 @@ export function LqaStudio({ initialRuns }: Props) {
     <div className="space-y-6">
       <UploadForm onRunCreated={upsertRun} />
 
+      {/* Recent runs — show up to 3 in-session results, link to full history */}
       {runs.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
-            LQA Runs
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+              Recent Runs
+            </h2>
+            <a href="/jobs?tab=lqa" className="text-xs text-indigo-600 hover:underline font-medium">
+              View all in My Jobs →
+            </a>
+          </div>
           <div className="space-y-3">
-            {runs.map((run) => (
+            {runs.slice(0, 3).map((run) => (
               <RunCard key={run.id} run={run} onRefresh={refreshRun} />
             ))}
           </div>
+          {runs.length > 3 && (
+            <p className="text-xs text-gray-400 mt-3 text-center">
+              +{runs.length - 3} more —{" "}
+              <a href="/jobs?tab=lqa" className="text-indigo-600 hover:underline">see all in My Jobs</a>
+            </p>
+          )}
         </section>
-      )}
-
-      {runs.length === 0 && (
-        <div className="text-center py-16 text-gray-400 text-sm">
-          No LQA runs yet. Upload a bilingual file above to get started.
-        </div>
       )}
     </div>
   )
