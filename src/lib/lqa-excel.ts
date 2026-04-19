@@ -61,7 +61,8 @@ function applyBorder(cell: ExcelJS.Cell) {
 function buildSummarySheet(
   ws: ExcelJS.Worksheet,
   meta: LqaReportMeta,
-  result: LqaAnalysisResult
+  result: LqaAnalysisResult,
+  totalUnits: number
 ) {
   ws.columns = [
     { key: "A", width: 28 },
@@ -86,7 +87,7 @@ function buildSummarySheet(
     ["File Name", meta.fileName],
     ["Source Language", meta.sourceLanguage],
     ["Target Language", meta.targetLanguage],
-    ["Total Units", String(result.findings.length > 0 ? "—" : "All passed")],
+    ["Total Units", String(totalUnits)],
     ["Model", meta.model],
     ["Generated", meta.createdAt.toISOString().slice(0, 19).replace("T", " ")],
   ]
@@ -141,6 +142,30 @@ function buildSummarySheet(
     row++
   }
   row++
+
+  // Scoring methodology note
+  const weightedErrors = result.accuracyErrors * 3 + result.languageErrors * 2 + result.styleErrors
+  const errorsPer100 = totalUnits > 0 ? (weightedErrors / totalUnits) * 100 : 0
+  const methodLines = [
+    "How the score is calculated:",
+    `  Each error is weighted by severity: Accuracy = 3 pts, Language = 2 pts, Style = 1 pt.`,
+    `  Weighted errors are normalised to a rate per 100 units so that large files are not`,
+    `  penalised more than small ones.  Score = 100 − (rate × 2.5), minimum 0.`,
+    ``,
+    `  This file: ${weightedErrors} weighted error${weightedErrors !== 1 ? "s" : ""} across ${totalUnits} unit${totalUnits !== 1 ? "s" : ""} = ${errorsPer100.toFixed(1)} per 100 units → score ${result.qualityScore}.`,
+    ``,
+    `  Bands:  High ≥ 95  (< 2 weighted errors / 100 units)`,
+    `          Medium ≥ 85  (< 6 weighted errors / 100 units)`,
+    `          Low < 85  (≥ 6 weighted errors / 100 units)`,
+  ]
+  ws.mergeCells(`A${row}:D${row}`)
+  const methodCell = ws.getCell(`A${row}`)
+  methodCell.value = methodLines.join("\n")
+  methodCell.font = { size: 9, color: { argb: "FF5D6D7E" } }
+  methodCell.alignment = { horizontal: "left", vertical: "top", wrapText: true }
+  methodCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8F9FA" } }
+  ws.getRow(row).height = methodLines.length * 13
+  row += 2
 
   // Improvements section
   ws.mergeCells(`A${row}:D${row}`)
@@ -303,7 +328,7 @@ export async function generateLqaExcel(
   wb.created = meta.createdAt
 
   const summarySheet = wb.addWorksheet("LQA Summary")
-  buildSummarySheet(summarySheet, meta, result)
+  buildSummarySheet(summarySheet, meta, result, allUnits.length)
 
   const bilingualSheet = wb.addWorksheet("Bilingual")
   buildBilingualSheet(bilingualSheet, meta, allUnits, result.findings)
