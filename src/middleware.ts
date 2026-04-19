@@ -68,7 +68,9 @@ const RULES: Array<{ prefix: string; limit: number; windowMs: number; label: str
   // v1 public API — rate-limited per API key prefix, not IP
   { prefix: "/api/v1/jobs",                 limit: 10,  windowMs: 60_000,  label: "v1-jobs" },
   { prefix: "/api/v1/",                     limit: 60,  windowMs: 60_000,  label: "v1-api" },
-  { prefix: "/api/translation-studio/jobs", limit: 20,  windowMs: 60_000,  label: "jobs" },
+  // Translation studio polling: 3 concurrent workers × 1 poll/2.5 s = ~72 polls/min;
+  // add headroom for translate POSTs and download requests → 300/min.
+  { prefix: "/api/translation-studio/jobs", limit: 300, windowMs: 60_000,  label: "jobs" },
   { prefix: "/api/projects",               limit: 30,  windowMs: 60_000,  label: "projects" },
   { prefix: "/api/",                        limit: 120, windowMs: 60_000,  label: "api" },
 ]
