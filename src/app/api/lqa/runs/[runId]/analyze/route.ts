@@ -51,57 +51,37 @@ export async function POST(
     )
   }
 
-  // Mark as running
+  // Mark as running and respond immediately so the client can start polling.
+  // The analysis runs in the background — Cloud Run keeps the process alive.
   await db.lqaRun.update({ where: { id: runId }, data: { status: "running" } })
 
-  // Hard cap so the serverless function never exits without writing a final status.
-  // If the race rejects, the catch block runs and marks the run as "failed" (retryable).
-  const ROUTE_TIMEOUT_MS = 55_000
+  // Fire-and-forget: no await, result written to DB when done
+  void (async () => {
+    try {
+      const { units } = parseBilingualFile(run.originalFile, run.fileFormat)
+      const result = await analyzeLqa(units, run.sourceLanguage, run.targetLanguage, apiKey, provider, model)
+      await db.lqaRun.update({
+        where: { id: runId },
+        data: {
+          status: "completed",
+          qualityScore: result.qualityScore,
+          qualityBand: result.qualityBand,
+          accuracyErrors: result.accuracyErrors,
+          languageErrors: result.languageErrors,
+          styleErrors: result.styleErrors,
+          findings: JSON.stringify(result.findings),
+          errorMessage: null,
+        },
+      })
+    } catch (err) {
+      const message = (err as Error).message
+      console.error("[lqa/analyze] background error:", message)
+      await db.lqaRun.update({
+        where: { id: runId },
+        data: { status: "failed", errorMessage: message },
+      })
+    }
+  })()
 
-  try {
-    // Re-parse units from stored file content
-    const { units } = parseBilingualFile(run.originalFile, run.fileFormat)
-
-    // Run AI analysis — race against the route-level timeout
-    const result = await Promise.race([
-      analyzeLqa(units, run.sourceLanguage, run.targetLanguage, apiKey, provider, model),
-      new Promise<never>((_, reject) =>
-        setTimeout(
-          () => reject(new Error("Analysis timed out. The file may be too large for a single request — please try again.")),
-          ROUTE_TIMEOUT_MS
-        )
-      ),
-    ])
-
-    // Persist results
-    await db.lqaRun.update({
-      where: { id: runId },
-      data: {
-        status: "completed",
-        qualityScore: result.qualityScore,
-        qualityBand: result.qualityBand,
-        accuracyErrors: result.accuracyErrors,
-        languageErrors: result.languageErrors,
-        styleErrors: result.styleErrors,
-        findings: JSON.stringify(result.findings),
-        errorMessage: null,
-      },
-    })
-
-    return NextResponse.json({
-      qualityScore: result.qualityScore,
-      qualityBand: result.qualityBand,
-      accuracyErrors: result.accuracyErrors,
-      languageErrors: result.languageErrors,
-      styleErrors: result.styleErrors,
-      totalFindings: result.findings.length,
-    })
-  } catch (err) {
-    const message = (err as Error).message
-    await db.lqaRun.update({
-      where: { id: runId },
-      data: { status: "failed", errorMessage: message },
-    })
-    return NextResponse.json({ error: message }, { status: 500 })
-  }
+  return NextResponse.json({ status: "running" }, { status: 202 })
 }

@@ -468,28 +468,39 @@ function UploadForm({ onRunCreated }: { onRunCreated: (run: LqaRun) => void }) {
         }
         onRunCreated(runningRun)
 
-        // Step 2: Trigger AI analysis
+        // Step 2: Trigger AI analysis (route returns 202 immediately; analysis runs in background)
         updateFile(qf.fileId, { status: "analyzing" })
         const analyzeRes = await fetch(`/api/lqa/runs/${runId}/analyze`, { method: "POST" })
-        const analyzeData = await analyzeRes.json() as {
-          qualityScore?: number; qualityBand?: string
-          accuracyErrors?: number; languageErrors?: number; styleErrors?: number; error?: string
-        }
-
         if (!analyzeRes.ok) {
+          const analyzeData = await analyzeRes.json() as { error?: string }
           updateFile(qf.fileId, { status: "error", error: analyzeData.error ?? "Analysis failed" })
           onRunCreated({ ...runningRun, status: "failed", errorMessage: analyzeData.error ?? "Analysis failed" })
-        } else {
-          updateFile(qf.fileId, { status: "done" })
-          onRunCreated({
-            ...runningRun,
-            status: "completed",
-            qualityScore: analyzeData.qualityScore ?? null,
-            qualityBand: (analyzeData.qualityBand as LqaRun["qualityBand"]) ?? null,
-            accuracyErrors: analyzeData.accuracyErrors ?? 0,
-            languageErrors: analyzeData.languageErrors ?? 0,
-            styleErrors: analyzeData.styleErrors ?? 0,
-          })
+          continue
+        }
+
+        // Step 3: Poll until analysis completes (handles files of any size)
+        const POLL_INTERVAL = 3_000
+        const MAX_POLLS = 200 // 10 min max
+        let done = false
+        for (let p = 0; p < MAX_POLLS && !done; p++) {
+          await new Promise((r) => setTimeout(r, POLL_INTERVAL))
+          try {
+            const pollRes = await fetch(`/api/lqa/runs/${runId}`)
+            if (!pollRes.ok) continue
+            const polledRun = await pollRes.json() as LqaRun
+            if (polledRun.status === "completed") {
+              updateFile(qf.fileId, { status: "done" })
+              onRunCreated(polledRun)
+              done = true
+            } else if (polledRun.status === "failed") {
+              updateFile(qf.fileId, { status: "error", error: polledRun.errorMessage ?? "Analysis failed" })
+              onRunCreated(polledRun)
+              done = true
+            }
+          } catch { /* ignore transient errors, keep polling */ }
+        }
+        if (!done) {
+          updateFile(qf.fileId, { status: "error", error: "Analysis is taking too long — check back later" })
         }
       }
     } finally {
