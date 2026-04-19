@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useRef, useMemo } from "react"
+import { useState, useCallback, useRef, useMemo, useEffect } from "react"
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -47,6 +47,8 @@ interface QueuedFile {
   file: File
   status: "waiting" | "uploading" | "analyzing" | "done" | "error"
   error?: string
+  totalUnits?: number
+  analyzingStartedAt?: number
 }
 
 const QUEUE_STATUS_LABELS: Record<QueuedFile["status"], string> = {
@@ -66,6 +68,31 @@ const QUEUE_STATUS_COLORS: Record<QueuedFile["status"], string> = {
 }
 
 const ACCEPTED_EXTS = new Set(["xliff", "xlf", "tmx", "mxliff"])
+
+// ─── Time-estimate helpers ─────────────────────────────────────────────────────
+
+/** Rough estimate: ~4 seconds per batch of 25 units */
+function estimateSecs(totalUnits: number): number {
+  return Math.max(10, Math.ceil(totalUnits / 25) * 4)
+}
+
+function formatDuration(secs: number): string {
+  if (secs < 60) return `~${secs}s`
+  const m = Math.ceil(secs / 60)
+  return `~${m} min`
+}
+
+/** Live elapsed-time counter, updates every second */
+function ElapsedTimer({ startedAt }: { startedAt: number }) {
+  const [elapsed, setElapsed] = useState(Math.floor((Date.now() - startedAt) / 1000))
+  useEffect(() => {
+    const id = setInterval(() => setElapsed(Math.floor((Date.now() - startedAt) / 1000)), 1000)
+    return () => clearInterval(id)
+  }, [startedAt])
+  const m = Math.floor(elapsed / 60)
+  const s = elapsed % 60
+  return <>{m > 0 ? `${m}m ${s}s` : `${s}s`} elapsed</>
+}
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -469,7 +496,7 @@ function UploadForm({ onRunCreated }: { onRunCreated: (run: LqaRun) => void }) {
         onRunCreated(runningRun)
 
         // Step 2: Trigger AI analysis (route returns 202 immediately; analysis runs in background)
-        updateFile(qf.fileId, { status: "analyzing" })
+        updateFile(qf.fileId, { status: "analyzing", totalUnits, analyzingStartedAt: Date.now() })
         const analyzeRes = await fetch(`/api/lqa/runs/${runId}/analyze`, { method: "POST" })
         if (!analyzeRes.ok) {
           const analyzeData = await analyzeRes.json() as { error?: string }
@@ -524,7 +551,21 @@ function UploadForm({ onRunCreated }: { onRunCreated: (run: LqaRun) => void }) {
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6">
-      <h2 className="text-base font-semibold text-gray-900 mb-4">New LQA Run</h2>
+      <h2 className="text-base font-semibold text-gray-900 mb-2">New LQA Run</h2>
+
+      {/* Help text */}
+      <div className="mb-4 rounded-lg bg-indigo-50 border border-indigo-100 px-4 py-3 text-xs text-indigo-800 space-y-1">
+        <p className="font-semibold text-indigo-900">How LQA works</p>
+        <p>
+          AI reviews every translation unit and flags <strong>Accuracy</strong> (mistranslations, missing content),{" "}
+          <strong>Language</strong> (grammar, spelling, terminology) and <strong>Style</strong> (fluency, readability) errors.
+          A normalised quality score (0–100) is calculated so results are comparable regardless of file size.
+        </p>
+        <p className="text-indigo-700">
+          <strong>Processing time:</strong> roughly <strong>4 s per 25 units</strong> — a 100-unit file takes ~16 s,
+          a 500-unit file ~80 s. You can leave this page; the run will appear in your history when done.
+        </p>
+      </div>
 
       {/* Drop zone */}
       <div
@@ -586,6 +627,11 @@ function UploadForm({ onRunCreated }: { onRunCreated: (run: LqaRun) => void }) {
                   <p className="text-sm font-medium text-gray-800 truncate">{qf.file.name}</p>
                   {qf.error ? (
                     <p className="text-xs text-red-600 truncate">{qf.error}</p>
+                  ) : qf.status === "analyzing" && qf.totalUnits && qf.analyzingStartedAt ? (
+                    <p className="text-xs text-blue-600">
+                      {formatDuration(estimateSecs(qf.totalUnits))} · {qf.totalUnits} units ·{" "}
+                      <ElapsedTimer startedAt={qf.analyzingStartedAt} />
+                    </p>
                   ) : (
                     <p className="text-xs text-gray-400">{(qf.file.size / 1024).toFixed(1)} KB</p>
                   )}
@@ -615,9 +661,13 @@ function UploadForm({ onRunCreated }: { onRunCreated: (run: LqaRun) => void }) {
               disabled={processing || pendingCount === 0}
               className="flex-1 py-2.5 px-4 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {processing
-                ? "Analyzing… (this may take a moment)"
-                : `Run LQA on ${pendingCount} file${pendingCount !== 1 ? "s" : ""}`}
+              {processing ? (() => {
+                const analyzing = queue.find((f) => f.status === "analyzing")
+                if (analyzing?.totalUnits) {
+                  return `Analyzing… ${formatDuration(estimateSecs(analyzing.totalUnits))} est for this file`
+                }
+                return "Analyzing…"
+              })() : `Run LQA on ${pendingCount} file${pendingCount !== 1 ? "s" : ""}`}
             </button>
             {hasDone && !processing && (
               <button
