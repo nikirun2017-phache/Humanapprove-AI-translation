@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import Link from "next/link"
 
@@ -275,10 +274,7 @@ function LqaRunRow({ run, onDelete }: { run: LqaRun; onDelete: (id: string) => v
 const PAGE_SIZE = 20
 
 export default function JobsPage() {
-  const searchParams = useSearchParams()
-  const [tab, setTab] = useState<"translation" | "lqa">(
-    searchParams.get("tab") === "lqa" ? "lqa" : "translation"
-  )
+  const [tab, setTab] = useState<"translation" | "lqa">("translation")
 
   // Translation jobs state
   const [jobs, setJobs] = useState<Job[]>([])
@@ -293,9 +289,12 @@ export default function JobsPage() {
   const [lqaPage, setLqaPage] = useState(0)
   const [lqaLoaded, setLqaLoaded] = useState(false)
 
-  // Load LQA runs on mount if starting on that tab
+  // Read ?tab=lqa from URL on client mount (avoids useSearchParams Suspense requirement)
   useEffect(() => {
-    if (tab === "lqa") loadLqa()
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab") === "lqa") {
+      setTab("lqa")
+      loadLqa()
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
