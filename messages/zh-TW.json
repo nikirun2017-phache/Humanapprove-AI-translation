@@ -162,6 +162,18 @@
     "p5From": "「登入翻譯入口網站。」",
     "p5To": "「翻譯在您已進行的工作中進行。」"
   },
+  "lqa": {
+    "badge": "語言品質保證 · 全新功能",
+    "heading": "翻譯品質自動評分與修正",
+    "description": "上傳任意雙語檔案，LQA Studio 將從準確性、語言品質和風格三個維度分析每個翻譯單元，並允許 Claude 一鍵修正所有標記問題。",
+    "feature1": "0 到 100 的客觀品質評分 — 高、中、低三檔",
+    "feature2": "三類錯誤：準確性、語言、風格 — 依嚴重程度加權",
+    "feature3": "AI 自動修訂 — 一鍵將 Claude 產生的修正套用至所有標記單元",
+    "feature4": "將發現問題下載為 Excel（.xlsx）供客戶報告使用",
+    "feature5": "支援 XLIFF、XLF、TMX 和 MXLIFF 雙語格式",
+    "cta": "免費試用 LQA Studio",
+    "caption": "LQA Studio — 品質評分、逐單元發現與一鍵 AI 修訂"
+  },
   "langSwitcher": {
     "label": "語言"
   }

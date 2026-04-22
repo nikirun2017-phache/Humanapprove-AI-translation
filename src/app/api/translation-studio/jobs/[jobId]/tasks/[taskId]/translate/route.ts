@@ -334,8 +334,46 @@ export async function POST(
       }))
       xliff = buildXliffFromTranslations(units, allTranslatedPdf, job.sourceLanguage, task.targetLanguage, job.name)
 
+    } else if (job.sourceFormat === "csv") {
+      // ── CSV path: markdown-based translation ──────────────────────────────────
+      // CSV strings often contain quoted text, commas, and special characters that
+      // cause the model to produce invalid JSON in the JSON-array approach.
+      // Markdown batching (same as XLIFF/PDF) avoids all JSON escaping issues.
+      const csvMarkdownBatches = buildMarkdownBatches(units)
+      const csvTranslationMap = new Map<string, string>()
+
+      for (const { markdown, indexToId } of csvMarkdownBatches) {
+        const translated = await withRetry(() =>
+          translateMarkdownBatch(
+            markdown,
+            job.sourceLanguage,
+            task.targetLanguage,
+            job.provider as ProviderName,
+            apiKey,
+            job.model,
+            glossaryTerms
+          )
+        )
+        const indexedMap = parseMarkdownTranslation(translated)
+        for (const [idx, text] of indexedMap) {
+          const unitId = indexToId.get(idx)
+          if (unitId) csvTranslationMap.set(unitId, text)
+        }
+
+        await db.translationTask.update({
+          where: { id: taskId },
+          data: { completedUnits: csvTranslationMap.size },
+        })
+      }
+
+      const allTranslatedCsv = units.map((u: SourceUnit) => ({
+        id: u.id,
+        translatedText: csvTranslationMap.get(u.id) ?? "",
+      }))
+      xliff = buildXliffFromTranslations(units, allTranslatedCsv, job.sourceLanguage, task.targetLanguage, job.name)
+
     } else {
-      // ── Non-XLIFF path: JSON-array batching (JSON, CSV, Markdown) ────────────
+      // ── Non-XLIFF path: JSON-array batching (JSON, Markdown, etc.) ────────────
       const provider = getProvider(job.provider as Parameters<typeof getProvider>[0])
       const batches = chunkUnits(units)
       const allTranslated: { id: string; translatedText: string }[] = []

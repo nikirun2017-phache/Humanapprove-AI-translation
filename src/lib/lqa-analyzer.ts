@@ -275,7 +275,7 @@ export async function analyzeLqa(
     const unitMap = keyToUnit
 
     for (const item of aiErrors) {
-      const unit = unitMap.get(item.id)
+      const unit = unitMap.get(String(item.id))
       if (!unit || !Array.isArray(item.errs) || item.errs.length === 0) continue
 
       const errors: LqaError[] = item.errs.map((e) => ({

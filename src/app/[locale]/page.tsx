@@ -154,6 +154,114 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* LQA Studio */}
+      <section className="max-w-6xl mx-auto px-6 py-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+          {/* Left: copy */}
+          <div className="lg:pt-6">
+            <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {t("lqa.badge")}
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t("lqa.heading")}</h2>
+            <p className="text-gray-500 leading-relaxed mb-6">{t("lqa.description")}</p>
+            <ul className="space-y-3">
+              {(["feature1","feature2","feature3","feature4","feature5"] as const).map((k) => (
+                <li key={k} className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-emerald-500 mt-0.5 shrink-0">✓</span>
+                  {t(`lqa.${k}`)}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-8">
+              <Link href="/login?mode=signup" className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
+                {t("lqa.cta")} →
+              </Link>
+            </div>
+          </div>
+          {/* Right: LQA Studio inline mockup */}
+          <div className="rounded-2xl border border-gray-200 shadow-xl overflow-hidden bg-white">
+            {/* Browser chrome */}
+            <div className="bg-gray-100 border-b border-gray-200 px-4 py-3 flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-red-300" />
+              <span className="w-3 h-3 rounded-full bg-yellow-300" />
+              <span className="w-3 h-3 rounded-full bg-green-300" />
+              <span className="ml-4 flex-1 bg-white rounded px-3 py-1 text-xs text-gray-400 border border-gray-200">
+                summontranslator.com/lqa-studio
+              </span>
+            </div>
+            {/* LQA report mockup */}
+            <div className="p-5 space-y-4">
+              {/* Score header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Quality Score</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-3xl font-extrabold text-gray-900">87</span>
+                    <span className="text-xs font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Medium</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-400">12 units analysed</p>
+                  <p className="text-xs text-gray-400">4 findings</p>
+                </div>
+              </div>
+              {/* Error breakdown */}
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: "Accuracy", count: 2, color: "bg-red-50 text-red-700 border-red-100" },
+                  { label: "Language", count: 1, color: "bg-amber-50 text-amber-700 border-amber-100" },
+                  { label: "Style", count: 1, color: "bg-blue-50 text-blue-700 border-blue-100" },
+                ].map((cat) => (
+                  <div key={cat.label} className={`rounded-lg border p-2.5 text-center ${cat.color}`}>
+                    <p className="text-lg font-bold">{cat.count}</p>
+                    <p className="text-xs font-medium">{cat.label}</p>
+                  </div>
+                ))}
+              </div>
+              {/* Sample findings */}
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Findings</p>
+                {[
+                  {
+                    type: "Accuracy",
+                    typeColor: "bg-red-100 text-red-700",
+                    source: "Submit your application",
+                    target: "提交您的申请",
+                    suggestion: "递交您的申请",
+                    note: "More formal register expected in legal context",
+                  },
+                  {
+                    type: "Style",
+                    typeColor: "bg-blue-100 text-blue-700",
+                    source: "Please review and confirm",
+                    target: "请审查并确认",
+                    suggestion: "请审阅并确认",
+                    note: "审阅 is preferred in formal document contexts",
+                  },
+                ].map((f, i) => (
+                  <div key={i} className="rounded-lg border border-gray-100 bg-gray-50 p-3 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${f.typeColor}`}>{f.type}</span>
+                      <span className="text-xs text-gray-400 truncate">{f.source}</span>
+                    </div>
+                    <p className="text-xs text-gray-500 line-through">{f.target}</p>
+                    <p className="text-xs font-medium text-gray-800">{f.suggestion}</p>
+                    <p className="text-xs text-gray-400 italic">{f.note}</p>
+                  </div>
+                ))}
+              </div>
+              {/* Action buttons */}
+              <div className="flex gap-2 pt-1">
+                <button className="flex-1 bg-emerald-600 text-white text-xs font-semibold py-2 rounded-lg">Revise File</button>
+                <button className="flex-1 border border-gray-200 text-gray-600 text-xs font-semibold py-2 rounded-lg">Download Report</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p className="text-center text-xs text-gray-400 mt-6">{t("lqa.caption")}</p>
+      </section>
+
       {/* Portfolio */}
       <section className="max-w-6xl mx-auto px-6 py-20">
         <div className="text-center mb-10">

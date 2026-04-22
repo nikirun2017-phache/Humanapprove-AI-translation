@@ -162,6 +162,18 @@
     "p5From": "&quot;Accedi al portale di traduzione.&quot;",
     "p5To": "&quot;La traduzione avviene dove il tuo lavoro è già.&quot;"
   },
+  "lqa": {
+    "badge": "Garanzia della qualità linguistica · Novità",
+    "heading": "Qualità della traduzione valutata e corretta automaticamente",
+    "description": "Carica qualsiasi file bilingue. LQA Studio analizza ogni unità di traduzione per accuratezza, qualità linguistica e stile — poi lascia che Claude corregga ogni problema rilevato con un clic.",
+    "feature1": "Punteggi di qualità oggettivi da 0 a 100 — Alto, Medio o Basso",
+    "feature2": "Tre categorie di errori: Accuratezza, Lingua, Stile — pesate per gravità",
+    "feature3": "Revisione automatica AI — un clic applica le correzioni di Claude a ogni unità segnalata",
+    "feature4": "Scarica i risultati in Excel (.xlsx) per i report ai clienti",
+    "feature5": "Compatibile con i formati bilingui XLIFF, XLF, TMX e MXLIFF",
+    "cta": "Prova LQA Studio gratis",
+    "caption": "LQA Studio — punteggio di qualità, risultati per unità e revisione AI in un clic"
+  },
   "langSwitcher": {
     "label": "Lingua"
   }

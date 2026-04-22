@@ -162,6 +162,18 @@
     "p5From": "&quot;Logga in på översättningsportalen.&quot;",
     "p5To": "&quot;Översättning sker där ditt arbete redan är.&quot;"
   },
+  "lqa": {
+    "badge": "Språklig kvalitetssäkring · Nyhet",
+    "heading": "Översättningskvalitet bedömd och korrigerad automatiskt",
+    "description": "Ladda upp vilken tvåspråkig fil som helst. LQA Studio analyserar varje översättningsenhet för noggrannhet, språklig kvalitet och stil — och låter Claude korrigera varje flaggat problem med ett klick.",
+    "feature1": "Objektiva kvalitetspoäng från 0 till 100 — Hög, Medel eller Låg",
+    "feature2": "Tre felkategorier: Noggrannhet, Språk, Stil — viktade efter allvarlighetsgrad",
+    "feature3": "Automatisk AI-revision — ett klick tillämpar Claudes korrigeringar på varje flaggad enhet",
+    "feature4": "Ladda ner resultat som Excel (.xlsx) för klientrapportering",
+    "feature5": "Fungerar med tvåspråkiga format XLIFF, XLF, TMX och MXLIFF",
+    "cta": "Prova LQA Studio gratis",
+    "caption": "LQA Studio — kvalitetspoäng, resultat per enhet och AI-revision med ett klick"
+  },
   "langSwitcher": {
     "label": "Språk"
   }

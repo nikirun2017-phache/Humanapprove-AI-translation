@@ -23,17 +23,18 @@ const REVISION_BATCH_SIZE = 20
 const REVISION_SYSTEM = `You are a professional translation editor. Apply the specified corrections to these translations.
 
 Input: JSON array of units with fix instructions
-[{"id":"<unit-id>","s":"<source>","cur":"<current translation — may contain XML/HTML inline tags like <g id=\"...\">, <ph>, <x/>>","fix":"<what to fix and how>"}]
+[{"id":"<unit-id>","s":"<source text>","cur":"<current translation — may contain XML/HTML inline tags like <g id=\"...\">, <ph>, <x/>>","fix":"<description of the error and what to fix>"}]
 
-Output: JSON array with corrected translations — ONLY include units you changed
+Output: JSON array containing ALL input units with their corrected translations
 [{"id":"<unit-id>","t":"<corrected translation>"}]
 
 Rules:
-- Apply the fix as described. If fix says "should be X", use X.
-- CRITICAL: Preserve ALL XML/HTML tags and attributes (e.g. <g id="...">, <ph id="...">, <x/>, <bpt>, <ept>) exactly as they appear — only modify the human-readable text content nodes between the tags
+- You MUST return an entry for EVERY unit in the input — never return an empty array
+- Apply the fix as described. If fix says "should be X", use X exactly
+- CRITICAL: Preserve ALL XML/HTML tags and attributes (e.g. <g id="...">, <ph id="...">, <x/>, <bpt>, <ept>) exactly as they appear — only modify the human-readable text between the tags
 - Keep formatting placeholders ({var}, %s, {{T1}}, %1$s etc.) intact
-- If the fix is unclear, make the most natural correction
-- Return ONLY valid JSON, no markdown, no explanations`
+- If the fix has already been applied or the suggestion is ambiguous, still return the unit with the best corrected translation
+- Return ONLY valid JSON array, no markdown fences, no explanations`
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -47,16 +48,35 @@ interface RevisionItem { id: string; t: string }
 
 function parseRevisionResponse(raw: string): RevisionItem[] {
   let text = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "")
+  let arr: unknown
   try {
     const parsed = JSON.parse(text)
-    if (Array.isArray(parsed)) return parsed as RevisionItem[]
-  } catch {
+    arr = Array.isArray(parsed) ? parsed : null
+  } catch { /* try fallback */ }
+  if (!arr) {
     const match = text.match(/\[[\s\S]*\]/)
     if (match) {
-      try { return JSON.parse(match[0]) as RevisionItem[] } catch { /* ignore */ }
+      try { arr = JSON.parse(match[0]) } catch { /* ignore */ }
     }
   }
-  return []
+  if (!Array.isArray(arr)) return []
+
+  return (arr as Record<string, unknown>[])
+    .map((item) => ({
+      // Always coerce id to string — models often return integer 1 instead of "1"
+      id: String(item["id"] ?? ""),
+      // Accept any field name the model might use for the translated text
+      t: String(
+        item["t"] ??
+        item["translation"] ??
+        item["text"] ??
+        item["revised"] ??
+        item["target"] ??
+        item["translatedText"] ??
+        ""
+      ),
+    }))
+    .filter((r): r is RevisionItem => Boolean(r.id && r.t))
 }
 
 // ─── Raw XML extraction helpers ───────────────────────────────────────────────
@@ -72,9 +92,15 @@ function extractRawXliffTarget(xml: string, unitId: string): string {
   const occurrence = hashMatch ? parseInt(hashMatch[2], 10) : 1
   const escapedId = rawId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
+  // id attribute may use double OR single quotes (both are valid XML)
+  const idAttr = `id=["']${escapedId}["']`
+  // Element names may carry a namespace prefix (e.g. <xliff:target>, <ns:trans-unit>)
+  const tgtOpen = `<(?:[\\w]+:)?target(?:[^>]*)>`
+  const tgtClose = `</(?:[\\w]+:)?target>`
+
   // XLIFF 1.2: <trans-unit id="X">…<target…>CONTENT</target>
   const re12 = new RegExp(
-    `<trans-unit[^>]*\\bid="${escapedId}"[^>]*>[\\s\\S]*?<target(?:[^>]*)>([\\s\\S]*?)</target>`,
+    `<(?:[\\w]+:)?trans-unit[^>]*\\b${idAttr}[^>]*>[\\s\\S]*?${tgtOpen}([\\s\\S]*?)${tgtClose}`,
     "g"
   )
   let n = 0
@@ -86,7 +112,7 @@ function extractRawXliffTarget(xml: string, unitId: string): string {
 
   // XLIFF 2.0: <unit id="X">…<target…>CONTENT</target>
   const re20 = new RegExp(
-    `<unit[^>]*\\bid="${escapedId}"[^>]*>[\\s\\S]*?<target(?:[^>]*)>([\\s\\S]*?)</target>`,
+    `<(?:[\\w]+:)?unit[^>]*\\b${idAttr}[^>]*>[\\s\\S]*?${tgtOpen}([\\s\\S]*?)${tgtClose}`,
     "g"
   )
   n = 0
@@ -151,6 +177,7 @@ async function callRevisionApi(
       body: JSON.stringify({
         model,
         max_tokens: 4096,
+        temperature: 0,
         system: [
           {
             type: "text",
@@ -227,27 +254,32 @@ function patchXliff(xml: string, fixes: Map<string, string>): string {
 
     const escapedId = rawId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
-    // XLIFF 1.2: <trans-unit id="…"> … <target>OLD</target>
+    // id attribute may use double OR single quotes; element names may have namespace prefix
+    const idAttr = `id=["']${escapedId}["']`
+    const tgtOpen = `(<(?:[\\w]+:)?target(?:[^>]*)>)`
+    const tgtClose = `(</(?:[\\w]+:)?target>)`
+
+    // XLIFF 1.2: <trans-unit id="…"> … <target…>OLD</target>
     const tu12 = new RegExp(
-      `(<trans-unit[^>]*\\bid="${escapedId}"[^>]*>[\\s\\S]*?<target(?:[^>]*)>)[\\s\\S]*?(</target>)`,
+      `(<(?:[\\w]+:)?trans-unit[^>]*\\b${idAttr}[^>]*>[\\s\\S]*?${tgtOpen})[\\s\\S]*?${tgtClose}`,
       "g"
     )
     let n12 = 0
-    result = result.replace(tu12, (m, g1, g2) => {
+    result = result.replace(tu12, (m, g1, _tgtOpen, g3) => {
       n12++
-      return n12 === occurrence ? `${g1}${newTarget}${g2}` : m
+      return n12 === occurrence ? `${g1}${newTarget}${g3}` : m
     })
 
-    // XLIFF 2.0: <unit id="…"> … <target>OLD</target>
+    // XLIFF 2.0: <unit id="…"> … <target…>OLD</target>
     if (n12 === 0) {
       const unit20 = new RegExp(
-        `(<unit[^>]*\\bid="${escapedId}"[^>]*>[\\s\\S]*?<target(?:[^>]*)>)[\\s\\S]*?(</target>)`,
+        `(<(?:[\\w]+:)?unit[^>]*\\b${idAttr}[^>]*>[\\s\\S]*?${tgtOpen})[\\s\\S]*?${tgtClose}`,
         "g"
       )
       let n20 = 0
-      result = result.replace(unit20, (m, g1, g2) => {
+      result = result.replace(unit20, (m, g1, _tgtOpen, g3) => {
         n20++
-        return n20 === occurrence ? `${g1}${newTarget}${g2}` : m
+        return n20 === occurrence ? `${g1}${newTarget}${g3}` : m
       })
     }
   }
@@ -345,6 +377,10 @@ export async function reviseBilingualFile(
   const batches = chunkArray(revisionItems, REVISION_BATCH_SIZE)
   const allFixes = new Map<string, string>()
 
+  let batchesAttempted = 0
+  let batchesFailed = 0
+  let lastBatchError: string | null = null
+
   for (const batch of batches) {
     // Use opaque sequential keys ("1", "2", …) instead of real unit IDs.
     // Real IDs like "title#2" contain patterns (the #N deduplication suffix) that
@@ -358,19 +394,37 @@ export async function reviseBilingualFile(
     })
 
     const payload = JSON.stringify(aiItems)
+    batchesAttempted++
     let raw = ""
     try {
       raw = await callRevisionApi(payload, apiKey, provider, model)
+      console.log(`[lqa-reviser] batch ${batchesAttempted} raw response (first 500 chars):`, raw.slice(0, 500))
     } catch (err) {
+      batchesFailed++
+      lastBatchError = (err as Error).message
       console.error("[lqa-reviser] batch revision error:", err)
       continue
     }
 
     const items = parseRevisionResponse(raw)
+    if (items.length === 0) {
+      console.warn(`[lqa-reviser] batch ${batchesAttempted}: AI returned no revision items. Raw response:`, raw.slice(0, 300))
+    }
     for (const item of items) {
-      const realId = keyToRealId.get(item.id)
+      // Coerce to string: models often return numeric IDs (1, 2, …) even when
+      // the input had string IDs ("1", "2", …), and Map.get(1) !== Map.get("1").
+      const realId = keyToRealId.get(String(item.id))
       if (realId && item.t) allFixes.set(realId, item.t)
     }
+  }
+
+  // If every batch failed with an API error, surface it instead of silently
+  // returning the original content (mirrors lqa-analyzer.ts error handling).
+  if (batchesAttempted > 0 && batchesFailed === batchesAttempted) {
+    throw new Error(
+      `AI revision failed for all ${batchesAttempted} batch${batchesAttempted !== 1 ? "es" : ""}. ` +
+      `Last error: ${lastBatchError ?? "unknown error"}`
+    )
   }
 
   if (allFixes.size === 0) return originalContent

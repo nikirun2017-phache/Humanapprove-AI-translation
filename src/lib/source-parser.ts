@@ -619,24 +619,19 @@ export function parseCsvSource(content: string): SourceUnit[] {
 
 /**
  * Parse a CSV file returning all columns.
- * The first row is treated as a header if its first field is "id", "key", or "name"
- * (same heuristic as parseCsvSource). Otherwise auto-generates col0, col1, … headers.
+ * The first row is always treated as a header row.
  * Used for multi-column CSV translation where passthrough columns must be preserved.
  */
 export function parseCsvFull(content: string): { headers: string[]; rows: Array<string[]> } {
   const lines = content.split(/\r?\n/).filter((l: string) => l.trim())
   if (lines.length === 0) return { headers: [], rows: [] }
 
-  const firstParsed = parseCsvLine(lines[0]).map((c: string) => c.trim().replace(/^"|"$/g, ""))
-  const hasHeader =
-    firstParsed[0].toLowerCase() === "id" ||
-    firstParsed[0].toLowerCase() === "key" ||
-    firstParsed[0].toLowerCase() === "name"
-
-  const headers: string[] = hasHeader ? firstParsed : firstParsed.map((_: string, i: number) => `col${i}`)
-  const dataLines = hasHeader ? lines.slice(1) : lines
-
-  const rows = dataLines
+  // Always treat the first row as headers. parseCsvFull is only invoked in the
+  // multi-column selection flow, where the user has already seen and configured
+  // column names from the header row in the UI — regardless of what the first
+  // column is named (e.g. "source_key", "token", "label", etc.).
+  const headers = parseCsvLine(lines[0]).map((c: string) => c.trim().replace(/^"|"$/g, ""))
+  const rows = lines.slice(1)
     .map((line: string) => parseCsvLine(line).map((c: string) => c.trim().replace(/^"|"$/g, "")))
     .filter((row: string[]) => row.some((c: string) => c))
 

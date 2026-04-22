@@ -73,6 +73,9 @@ export function JobProgress({ initialJob }: Props) {
   const runningTask = tasks.find((t: Task) => t.status === "running")
 
   const isPdf = job.sourceFormat === "pdf"
+  const isXliff = job.sourceFormat === "xliff" || job.sourceFormat === "xlf" || job.sourceFormat === "mxliff"
+  // Formats that produce both a native-format file AND a separate bilingual XLIFF
+  const hasNativeAndXliff = !isPdf && !isXliff
 
   function triggerDownload(url: string) {
     const a = document.createElement("a")
@@ -468,12 +471,23 @@ export function JobProgress({ initialJob }: Props) {
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-3">
                       {task.status === "completed" && !isPdf && (
-                        <button
-                          onClick={() => downloadTask(task)}
-                          className="text-xs text-gray-500 hover:text-gray-700 underline"
-                        >
-                          Download
-                        </button>
+                        <>
+                          <button
+                            onClick={() => downloadTask(task)}
+                            className="text-xs text-gray-500 hover:text-gray-700 underline"
+                          >
+                            {isXliff ? "XLIFF" : "Download"}
+                          </button>
+                          {hasNativeAndXliff && (
+                            <a
+                              href={`/api/translation-studio/jobs/${job.id}/tasks/${task.id}/download?format=xliff`}
+                              download
+                              className="text-xs text-indigo-500 hover:text-indigo-700 underline"
+                            >
+                              XLIFF
+                            </a>
+                          )}
+                        </>
                       )}
                       {task.status === "completed" && isPdf && (
                         <>
@@ -490,6 +504,13 @@ export function JobProgress({ initialJob }: Props) {
                             className="text-xs text-indigo-600 hover:text-indigo-800 underline font-medium"
                           >
                             .pdf
+                          </a>
+                          <a
+                            href={`/api/translation-studio/jobs/${job.id}/tasks/${task.id}/download?format=xliff`}
+                            download
+                            className="text-xs text-gray-400 hover:text-gray-600 underline"
+                          >
+                            XLIFF
                           </a>
                         </>
                       )}

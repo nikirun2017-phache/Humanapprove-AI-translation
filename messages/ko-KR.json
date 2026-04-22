@@ -162,6 +162,18 @@
     "p5From": "&quot;번역 포털에 로그인하세요.&quot;",
     "p5To": "&quot;번역은 이미 작업 중인 곳에서 진행됩니다.&quot;"
   },
+  "lqa": {
+    "badge": "언어 품질 보증 · 신규",
+    "heading": "번역 품질 자동 채점 및 수정",
+    "description": "이중 언어 파일을 업로드하세요. LQA Studio가 정확성, 언어 품질, 스타일 측면에서 모든 번역 단위를 분석하고, Claude가 플래그된 모든 문제를 한 번의 클릭으로 수정합니다.",
+    "feature1": "0~100점의 객관적 품질 점수 — 높음, 보통, 낮음",
+    "feature2": "세 가지 오류 범주: 정확성, 언어, 스타일 — 심각도에 따른 가중치",
+    "feature3": "AI 자동 수정 — 클릭 한 번으로 Claude 수정 사항을 모든 플래그 단위에 적용",
+    "feature4": "결과를 Excel(.xlsx)로 다운로드하여 고객 보고에 활용",
+    "feature5": "XLIFF, XLF, TMX, MXLIFF 이중 언어 형식 지원",
+    "cta": "LQA Studio 무료 체험",
+    "caption": "LQA Studio — 품질 점수, 단위별 결과, 원클릭 AI 수정"
+  },
   "langSwitcher": {
     "label": "언어"
   }

@@ -162,6 +162,18 @@
     "p5From": "&quot;Log into the translation portal.&quot;",
     "p5To": "&quot;Translation happens where your work already is.&quot;"
   },
+  "lqa": {
+    "badge": "Language Quality Assurance · New",
+    "heading": "Translation quality scored and fixed automatically",
+    "description": "Upload any bilingual file. LQA Studio analyses every translation unit for accuracy, language quality, and style — then lets Claude correct every flagged issue in one click.",
+    "feature1": "Objective quality scores from 0 to 100 — High, Medium, or Low",
+    "feature2": "Three error categories: Accuracy, Language, Style — each weighted by severity",
+    "feature3": "AI auto-revision — one click applies Claude-generated fixes to every flagged unit",
+    "feature4": "Download findings as Excel (.xlsx) for client reporting and handover",
+    "feature5": "Works with XLIFF, XLF, TMX, and MXLIFF bilingual formats",
+    "cta": "Try LQA Studio free",
+    "caption": "LQA Studio — quality score, per-unit findings, and one-click AI revision"
+  },
   "langSwitcher": {
     "label": "Language"
   }

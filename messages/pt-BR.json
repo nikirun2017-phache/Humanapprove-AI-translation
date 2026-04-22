@@ -162,6 +162,18 @@
     "p5From": "&quot;Faça login no portal de tradução.&quot;",
     "p5To": "&quot;A tradução acontece onde seu trabalho já está.&quot;"
   },
+  "lqa": {
+    "badge": "Garantia de qualidade linguística · Novo",
+    "heading": "Qualidade de tradução avaliada e corrigida automaticamente",
+    "description": "Envie qualquer arquivo bilíngue. O LQA Studio analisa cada unidade de tradução quanto à precisão, qualidade linguística e estilo — e permite que o Claude corrija cada problema sinalizado com um clique.",
+    "feature1": "Pontuações de qualidade objetivas de 0 a 100 — Alta, Média ou Baixa",
+    "feature2": "Três categorias de erro: Precisão, Idioma, Estilo — ponderadas por gravidade",
+    "feature3": "Revisão automática por IA — um clique aplica as correções do Claude a cada unidade sinalizada",
+    "feature4": "Baixe os resultados em Excel (.xlsx) para relatórios de clientes",
+    "feature5": "Compatível com formatos bilíngues XLIFF, XLF, TMX e MXLIFF",
+    "cta": "Experimente o LQA Studio grátis",
+    "caption": "LQA Studio — pontuação de qualidade, resultados por unidade e revisão de IA com um clique"
+  },
   "langSwitcher": {
     "label": "Idioma"
   }

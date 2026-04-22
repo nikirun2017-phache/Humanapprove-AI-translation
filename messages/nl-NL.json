@@ -162,6 +162,18 @@
     "p5From": "&quot;Inloggen op de vertaalportal.&quot;",
     "p5To": "&quot;Vertaling gebeurt waar uw werk al is.&quot;"
   },
+  "lqa": {
+    "badge": "Taalkundige kwaliteitsborging · Nieuw",
+    "heading": "Vertaalkwaliteit automatisch beoordeeld en gecorrigeerd",
+    "description": "Upload een willekeurig tweetalig bestand. LQA Studio analyseert elke vertaaleenheid op nauwkeurigheid, taalkwaliteit en stijl — en laat Claude elk gemarkeerd probleem met één klik corrigeren.",
+    "feature1": "Objectieve kwaliteitsscores van 0 tot 100 — Hoog, Gemiddeld of Laag",
+    "feature2": "Drie foutcategorieën: Nauwkeurigheid, Taal, Stijl — gewogen op ernst",
+    "feature3": "Automatische AI-revisie — één klik past Claude-correcties toe op elke gemarkeerde eenheid",
+    "feature4": "Download bevindingen als Excel (.xlsx) voor klantrapportage",
+    "feature5": "Werkt met tweetalige formaten XLIFF, XLF, TMX en MXLIFF",
+    "cta": "Probeer LQA Studio gratis",
+    "caption": "LQA Studio — kwaliteitsscore, bevindingen per eenheid en AI-revisie met één klik"
+  },
   "langSwitcher": {
     "label": "Taal"
   }

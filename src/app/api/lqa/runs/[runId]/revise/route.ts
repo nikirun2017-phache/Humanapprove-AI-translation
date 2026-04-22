@@ -4,6 +4,8 @@ import { db } from "@/lib/db"
 import { reviseBilingualFile } from "@/lib/lqa-reviser"
 import type { LqaFinding } from "@/lib/lqa-analyzer"
 
+export const maxDuration = 60 // seconds — increase Vercel function timeout
+
 // POST /api/lqa/runs/[runId]/revise — trigger AI auto-fix of findings
 export async function POST(
   _req: Request,
@@ -67,12 +69,21 @@ export async function POST(
       ),
     ])
 
+    const unchanged = revisedContent === run.originalFile
+    if (unchanged) {
+      console.warn(`[lqa/revise] run ${runId}: AI returned no changes — revised content is identical to original. Findings count: ${findings.length}`)
+    }
+
     await db.lqaRun.update({
       where: { id: runId },
       data: { revisedFile: revisedContent, revisionStatus: "completed" },
     })
 
-    return NextResponse.json({ success: true, revisedUnits: findings.length })
+    return NextResponse.json({
+      success: true,
+      revisedUnits: unchanged ? 0 : findings.length,
+      warning: unchanged ? "AI returned no revisions — the translated content may already be correct, or the fix suggestions were unclear." : undefined,
+    })
   } catch (err) {
     const message = (err as Error).message
     await db.lqaRun.update({

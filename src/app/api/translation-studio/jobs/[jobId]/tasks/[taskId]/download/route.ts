@@ -39,14 +39,16 @@ export async function GET(
 
   const safeName = `${job.name}-${task.targetLanguage}`.replace(/[^a-zA-Z0-9-_]/g, "_")
   const fmt = job.sourceFormat
-  // ?format=xliff|txt|pdf — only meaningful for PDF source jobs
-  const format = req.nextUrl.searchParams.get("format") ?? "xliff"
+  // ?format=xliff|txt|pdf
+  // For PDF source jobs: selects between xliff, txt, and pdf outputs
+  // For all other formats: ?format=xliff forces the bilingual XLIFF regardless of source format
+  const format = req.nextUrl.searchParams.get("format")
 
   // ── PDF source: support multiple output formats ──────────────────────────
   if (fmt === "pdf") {
     const xliff = task.xliffData ?? await readFile(task.xliffFileUrl!, "utf-8")
 
-    if (format === "xliff") {
+    if (format === "xliff" || !format) {
       return new NextResponse(xliff, {
         headers: {
           "Content-Type": "application/xliff+xml",
@@ -105,13 +107,25 @@ export async function GET(
     }
   }
 
-  // XLIFF: serve bilingual XLIFF as-is
-  if (fmt === "xliff") {
+  // ?format=xliff — serve the bilingual XLIFF for any non-PDF source format
+  if (format === "xliff" && fmt !== "pdf") {
     const xliff = task.xliffData ?? await readFile(task.xliffFileUrl!, "utf-8")
     return new NextResponse(xliff, {
       headers: {
         "Content-Type": "application/xliff+xml",
-        "Content-Disposition": `attachment; filename="${safeName}.xliff"`,
+        "Content-Disposition": `attachment; filename="${safeName}-bilingual.xliff"`,
+      },
+    })
+  }
+
+  // XLIFF source format: serve bilingual XLIFF as-is (the translated XLIFF IS the bilingual output)
+  if (fmt === "xliff" || fmt === "xlf" || fmt === "mxliff") {
+    const xliff = task.xliffData ?? await readFile(task.xliffFileUrl!, "utf-8")
+    const ext = fmt === "xlf" ? "xlf" : fmt === "mxliff" ? "mxliff" : "xliff"
+    return new NextResponse(xliff, {
+      headers: {
+        "Content-Type": "application/xliff+xml",
+        "Content-Disposition": `attachment; filename="${safeName}.${ext}"`,
       },
     })
   }
@@ -186,6 +200,23 @@ export async function GET(
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="${safeName}.csv"`,
+      },
+    })
+  }
+
+  if (fmt === "txt") {
+    // Reconstruct plain text: paragraph mode (p_N IDs → join with \n\n)
+    // or line mode (l_N IDs → join with \n), mirroring parseTxtSource logic.
+    const usesLines = parsed.units.some((u: (typeof parsed.units)[number]) => u.id.startsWith("l_"))
+    const separator = usesLines ? "\n" : "\n\n"
+    const reconstructed = parsed.units
+      .map((u: (typeof parsed.units)[number]) => translations.get(u.id) ?? u.sourceText ?? "")
+      .filter(Boolean)
+      .join(separator)
+    return new NextResponse(reconstructed, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Disposition": `attachment; filename="${safeName}.txt"`,
       },
     })
   }

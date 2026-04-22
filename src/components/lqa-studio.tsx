@@ -217,18 +217,23 @@ function RunCard({ run, onRefresh }: { run: LqaRun; onRefresh: (id: string) => P
   const [showReviseForm, setShowReviseForm] = useState(false)
   const [revising, setRevising] = useState(false)
   const [reviseError, setReviseError] = useState("")
+  const [reviseWarning, setReviseWarning] = useState("")
 
   const handleRevise = async () => {
     setRevising(true)
     setReviseError("")
+    setReviseWarning("")
     try {
       const res = await fetch(`/api/lqa/runs/${run.id}/revise`, { method: "POST" })
-      const data = await res.json() as { error?: string }
+      const data = await res.json() as { error?: string; warning?: string; revisedUnits?: number }
       if (!res.ok) {
         setReviseError(data.error ?? "Revision failed")
       } else {
         setShowReviseForm(false)
         await onRefresh(run.id)
+        if (data.warning) {
+          setReviseWarning(data.warning)
+        }
       }
     } finally {
       setRevising(false)
@@ -317,6 +322,7 @@ function RunCard({ run, onRefresh }: { run: LqaRun; onRefresh: (id: string) => P
 
           {/* Action buttons */}
           {run.status === "completed" && (
+            <>
             <div className="mt-4 flex flex-wrap gap-2 items-center">
 
               {/* Download Excel */}
@@ -381,6 +387,16 @@ function RunCard({ run, onRefresh }: { run: LqaRun; onRefresh: (id: string) => P
                 </a>
               )}
             </div>
+            {/* Warning: revision completed but AI produced no changes */}
+            {reviseWarning && (
+              <p
+                className="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {reviseWarning}
+              </p>
+            )}
+            </>
           )}
 
           {/* Inline revise form */}
