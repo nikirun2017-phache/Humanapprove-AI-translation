@@ -44,6 +44,7 @@ export async function GET(
       targetLanguage: true,
       status: true,
       totalUnits: true,
+      totalWordCount: true,
       qualityScore: true,
       qualityBand: true,
       accuracyErrors: true,

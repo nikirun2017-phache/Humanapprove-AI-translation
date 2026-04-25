@@ -36,6 +36,7 @@ export interface LqaAnalysisResult {
   languageErrors: number
   styleErrors: number
   findings: LqaFinding[]
+  totalWords: number        // sum of source-text word counts across all units
 }
 
 // ─── Prompt (fixed — ideal for Anthropic caching) ─────────────────────────────
@@ -65,6 +66,16 @@ Rules:
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
 const BATCH_SIZE = 25
+
+/**
+ * Count words in a source-text string.
+ * Strips XML/HTML inline tags (e.g. <g id="1">, <ph>, <x/>) before splitting
+ * so tag markup doesn't inflate the word count.
+ */
+export function countWords(text: string): number {
+  const stripped = text.replace(/<[^>]+>/g, " ")
+  return stripped.trim().split(/\s+/).filter((w) => w.length > 0).length
+}
 
 function chunkArray<T>(arr: T[], size: number): T[][] {
   const chunks: T[][] = []
@@ -307,15 +318,21 @@ export async function analyzeLqa(
     )
   }
 
-  // Normalize score by total units so large files aren't unfairly penalized.
-  // Formula: deduct 2.5 pts per "1 weighted error per 100 units".
-  //   • score 95+ → High  (< ~2 weighted errors per 100 units)
-  //   • score 85+ → Medium
-  //   • score  <85 → Low  (> ~6 weighted errors per 100 units)
-  const totalUnits = units.length
+  // Normalize score by total SOURCE WORD COUNT so results reflect real document
+  // volume rather than the arbitrary number of segments.
+  //
+  // Formula: deduct 2.5 pts per "1 weighted error per 1000 words"
+  //   acc error (×3) + lang error (×2) + style error (×1)
+  //   • score ≥ 95 → High   (< 2 weighted errors per 1000 words)
+  //   • score ≥ 85 → Medium (2–6 weighted errors per 1000 words)
+  //   • score  < 85 → Low   (> 6 weighted errors per 1000 words)
+  //
+  // Falls back to unit count if word count is zero (e.g. all-tag segments).
+  const totalWords = units.reduce((sum, u) => sum + countWords(u.source), 0)
+  const denominator = totalWords > 0 ? totalWords : units.length
   const weightedErrors = totalAccuracy * 3 + totalLanguage * 2 + totalStyle
-  const errorsPer100 = totalUnits > 0 ? (weightedErrors / totalUnits) * 100 : 0
-  const qualityScore = Math.max(0, Math.round(100 - errorsPer100 * 2.5))
+  const errorsPer1000 = denominator > 0 ? (weightedErrors / denominator) * 1000 : 0
+  const qualityScore = Math.max(0, Math.round(100 - errorsPer1000 * 2.5))
   const qualityBand: LqaAnalysisResult["qualityBand"] =
     qualityScore >= 95 ? "High" : qualityScore >= 85 ? "Medium" : "Low"
 
@@ -326,5 +343,6 @@ export async function analyzeLqa(
     languageErrors: totalLanguage,
     styleErrors: totalStyle,
     findings: allFindings,
+    totalWords,
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { parseBilingualFile } from "@/lib/lqa-bilingual-parser"
+import { countWords } from "@/lib/lqa-analyzer"
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024 // 5 MB
 const ALLOWED_EXTS = new Set(["xliff", "xlf", "tmx", "mxliff"])
@@ -23,6 +24,7 @@ export async function GET() {
       targetLanguage: true,
       status: true,
       totalUnits: true,
+      totalWordCount: true,
       qualityScore: true,
       qualityBand: true,
       accuracyErrors: true,
@@ -88,6 +90,8 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  const totalWordCount = units.reduce((sum, u) => sum + countWords(u.source), 0)
+
   const run = await db.lqaRun.create({
     data: {
       userId: session.user.id,
@@ -97,12 +101,13 @@ export async function POST(req: NextRequest) {
       targetLanguage,
       status: "pending",
       totalUnits: units.length,
+      totalWordCount,
       originalFile: content,
     },
   })
 
   return NextResponse.json(
-    { runId: run.id, totalUnits: units.length, sourceLanguage, targetLanguage },
+    { runId: run.id, totalUnits: units.length, totalWordCount, sourceLanguage, targetLanguage },
     { status: 201 }
   )
 }

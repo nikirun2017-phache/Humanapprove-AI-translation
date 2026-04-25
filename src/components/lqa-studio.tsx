@@ -27,6 +27,7 @@ interface LqaRun {
   targetLanguage: string
   status: "pending" | "running" | "completed" | "failed"
   totalUnits: number
+  totalWordCount: number
   qualityScore: number | null
   qualityBand: "High" | "Medium" | "Low" | null
   accuracyErrors: number
@@ -267,7 +268,9 @@ function RunCard({ run, onRefresh }: { run: LqaRun; onRefresh: (id: string) => P
               {run.sourceLanguage && run.targetLanguage
                 ? `${run.sourceLanguage} → ${run.targetLanguage} · `
                 : ""}
-              {run.totalUnits} units · {new Date(run.createdAt).toLocaleDateString()}
+              {run.totalWordCount > 0
+                ? `${run.totalWordCount.toLocaleString()} words`
+                : `${run.totalUnits} units`} · {new Date(run.createdAt).toLocaleDateString()}
             </p>
           </div>
         </div>
@@ -486,14 +489,14 @@ function UploadForm({ onRunCreated }: { onRunCreated: (run: LqaRun) => void }) {
         fd.append("file", qf.file)
         const uploadRes = await fetch("/api/lqa/runs", { method: "POST", body: fd })
         const uploadData = await uploadRes.json() as {
-          runId?: string; totalUnits?: number; sourceLanguage?: string; targetLanguage?: string; error?: string
+          runId?: string; totalUnits?: number; totalWordCount?: number; sourceLanguage?: string; targetLanguage?: string; error?: string
         }
         if (!uploadRes.ok || !uploadData.runId) {
           updateFile(qf.fileId, { status: "error", error: uploadData.error ?? "Upload failed" })
           continue
         }
 
-        const { runId, totalUnits = 0, sourceLanguage = "", targetLanguage = "" } = uploadData
+        const { runId, totalUnits = 0, totalWordCount = 0, sourceLanguage = "", targetLanguage = "" } = uploadData
 
         // Optimistic run card
         const runningRun: LqaRun = {
@@ -504,6 +507,7 @@ function UploadForm({ onRunCreated }: { onRunCreated: (run: LqaRun) => void }) {
           targetLanguage,
           status: "running",
           totalUnits,
+          totalWordCount,
           qualityScore: null,
           qualityBand: null,
           accuracyErrors: 0,

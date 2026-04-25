@@ -39,6 +39,7 @@ export async function GET(
     languageErrors: run.languageErrors,
     styleErrors: run.styleErrors,
     findings,
+    totalWords: run.totalWordCount,
   }
 
   const buffer = await generateLqaExcel(

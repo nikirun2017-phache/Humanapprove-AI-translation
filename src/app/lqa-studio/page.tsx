@@ -24,6 +24,7 @@ export default async function LqaStudioPage() {
       targetLanguage: true,
       status: true,
       totalUnits: true,
+      totalWordCount: true,
       qualityScore: true,
       qualityBand: true,
       accuracyErrors: true,

@@ -183,6 +183,7 @@ interface LqaRun {
   targetLanguage: string
   status: string
   totalUnits: number
+  totalWordCount: number
   qualityScore: number | null
   qualityBand: string | null
   accuracyErrors: number
@@ -244,7 +245,11 @@ function LqaRunRow({ run, onDelete }: { run: LqaRun; onDelete: (id: string) => v
       <td className="px-4 py-3 text-xs text-gray-600">
         {run.sourceLanguage && run.targetLanguage ? `${run.sourceLanguage} → ${run.targetLanguage}` : "—"}
       </td>
-      <td className="px-4 py-3 text-xs text-gray-500">{run.totalUnits} units</td>
+      <td className="px-4 py-3 text-xs text-gray-500">
+        {run.totalWordCount > 0
+          ? `${run.totalWordCount.toLocaleString()} words`
+          : `${run.totalUnits} units`}
+      </td>
       <td className="px-4 py-3">
         {run.status === "completed"
           ? <LqaScoreBadge score={run.qualityScore} band={run.qualityBand} />

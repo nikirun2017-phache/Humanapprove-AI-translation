@@ -83,6 +83,7 @@ export async function POST(
           accuracyErrors: result.accuracyErrors,
           languageErrors: result.languageErrors,
           styleErrors: result.styleErrors,
+          totalWordCount: result.totalWords,
           findings: JSON.stringify(result.findings),
           errorMessage: null,
         },

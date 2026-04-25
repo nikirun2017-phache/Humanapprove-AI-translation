@@ -317,6 +317,7 @@ model LqaRun {
   status         String    @default("pending")
   // pending | running | completed | failed
   totalUnits     Int       @default(0)
+  totalWordCount Int       @default(0)
   qualityScore   Int?
   qualityBand    String?   // "High" | "Medium" | "Low"
   accuracyErrors Int       @default(0)
