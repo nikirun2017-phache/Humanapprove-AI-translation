@@ -245,8 +245,9 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
   // Terminology / glossary state
   type GlossaryTerm = { source: string; target: string }
   const [glossary, setGlossary] = useState<Record<string, GlossaryTerm[]>>({})
-  const [glossaryOpen, setGlossaryOpen] = useState(false)
+  const [glossaryOpen, setGlossaryOpen] = useState(true)
   const [glossaryTab, setGlossaryTab] = useState<string>("")
+  const [suggestedSourceTerms, setSuggestedSourceTerms] = useState<string[]>([])
 
   const MAX_TERMS = 5
 
@@ -268,6 +269,24 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     })
   }
   const totalGlossaryTerms = Object.values(glossary).reduce((s, t) => s + t.filter((x: GlossaryTerm) => x.source.trim() && x.target.trim()).length, 0)
+
+  function extractTopSourceTerms(fileEntries: FileEntry[], max: number): string[] {
+    const stopWords = new Set(["the","a","an","is","are","was","were","be","been","being","have","has","had","do","does","did","will","would","could","should","may","might","shall","can","of","in","to","for","on","at","by","from","with","as","this","that","these","those","it","its","and","or","but","not","no","so","if","then","than","when","where","who","which","what","how","i","you","we","they","he","she","my","your","our","their","his","her","me","him","us","them","all","just","more","also","into","about","up","out","use","used","using","please","new","one","two","three","select"])
+    const freq = new Map<string, number>()
+    for (const entry of fileEntries) {
+      for (const unit of entry.preview) {
+        const words = unit.sourceText.match(/\b[A-Za-z][A-Za-z'-]{2,}\b/g) ?? []
+        for (const word of words) {
+          const norm = word.toLowerCase()
+          if (!stopWords.has(norm)) freq.set(norm, (freq.get(norm) ?? 0) + 1)
+        }
+      }
+    }
+    return Array.from(freq.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, max)
+      .map(([term]) => term)
+  }
 
   // Step 3 state
   const [submitting, setSubmitting] = useState(false)
@@ -299,6 +318,14 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     if (entries.some((e: FileEntry) => e.probePending || e.parseError)) return
     setStep(2)
   }, [entries, restoringFromCardSetup, step])
+
+  // On entering step 2: clear language search/filter and scan source files for suggested terms
+  useEffect(() => {
+    if (step !== 2) return
+    setLangSearch("")
+    setRegionFilter("")
+    setSuggestedSourceTerms(extractTopSourceTerms(entries, MAX_TERMS))
+  }, [step]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function addCard() {
     setAddingCard(true)
@@ -1369,6 +1396,34 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
                               </button>
                             )
                           })}
+                        </div>
+                      )}
+
+                      {/* Suggested terms from source file scan */}
+                      {suggestedSourceTerms.length > 0 && activeLang && (
+                        <div className="space-y-1.5">
+                          <p className="text-xs font-medium text-gray-500">Suggested from your file</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {suggestedSourceTerms.map(term => {
+                              const alreadyAdded = (glossary[activeLang] ?? []).some(t => t.source.toLowerCase() === term.toLowerCase())
+                              const atMax = (glossary[activeLang] ?? []).length >= MAX_TERMS
+                              return (
+                                <button
+                                  key={term}
+                                  type="button"
+                                  disabled={alreadyAdded || atMax}
+                                  onClick={() => setGlossary(prev => ({ ...prev, [activeLang]: [...(prev[activeLang] ?? []), { source: term, target: "" }] }))}
+                                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                                    alreadyAdded
+                                      ? "border-gray-200 bg-gray-100 text-gray-400 cursor-default"
+                                      : "border-dashed border-indigo-300 text-indigo-600 hover:bg-indigo-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                  }`}
+                                >
+                                  {alreadyAdded ? "✓ " : "+ "}{term}
+                                </button>
+                              )
+                            })}
+                          </div>
                         </div>
                       )}
 

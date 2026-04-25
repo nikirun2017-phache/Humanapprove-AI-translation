@@ -387,10 +387,14 @@ function RunCard({ run, onRefresh }: { run: LqaRun; onRefresh: (id: string) => P
                 </a>
               )}
             </div>
-            {/* Warning: revision completed but AI produced no changes */}
+            {/* Warning: no changes, or quality regression detected */}
             {reviseWarning && (
               <p
-                className="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2"
+                className={`mt-2 text-xs rounded px-3 py-2 ${
+                  reviseWarning.startsWith("Quality regression")
+                    ? "text-red-800 bg-red-50 border border-red-200"
+                    : "text-amber-800 bg-amber-50 border border-amber-200"
+                }`}
                 onClick={(e) => e.stopPropagation()}
               >
                 {reviseWarning}

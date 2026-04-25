@@ -2,9 +2,11 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { reviseBilingualFile } from "@/lib/lqa-reviser"
+import { analyzeLqa } from "@/lib/lqa-analyzer"
 import type { LqaFinding } from "@/lib/lqa-analyzer"
+import { parseBilingualFile } from "@/lib/lqa-bilingual-parser"
 
-export const maxDuration = 60 // seconds — increase Vercel function timeout
+export const maxDuration = 120 // seconds — revision + quality validation
 
 // POST /api/lqa/runs/[runId]/revise — trigger AI auto-fix of findings
 export async function POST(
@@ -74,6 +76,52 @@ export async function POST(
       console.warn(`[lqa/revise] run ${runId}: AI returned no changes — revised content is identical to original. Findings count: ${findings.length}`)
     }
 
+    // ── Quality validation: re-analyse the revised units to check for regressions ──
+    let regressionWarning: string | undefined
+    if (!unchanged) {
+      try {
+        // Compute original weighted-error cost for the flagged units only
+        const originalWeighted = findings.reduce((sum, f) => {
+          for (const e of f.errors) {
+            sum += e.type === "acc" ? 3 : e.type === "lang" ? 2 : 1
+          }
+          return sum
+        }, 0)
+
+        // Extract the revised versions of only the flagged units
+        const { units: revisedUnits } = parseBilingualFile(revisedContent, run.fileFormat)
+        const findingIds = new Set(findings.map((f) => f.unitId))
+        const revisedFindingUnits = revisedUnits.filter((u) => findingIds.has(u.id))
+
+        if (revisedFindingUnits.length > 0) {
+          const reanalysis = await analyzeLqa(
+            revisedFindingUnits,
+            run.sourceLanguage,
+            run.targetLanguage,
+            apiKey,
+            provider,
+            model
+          )
+          const revisedWeighted =
+            reanalysis.accuracyErrors * 3 +
+            reanalysis.languageErrors * 2 +
+            reanalysis.styleErrors
+
+          if (revisedWeighted > originalWeighted) {
+            const delta = revisedWeighted - originalWeighted
+            regressionWarning =
+              `Quality regression detected: the revised translation introduced ${delta} additional weighted error point${delta !== 1 ? "s" : ""} ` +
+              `(original: ${originalWeighted}, after revision: ${revisedWeighted}). ` +
+              `Review the revised file carefully before using it.`
+            console.warn(`[lqa/revise] run ${runId}: regression — original weighted ${originalWeighted}, revised ${revisedWeighted}`)
+          }
+        }
+      } catch (validationErr) {
+        // Non-fatal: log and continue — we still save the revision
+        console.warn(`[lqa/revise] run ${runId}: quality validation failed (non-fatal):`, (validationErr as Error).message)
+      }
+    }
+
     await db.lqaRun.update({
       where: { id: runId },
       data: { revisedFile: revisedContent, revisionStatus: "completed" },
@@ -82,7 +130,9 @@ export async function POST(
     return NextResponse.json({
       success: true,
       revisedUnits: unchanged ? 0 : findings.length,
-      warning: unchanged ? "AI returned no revisions — the translated content may already be correct, or the fix suggestions were unclear." : undefined,
+      warning: unchanged
+        ? "AI returned no revisions — the translated content may already be correct, or the fix suggestions were unclear."
+        : regressionWarning,
     })
   } catch (err) {
     const message = (err as Error).message

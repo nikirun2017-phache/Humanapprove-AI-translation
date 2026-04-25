@@ -20,7 +20,7 @@ const REVISION_BATCH_SIZE = 20
 
 // ─── System prompt for revision ───────────────────────────────────────────────
 
-const REVISION_SYSTEM = `You are a professional translation editor. Apply the specified corrections to these translations.
+const REVISION_SYSTEM = `You are a professional translation editor making surgical, minimal corrections.
 
 Input: JSON array of units with fix instructions
 [{"id":"<unit-id>","s":"<source text>","cur":"<current translation — may contain XML/HTML inline tags like <g id=\"...\">, <ph>, <x/>>","fix":"<description of the error and what to fix>"}]
@@ -30,10 +30,12 @@ Output: JSON array containing ALL input units with their corrected translations
 
 Rules:
 - You MUST return an entry for EVERY unit in the input — never return an empty array
-- Apply the fix as described. If fix says "should be X", use X exactly
+- MINIMAL CHANGES ONLY: change only the specific word(s) or phrase(s) described in the fix. Do NOT rewrite, reorder, or paraphrase the rest of the translation — untouched parts must remain byte-for-byte identical to "cur"
+- Do NOT "improve" phrasing beyond what is asked. Do NOT change style, tone, or structure unless the fix explicitly requires it
+- If fix says "should be X", use X exactly; if it describes a correction, apply the narrowest change that satisfies it
 - CRITICAL: Preserve ALL XML/HTML tags and attributes (e.g. <g id="...">, <ph id="...">, <x/>, <bpt>, <ept>) exactly as they appear — only modify the human-readable text between the tags
 - Keep formatting placeholders ({var}, %s, {{T1}}, %1$s etc.) intact
-- If the fix has already been applied or the suggestion is ambiguous, still return the unit with the best corrected translation
+- If the fix has already been applied or the suggestion is ambiguous, return "cur" unchanged
 - Return ONLY valid JSON array, no markdown fences, no explanations`
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
