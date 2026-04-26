@@ -211,11 +211,251 @@ function FindingsPanel({ findings }: { findings: LqaFinding[] }) {
   )
 }
 
+// ─── Findings editor modal ────────────────────────────────────────────────────
+
+function FindingsEditorModal({
+  run,
+  onClose,
+  onRevised,
+}: {
+  run: LqaRun
+  onClose: () => void
+  onRevised: (id: string) => Promise<void>
+}) {
+  const [loadingFindings, setLoadingFindings] = useState(!run.findings)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(
+    () => new Set((run.findings ?? []).map((f) => f.unitId))
+  )
+  const [revising, setRevising] = useState(false)
+  const [error, setError] = useState("")
+
+  // Load findings on mount if not yet available
+  useEffect(() => {
+    if (!run.findings) {
+      void onRevised(run.id)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // When findings arrive via prop update, sync selectedIds and clear loading state
+  useEffect(() => {
+    if (!run.findings) return
+    const fs = run.findings
+    setSelectedIds((prev) => (prev.size === 0 ? new Set(fs.map((f) => f.unitId)) : prev))
+    setLoadingFindings(false)
+  }, [run.findings])
+
+  // Escape key closes modal
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
+    document.addEventListener("keydown", handler)
+    return () => document.removeEventListener("keydown", handler)
+  }, [onClose])
+
+  const findings = run.findings ?? []
+  const allSelected = findings.length > 0 && selectedIds.size === findings.length
+
+  const toggleAll = () => {
+    if (allSelected) setSelectedIds(new Set())
+    else setSelectedIds(new Set(findings.map((f) => f.unitId)))
+  }
+
+  const toggle = (unitId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(unitId)) next.delete(unitId)
+      else next.add(unitId)
+      return next
+    })
+  }
+
+  const handleRevise = async () => {
+    if (selectedIds.size === 0 || revising) return
+    setRevising(true)
+    setError("")
+    try {
+      const res = await fetch(`/api/lqa/runs/${run.id}/revise`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ unitIds: [...selectedIds] }),
+      })
+      const data = await res.json() as { error?: string; warning?: string }
+      if (!res.ok) {
+        setError(data.error ?? "Revision failed")
+      } else {
+        await onRevised(run.id)
+        onClose()
+      }
+    } finally {
+      setRevising(false)
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full flex flex-col max-h-[85vh]">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
+          <div className="min-w-0">
+            <h2 className="text-base font-semibold text-gray-900">Review Findings Before Revision</h2>
+            <p className="text-xs text-gray-500 mt-0.5 truncate">{run.fileName}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="shrink-0 ml-4 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Loading spinner */}
+        {loadingFindings ? (
+          <div className="flex-1 flex items-center justify-center p-16">
+            <div className="text-center space-y-3">
+              <svg className="w-8 h-8 animate-spin text-indigo-500 mx-auto" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <p className="text-sm text-gray-500">Loading findings…</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Controls bar */}
+            <div className="flex items-center justify-between px-6 py-2.5 border-b border-gray-100 bg-gray-50 shrink-0">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={toggleAll}
+                  className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
+                  {allSelected ? "Deselect all" : "Select all"}
+                </button>
+                <span className="text-gray-300">|</span>
+                <span className="text-xs text-gray-600">
+                  <strong>{selectedIds.size}</strong> of {findings.length} selected for revision
+                </span>
+              </div>
+              <div className="flex gap-1.5 shrink-0">
+                <span className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700 font-medium">ACC ×3</span>
+                <span className="text-xs px-2 py-0.5 rounded bg-orange-100 text-orange-700 font-medium">LANG ×2</span>
+                <span className="text-xs px-2 py-0.5 rounded bg-yellow-100 text-yellow-700 font-medium">STYLE ×1</span>
+              </div>
+            </div>
+
+            {/* Findings list */}
+            <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+              {findings.map((f) => {
+                const checked = selectedIds.has(f.unitId)
+                const primaryError = f.errors[0]
+                return (
+                  <div
+                    key={f.unitId}
+                    className={`flex gap-3 px-6 py-3 cursor-pointer transition-colors ${
+                      checked ? "hover:bg-gray-50" : "bg-gray-50/70 opacity-60"
+                    }`}
+                    onClick={() => toggle(f.unitId)}
+                  >
+                    {/* Checkbox */}
+                    <div className="pt-0.5 shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggle(f.unitId)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                      />
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                        <span className="text-xs font-mono text-gray-400 truncate">{f.unitId}</span>
+                        <div className="flex gap-1 shrink-0">
+                          {f.errors.map((e, i) => (
+                            <span key={i} className={`text-xs px-1.5 py-0.5 rounded font-medium ${ERROR_BADGE[e.type]}`}>
+                              {ERROR_LABELS[e.type]}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-xs mb-2">
+                        <div>
+                          <p className="text-gray-400 font-medium mb-0.5">Source</p>
+                          <p className="text-gray-700 line-clamp-2">{f.sourceText}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 font-medium mb-0.5">Target</p>
+                          <p className="text-gray-700 line-clamp-2">{f.targetText || <em className="text-gray-400">empty</em>}</p>
+                        </div>
+                      </div>
+                      {primaryError && (
+                        <p className={`text-xs rounded px-2.5 py-1.5 border ${ERROR_COLORS[primaryError.type]}`}>
+                          <strong>{primaryError.description}</strong>
+                          {primaryError.suggestion && (
+                            <span className="opacity-80"> → {primaryError.suggestion}</span>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between gap-3 shrink-0">
+              <div className="flex-1">
+                {error && (
+                  <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+                    {error}
+                  </p>
+                )}
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <button
+                  onClick={onClose}
+                  className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRevise}
+                  disabled={revising || selectedIds.size === 0}
+                  className="px-5 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-1.5"
+                >
+                  {revising ? (
+                    <>
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Revising…
+                    </>
+                  ) : (
+                    `Revise ${selectedIds.size} finding${selectedIds.size !== 1 ? "s" : ""}`
+                  )}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Run card ─────────────────────────────────────────────────────────────────
 
 function RunCard({ run, onRefresh }: { run: LqaRun; onRefresh: (id: string) => Promise<void> }) {
   const [expanded, setExpanded] = useState(false)
   const [showReviseForm, setShowReviseForm] = useState(false)
+  const [showFindingsEditor, setShowFindingsEditor] = useState(false)
   const [revising, setRevising] = useState(false)
   const [reviseError, setReviseError] = useState("")
   const [reviseWarning, setReviseWarning] = useState("")
@@ -341,17 +581,25 @@ function RunCard({ run, onRefresh }: { run: LqaRun; onRefresh: (id: string) => P
                 Download Report (.xlsx)
               </a>
 
-              {/* Revise button — only when there are errors and not yet revised */}
+              {/* Revise buttons — only when there are errors and not yet revised */}
               {canRevise && !showReviseForm && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); setShowReviseForm(true) }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  Revise File ({totalErrors} issue{totalErrors !== 1 ? "s" : ""})
-                </button>
+                <>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowFindingsEditor(true) }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    Review &amp; Select ({totalErrors} issue{totalErrors !== 1 ? "s" : ""})
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowReviseForm(true) }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-amber-400 text-amber-700 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors"
+                  >
+                    Apply All Fixes
+                  </button>
+                </>
               )}
 
               {/* Revision in-progress */}
@@ -438,6 +686,15 @@ function RunCard({ run, onRefresh }: { run: LqaRun; onRefresh: (id: string) => P
             </div>
           )}
         </div>
+      )}
+
+      {/* Findings editor modal */}
+      {showFindingsEditor && (
+        <FindingsEditorModal
+          run={run}
+          onClose={() => setShowFindingsEditor(false)}
+          onRevised={onRefresh}
+        />
       )}
     </div>
   )

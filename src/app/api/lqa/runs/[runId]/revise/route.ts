@@ -9,8 +9,10 @@ import { parseBilingualFile } from "@/lib/lqa-bilingual-parser"
 export const maxDuration = 120 // seconds — revision + quality validation
 
 // POST /api/lqa/runs/[runId]/revise — trigger AI auto-fix of findings
+// Optional body: { unitIds: string[] } — if provided, only those units are revised.
+// Omit body (or send empty) to revise all findings.
 export async function POST(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ runId: string }> }
 ) {
   const session = await auth()
@@ -37,6 +39,19 @@ export async function POST(
     return NextResponse.json({ error: "No findings to revise — translation quality is excellent" }, { status: 400 })
   }
 
+  // Parse optional unitIds filter — revise only selected units
+  let selectedFindings = findings
+  try {
+    const body = await req.json() as { unitIds?: string[] }
+    if (Array.isArray(body.unitIds) && body.unitIds.length > 0) {
+      const unitIdSet = new Set(body.unitIds)
+      selectedFindings = findings.filter((f) => unitIdSet.has(f.unitId))
+      if (selectedFindings.length === 0) {
+        return NextResponse.json({ error: "None of the selected unit IDs match any findings" }, { status: 400 })
+      }
+    }
+  } catch { /* no body or invalid JSON — revise all */ }
+
   // Always use Anthropic Claude — resolve key from DB settings or platform env
   const provider = "anthropic"
   const model = "claude-sonnet-4-6"
@@ -62,7 +77,7 @@ export async function POST(
 
   try {
     const revisedContent = await Promise.race([
-      reviseBilingualFile(run.originalFile, run.fileFormat, run.targetLanguage, findings, apiKey, provider, model),
+      reviseBilingualFile(run.originalFile, run.fileFormat, run.targetLanguage, selectedFindings, apiKey, provider, model),
       new Promise<never>((_, reject) =>
         setTimeout(
           () => reject(new Error("Revision timed out. Please try again.")),
@@ -73,24 +88,24 @@ export async function POST(
 
     const unchanged = revisedContent === run.originalFile
     if (unchanged) {
-      console.warn(`[lqa/revise] run ${runId}: AI returned no changes — revised content is identical to original. Findings count: ${findings.length}`)
+      console.warn(`[lqa/revise] run ${runId}: AI returned no changes — revised content is identical to original. Findings count: ${selectedFindings.length}`)
     }
 
     // ── Quality validation: re-analyse the revised units to check for regressions ──
     let regressionWarning: string | undefined
     if (!unchanged) {
       try {
-        // Compute original weighted-error cost for the flagged units only
-        const originalWeighted = findings.reduce((sum, f) => {
+        // Compute original weighted-error cost for the selected units only
+        const originalWeighted = selectedFindings.reduce((sum, f) => {
           for (const e of f.errors) {
             sum += e.type === "acc" ? 3 : e.type === "lang" ? 2 : 1
           }
           return sum
         }, 0)
 
-        // Extract the revised versions of only the flagged units
+        // Extract the revised versions of only the selected units
         const { units: revisedUnits } = parseBilingualFile(revisedContent, run.fileFormat)
-        const findingIds = new Set(findings.map((f) => f.unitId))
+        const findingIds = new Set(selectedFindings.map((f) => f.unitId))
         const revisedFindingUnits = revisedUnits.filter((u) => findingIds.has(u.id))
 
         if (revisedFindingUnits.length > 0) {
@@ -129,7 +144,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      revisedUnits: unchanged ? 0 : findings.length,
+      revisedUnits: unchanged ? 0 : selectedFindings.length,
       warning: unchanged
         ? "AI returned no revisions — the translated content may already be correct, or the fix suggestions were unclear."
         : regressionWarning,
