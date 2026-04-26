@@ -129,27 +129,56 @@ function extractRawXliffTarget(xml: string, unitId: string): string {
 /**
  * Extract the raw inner content of the <seg> element inside the target-language <tuv>
  * for a given TMX translation unit.
+ *
+ * Two cases:
+ *  • Named unit  — <tu tuid="X"> — locate by attribute value
+ *  • Anonymous unit — <tu> (no tuid/id) — parser assigns "tu_N" (0-based); locate by
+ *    counting <tu> blocks in document order, skipping those with empty source segments
+ *    to mirror parseTmx's orderIdx logic exactly.
  */
 function extractRawTmxTarget(xml: string, tuId: string, targetLanguage: string): string {
   const hashMatch = tuId.match(/^([\s\S]+)#(\d+)$/)
   const rawId = hashMatch ? hashMatch[1] : tuId
   const occurrence = hashMatch ? parseInt(hashMatch[2], 10) : 1
-  const escapedId = rawId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
-  const tuPattern = new RegExp(
-    `<tu[^>]*(?:tuid|id)="${escapedId}"[^>]*>[\\s\\S]*?</tu>`,
+  const langSegRe = new RegExp(
+    `<tuv[^>]*xml:lang="${targetLanguage}"[^>]*>[\\s\\S]*?<seg>([\\s\\S]*?)<\\/seg>`,
+    "i"
+  )
+  // Matches every <tu>…</tu> block (TMX <tu> elements never nest)
+  const tuBlockRe = /<tu(?:\s[^>]*)?>[\s\S]*?<\/tu>/g
+
+  // ── Positional ID (anonymous <tu> with no tuid attribute) ──────────────────
+  const positionalMatch = rawId.match(/^tu_(\d+)$/)
+  if (positionalMatch) {
+    const targetIdx = parseInt(positionalMatch[1], 10)
+    let nonEmptyCount = 0
+    let m: RegExpExecArray | null
+    while ((m = tuBlockRe.exec(xml)) !== null) {
+      // Mirror parseTmx: only count units whose first <seg> is non-empty
+      const firstSeg = m[0].match(/<seg>([\s\S]*?)<\/seg>/)
+      if (!firstSeg || !firstSeg[1].trim()) continue
+      if (nonEmptyCount === targetIdx) {
+        const lm = m[0].match(langSegRe)
+        return lm ? lm[1] : ""
+      }
+      nonEmptyCount++
+    }
+    return ""
+  }
+
+  // ── Named ID (<tu tuid="X"> or <tu id="X">) ───────────────────────────────
+  const escapedId = rawId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  const namedRe = new RegExp(
+    `<tu[^>]*(?:tuid|id)=["']${escapedId}["'][^>]*>[\\s\\S]*?<\\/tu>`,
     "g"
   )
   let n = 0
   let m: RegExpExecArray | null
-  while ((m = tuPattern.exec(xml)) !== null) {
+  while ((m = namedRe.exec(xml)) !== null) {
     n++
     if (n === occurrence) {
-      const langPattern = new RegExp(
-        `<tuv[^>]*xml:lang="${targetLanguage}"[^>]*>[\\s\\S]*?<seg>([\\s\\S]*?)</seg>`,
-        "i"
-      )
-      const lm = m[0].match(langPattern)
+      const lm = m[0].match(langSegRe)
       return lm ? lm[1] : ""
     }
   }
@@ -299,6 +328,12 @@ function patchXliff(xml: string, fixes: Map<string, string>): string {
  *   <tuv xml:lang="zh-CN"><seg>target</seg></tuv>
  * </tu>
  *
+ * Two cases:
+ *  • Named unit  — <tu tuid="X"> — locate by attribute value
+ *  • Anonymous unit — <tu> (no tuid/id) — parser assigns "tu_N" (0-based); locate by
+ *    counting <tu> blocks in document order, skipping those with empty source segments
+ *    to mirror parseTmx's orderIdx logic exactly.
+ *
  * The replacement value is raw XML — no escaping applied.
  */
 function patchTmx(
@@ -306,10 +341,43 @@ function patchTmx(
   fixes: Map<string, string>,
   targetLanguage: string
 ): string {
-  let result = xml
+  // Separate positional (tu_N) from named (tuid-based) fixes
+  const positionalFixes = new Map<number, string>()
+  const idFixes = new Map<string, string>()
 
   for (const [tuId, newTarget] of fixes) {
-    // Strip the "#N" occurrence suffix if present
+    const hashMatch = tuId.match(/^([\s\S]+)#(\d+)$/)
+    const rawId = hashMatch ? hashMatch[1] : tuId
+    const positional = rawId.match(/^tu_(\d+)$/)
+    if (positional) {
+      positionalFixes.set(parseInt(positional[1], 10), newTarget)
+    } else {
+      idFixes.set(tuId, newTarget)
+    }
+  }
+
+  let result = xml
+
+  // ── Apply positional fixes (anonymous <tu> elements without tuid) ───────────
+  if (positionalFixes.size > 0) {
+    let nonEmptyCount = 0
+    result = result.replace(/<tu(?:\s[^>]*)?>[\s\S]*?<\/tu>/g, (match) => {
+      // Mirror parseTmx: only count units whose first <seg> is non-empty
+      const firstSeg = match.match(/<seg>([\s\S]*?)<\/seg>/)
+      if (!firstSeg || !firstSeg[1].trim()) return match
+      const idx = nonEmptyCount++
+      const newTarget = positionalFixes.get(idx)
+      if (newTarget === undefined) return match
+      const langPattern = new RegExp(
+        `(<tuv[^>]*xml:lang="${targetLanguage}"[^>]*>[\\s\\S]*?<seg>)[\\s\\S]*?(<\\/seg>)`,
+        "i"
+      )
+      return match.replace(langPattern, `$1${newTarget}$2`)
+    })
+  }
+
+  // ── Apply named ID fixes (<tu tuid="X"> or <tu id="X">) ────────────────────
+  for (const [tuId, newTarget] of idFixes) {
     const hashMatch = tuId.match(/^([\s\S]+)#(\d+)$/)
     const rawId = hashMatch ? hashMatch[1] : tuId
     const occurrence = hashMatch ? parseInt(hashMatch[2], 10) : 1
@@ -318,7 +386,7 @@ function patchTmx(
 
     // Find the Nth <tu tuid="X">…</tu> and patch the target <tuv> inside
     const tuPattern = new RegExp(
-      `(<tu[^>]*(?:tuid|id)="${escapedId}"[^>]*>)([\\s\\S]*?)(</tu>)`,
+      `(<tu[^>]*(?:tuid|id)=["']${escapedId}["'][^>]*>)([\\s\\S]*?)(</tu>)`,
       "g"
     )
     let nTu = 0
