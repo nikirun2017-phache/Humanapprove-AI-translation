@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/values/strings.xml — Android default (English) strings -->
+<resources>
+
+    <!-- App Info -->
+    <string name="app_name">My App</string>
+    <string name="app_version">Version %s</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Welcome to My App</string>
+    <string name="onboarding_welcome_subtitle">The best app for managing your tasks</string>
+    <string name="onboarding_get_started">Get Started</string>
+    <string name="onboarding_skip">Skip</string>
+
+    <!-- Authentication -->
+    <string name="auth_login_title">Sign In</string>
+    <string name="auth_login_email_hint">Email address</string>
+    <string name="auth_login_password_hint">Password</string>
+    <string name="auth_login_button">Sign In</string>
+    <string name="auth_login_forgot_password">Forgot password?</string>
+    <string name="auth_login_no_account">Don\'t have an account? Sign Up</string>
+    <string name="auth_logout">Sign Out</string>
+
+    <!-- Home -->
+    <string name="home_greeting">Hello, %s!</string>
+    <string name="home_empty_state">No tasks yet. Tap + to add one.</string>
+
+    <!-- Plurals: task count -->
+    <plurals name="home_tasks_count">
+        <item quantity="zero">No tasks remaining</item>
+        <item quantity="one">%d task remaining</item>
+        <item quantity="other">%d tasks remaining</item>
+    </plurals>
+
+    <!-- Plurals: files uploaded -->
+    <plurals name="upload_files_uploaded">
+        <item quantity="one">%d file uploaded</item>
+        <item quantity="other">%d files uploaded</item>
+    </plurals>
+
+    <!-- Errors -->
+    <string name="error_generic">Something went wrong. Please try again.</string>
+    <string name="error_network">No internet connection.</string>
+    <string name="error_invalid_email">Please enter a valid email address.</string>
+    <string name="error_invalid_password">Password must be at least 8 characters.</string>
+
+    <!-- Buttons -->
+    <string name="button_ok">OK</string>
+    <string name="button_cancel">Cancel</string>
+    <string name="button_save">Save</string>
+    <string name="button_delete">Delete</string>
+    <string name="button_edit">Edit</string>
+    <string name="button_done">Done</string>
+    <string name="button_retry">Retry</string>
+
+    <!-- Accessibility / Content Descriptions -->
+    <string name="accessibility_close_button">Close</string>
+    <string name="accessibility_back_button">Go back</string>
+    <string name="accessibility_settings">Open settings</string>
+
+    <!-- String Array example -->
+    <string-array name="days_of_week">
+        <item>Sunday</item>
+        <item>Monday</item>
+        <item>Tuesday</item>
+        <item>Wednesday</item>
+        <item>Thursday</item>
+        <item>Friday</item>
+        <item>Saturday</item>
+    </string-array>
+
+</resources>

@@ -1,0 +1,179 @@
+{
+  "@@locale": "en",
+  "@@last_modified": "2026-03-31T10:00:00.000Z",
+  "@@author": "My App Team",
+
+  "appName": "My App",
+  "@appName": {
+    "description": "The name of the application shown in the title bar and App Store."
+  },
+
+  "appVersion": "Version {version}",
+  "@appVersion": {
+    "description": "Version string shown in settings.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "1.2.3"
+      }
+    }
+  },
+
+  "onboardingWelcomeTitle": "Welcome to My App",
+  "@onboardingWelcomeTitle": {
+    "description": "Large title on the first onboarding screen."
+  },
+
+  "onboardingWelcomeSubtitle": "The best app for managing your tasks",
+  "@onboardingWelcomeSubtitle": {
+    "description": "Subtitle shown below the welcome title."
+  },
+
+  "onboardingGetStarted": "Get Started",
+  "@onboardingGetStarted": {
+    "description": "Primary CTA button on the onboarding screen. Keep short."
+  },
+
+  "onboardingSkip": "Skip",
+  "@onboardingSkip": {
+    "description": "Secondary button to skip the onboarding flow."
+  },
+
+  "authLoginTitle": "Sign In",
+  "@authLoginTitle": {
+    "description": "Navigation title for the login screen."
+  },
+
+  "authLoginEmailHint": "Email address",
+  "@authLoginEmailHint": {
+    "description": "Hint/placeholder text inside the email text field."
+  },
+
+  "authLoginPasswordHint": "Password",
+  "@authLoginPasswordHint": {
+    "description": "Hint/placeholder text inside the password text field."
+  },
+
+  "authLoginForgotPassword": "Forgot password?",
+  "@authLoginForgotPassword": {
+    "description": "Tappable link below the login form."
+  },
+
+  "authLoginNoAccount": "Don't have an account? Sign Up",
+  "@authLoginNoAccount": {
+    "description": "Link at the bottom of the login screen directing users to register."
+  },
+
+  "authLogout": "Sign Out",
+  "@authLogout": {
+    "description": "Button in settings to log out the current user."
+  },
+
+  "homeGreeting": "Hello, {name}!",
+  "@homeGreeting": {
+    "description": "Personalized greeting on the home screen.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Sarah"
+      }
+    }
+  },
+
+  "homeEmptyState": "No tasks yet. Tap + to add one.",
+  "@homeEmptyState": {
+    "description": "Shown when the task list is empty."
+  },
+
+  "homeTasksCount": "{count, plural, =0{No tasks remaining} =1{1 task remaining} other{{count} tasks remaining}}",
+  "@homeTasksCount": {
+    "description": "Number of tasks remaining with plural support.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+
+  "uploadFilesUploaded": "{count, plural, =1{1 file uploaded} other{{count} files uploaded}}",
+  "@uploadFilesUploaded": {
+    "description": "Confirmation message after uploading files.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+
+  "errorGeneric": "Something went wrong. Please try again.",
+  "@errorGeneric": {
+    "description": "Generic fallback error message."
+  },
+
+  "errorNetwork": "No internet connection.",
+  "@errorNetwork": {
+    "description": "Shown when a network request fails due to no connectivity."
+  },
+
+  "errorInvalidEmail": "Please enter a valid email address.",
+  "@errorInvalidEmail": {
+    "description": "Validation error for the email input field."
+  },
+
+  "errorInvalidPassword": "Password must be at least 8 characters.",
+  "@errorInvalidPassword": {
+    "description": "Validation error for the password input field."
+  },
+
+  "buttonOk": "OK",
+  "@buttonOk": {
+    "description": "Generic confirmation button label."
+  },
+
+  "buttonCancel": "Cancel",
+  "@buttonCancel": {
+    "description": "Generic cancel button label."
+  },
+
+  "buttonSave": "Save",
+  "@buttonSave": {
+    "description": "Save button in edit screens."
+  },
+
+  "buttonDelete": "Delete",
+  "@buttonDelete": {
+    "description": "Destructive action button."
+  },
+
+  "buttonEdit": "Edit",
+  "@buttonEdit": {
+    "description": "Edit button to enter editing mode."
+  },
+
+  "buttonDone": "Done",
+  "@buttonDone": {
+    "description": "Button to dismiss a modal or finish editing."
+  },
+
+  "buttonRetry": "Retry",
+  "@buttonRetry": {
+    "description": "Button to retry a failed operation."
+  },
+
+  "accessibilityCloseButton": "Close",
+  "@accessibilityCloseButton": {
+    "description": "Semantic label for screen readers on the close button."
+  },
+
+  "accessibilityBackButton": "Go back",
+  "@accessibilityBackButton": {
+    "description": "Semantic label for screen readers on the back navigation button."
+  },
+
+  "accessibilitySettings": "Open settings",
+  "@accessibilitySettings": {
+    "description": "Semantic label for screen readers on the settings icon."
+  }
+}

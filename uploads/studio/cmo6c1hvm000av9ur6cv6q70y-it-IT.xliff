@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="en-US" target-language="it-IT" original="test.html" datatype="plaintext">
+    <body>
+      <trans-unit id="t_0" xml:space="preserve">
+        <source>{{subject}}</source>
+        <target state="needs-review-translation">{{subject}}</target>
+      </trans-unit>
+      <trans-unit id="t_1" xml:space="preserve">
+        <source>Here&apos;s what&apos;s new this month — we think you&apos;ll love it.</source>
+        <target state="needs-review-translation">Ecco le novità di questo mese — siamo sicuri che ti piaceranno.</target>
+      </trans-unit>
+      <trans-unit id="t_2" xml:space="preserve">
+        <source>Summon Translator</source>
+        <target state="needs-review-translation">Summon Translator</target>
+      </trans-unit>
+      <trans-unit id="t_3" xml:space="preserve">
+        <source>Hi {{firstName}},</source>
+        <target state="needs-review-translation">Ciao {{firstName}},</target>
+      </trans-unit>
+      <trans-unit id="t_4" xml:space="preserve">
+        <source>Rumi — Reflections Across Languages</source>
+        <target state="needs-review-translation">Rumi — Riflessioni attraverso le lingue</target>
+      </trans-unit>
+      <trans-unit id="t_5" xml:space="preserve">
+        <source>Quote 1</source>
+        <target state="needs-review-translation">Citazione 1</target>
+      </trans-unit>
+      <trans-unit id="t_6" xml:space="preserve">
+        <source>Yesterday I was clever, so I wanted to change the world.</source>
+        <target state="needs-review-translation">Ieri ero intelligente, quindi volevo cambiare il mondo.</target>
+      </trans-unit>
+      <trans-unit id="t_7" xml:space="preserve">
+        <source>Today I am wise, so I am changing myself.</source>
+        <target state="needs-review-translation">Oggi sono saggio, quindi sto cambiando me stesso.</target>
+      </trans-unit>
+      <trans-unit id="t_8" xml:space="preserve">
+        <source>Ieri ero intelligente, quindi volevo cambiare il mondo.</source>
+        <target state="needs-review-translation">Ieri ero intelligente, quindi volevo cambiare il mondo.</target>
+      </trans-unit>
+      <trans-unit id="t_9" xml:space="preserve">
+        <source>Oggi sono saggio, quindi sto cambiando me stesso.</source>
+        <target state="needs-review-translation">Oggi sono saggio, quindi sto cambiando me stesso.</target>
+      </trans-unit>
+      <trans-unit id="t_10" xml:space="preserve">
+        <source>Gestern war ich klug, deshalb wollte ich die Welt verändern.</source>
+        <target state="needs-review-translation">Gestern war ich klug, deshalb wollte ich die Welt verändern.</target>
+      </trans-unit>
+      <trans-unit id="t_11" xml:space="preserve">
+        <source>Heute bin ich weise, deshalb verändere ich mich selbst.</source>
+        <target state="needs-review-translation">Heute bin ich weise, deshalb verändere ich mich selbst.</target>
+      </trans-unit>
+      <trans-unit id="t_12" xml:space="preserve">
+        <source>Hier, j’étais intelligent, alors je voulais changer le monde.</source>
+        <target state="needs-review-translation">Hier, j&apos;étais intelligent, alors je voulais changer le monde.</target>
+      </trans-unit>
+      <trans-unit id="t_13" xml:space="preserve">
+        <source>Aujourd’hui, je suis sage, alors je me change moi-même.</source>
+        <target state="needs-review-translation">Aujourd&apos;hui, je suis sage, alors je me change moi-même.</target>
+      </trans-unit>
+      <trans-unit id="t_14" xml:space="preserve">
+        <source>Quote 4</source>
+        <target state="needs-review-translation">Citazione 4</target>
+      </trans-unit>
+      <trans-unit id="t_15" xml:space="preserve">
+        <source>Why are you so busy with this or that or good or bad;</source>
+        <target state="needs-review-translation">Perché sei così impegnato con questo o quello, con il bene o il male;</target>
+      </trans-unit>
+      <trans-unit id="t_16" xml:space="preserve">
+        <source>pay attention to how things blend.</source>
+        <target state="needs-review-translation">presta attenzione a come le cose si fondono.</target>
+      </trans-unit>
+      <trans-unit id="t_17" xml:space="preserve">
+        <source>Perché sei così occupato con questo o quello, con il bene o il male?</source>
+        <target state="needs-review-translation">Perché sei così occupato con questo o quello, con il bene o il male?</target>
+      </trans-unit>
+      <trans-unit id="t_18" xml:space="preserve">
+        <source>Presta attenzione a come le cose si mescolano.</source>
+        <target state="needs-review-translation">Presta attenzione a come le cose si mescolano.</target>
+      </trans-unit>
+      <trans-unit id="t_19" xml:space="preserve">
+        <source>Warum bist du so beschäftigt mit diesem oder jenem, mit Gut oder Böse?</source>
+        <target state="needs-review-translation">Warum bist du so beschäftigt mit diesem oder jenem, mit Gut oder Böse?</target>
+      </trans-unit>
+      <trans-unit id="t_20" xml:space="preserve">
+        <source>Achte darauf, wie die Dinge sich verbinden.</source>
+        <target state="needs-review-translation">Achte darauf, wie die Dinge sich verbinden.</target>
+      </trans-unit>
+      <trans-unit id="t_21" xml:space="preserve">
+        <source>Pourquoi es-tu si occupé par ceci ou cela, par le bien ou le mal ?</source>
+        <target state="needs-review-translation">Pourquoi es-tu si occupé par ceci ou cela, par le bien ou le mal ?</target>
+      </trans-unit>
+      <trans-unit id="t_22" xml:space="preserve">
+        <source>Prête attention à la façon dont les choses se mélangent.</source>
+        <target state="needs-review-translation">Prête attention à la façon dont les choses se mélangent.</target>
+      </trans-unit>
+      <trans-unit id="t_23" xml:space="preserve">
+        <source>Built for real-world localization workflows</source>
+        <target state="needs-review-translation">Progettato per i flussi di lavoro di localizzazione reali</target>
+      </trans-unit>
+      <trans-unit id="t_24" xml:space="preserve">
+        <source>When you&apos;re localizing product listings, compliance docs, and seller guides across German, Italian, Spanish, Portuguese, and beyond — the bottleneck is rarely content. It&apos;s turnaround, format integrity, and cost you can&apos;t predict month to month.</source>
+        <target state="needs-review-translation">Quando localizzi schede prodotto, documenti di conformità e guide per i venditori in tedesco, italiano, spagnolo, portoghese e oltre — il collo di bottiglia è raramente il contenuto. È il tempo di consegna, l&apos;integrità del formato e i costi che non riesci a prevedere di mese in mese.</target>
+      </trans-unit>
+      <trans-unit id="t_25" xml:space="preserve">
+        <source>Summon Translator was built for exactly this. Upload JSON, CSV, PDF, XLIFF, Markdown, or 10 other formats. Get back a translated file in the same structure you sent — no reformatting, no cleanup. Powered by Claude, GPT-4o, Gemini, or DeepSeek across 100+ languages.</source>
+        <target state="needs-review-translation">Summon Translator è stato creato esattamente per questo. Carica file JSON, CSV, PDF, XLIFF, Markdown o altri 10 formati. Ricevi il file tradotto nella stessa struttura che hai inviato — senza riformattazione, senza pulizia. Alimentato da Claude, GPT-4o, Gemini o DeepSeek in oltre 100 lingue.</target>
+      </trans-unit>
+      <trans-unit id="t_26" xml:space="preserve">
+        <source>Try It Now</source>
+        <target state="needs-review-translation">Provalo ora</target>
+      </trans-unit>
+      <trans-unit id="t_27" xml:space="preserve">
+        <source>Warm regards,</source>
+        <target state="needs-review-translation">Cordiali saluti,</target>
+      </trans-unit>
+      <trans-unit id="t_28" xml:space="preserve">
+        <source>Jason &amp;amp; the Summon Team</source>
+        <target state="needs-review-translation">Jason &amp;amp; il team di Summon</target>
+      </trans-unit>
+      <trans-unit id="t_29" xml:space="preserve">
+        <source>You are receiving this email because you signed up for updates from Summon Translator.</source>
+        <target state="needs-review-translation">Stai ricevendo questa email perché ti sei iscritto agli aggiornamenti di Summon Translator.</target>
+      </trans-unit>
+      <trans-unit id="t_30" xml:space="preserve">
+        <source>Summon Translator Inc. · 19751 Main Street · San Francisco, CA 94105
+                &amp;nbsp;|&amp;nbsp;</source>
+        <target state="needs-review-translation">Summon Translator Inc. · 19751 Main Street · San Francisco, CA 94105
+                &amp;nbsp;|&amp;nbsp;</target>
+      </trans-unit>
+      <trans-unit id="t_31" xml:space="preserve">
+        <source>Unsubscribe</source>
+        <target state="needs-review-translation">Annulla iscrizione</target>
+      </trans-unit>
+      <trans-unit id="t_32" xml:space="preserve">
+        <source>{{{trackingPixel}}}</source>
+        <target state="needs-review-translation">{{{trackingPixel}}}</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

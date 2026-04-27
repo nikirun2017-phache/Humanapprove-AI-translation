@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+
+  <!-- "You have 1 task" / "You have 3 tasks" -->
+  <key>home.tasks_count</key>
+  <dict>
+    <key>NSStringLocalizedFormatKey</key>
+    <string>%#@tasks@</string>
+    <key>tasks</key>
+    <dict>
+      <key>NSStringFormatSpecTypeKey</key>
+      <string>NSStringPluralRuleType</string>
+      <key>NSStringFormatValueTypeKey</key>
+      <string>d</string>
+      <key>zero</key>
+      <string>No tasks remaining</string>
+      <key>one</key>
+      <string>%d task remaining</string>
+      <key>other</key>
+      <string>%d tasks remaining</string>
+    </dict>
+  </dict>
+
+  <!-- "1 file uploaded" / "5 files uploaded" -->
+  <key>upload.files_uploaded</key>
+  <dict>
+    <key>NSStringLocalizedFormatKey</key>
+    <string>%#@files@</string>
+    <key>files</key>
+    <dict>
+      <key>NSStringFormatSpecTypeKey</key>
+      <string>NSStringPluralRuleType</string>
+      <key>NSStringFormatValueTypeKey</key>
+      <string>d</string>
+      <key>one</key>
+      <string>%d file uploaded</string>
+      <key>other</key>
+      <string>%d files uploaded</string>
+    </dict>
+  </dict>
+
+  <!-- "John and 1 other like this" / "John and 4 others like this" -->
+  <key>social.likes_others</key>
+  <dict>
+    <key>NSStringLocalizedFormatKey</key>
+    <string>%@ and %#@others@</string>
+    <key>others</key>
+    <dict>
+      <key>NSStringFormatSpecTypeKey</key>
+      <string>NSStringPluralRuleType</string>
+      <key>NSStringFormatValueTypeKey</key>
+      <string>d</string>
+      <key>one</key>
+      <string>%d other like this</string>
+      <key>other</key>
+      <string>%d others like this</string>
+    </dict>
+  </dict>
+
+</dict>
+</plist>

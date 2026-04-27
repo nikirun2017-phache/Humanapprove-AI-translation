@@ -1,0 +1,46 @@
+/* Localizable.strings */
+/* English (en) */
+
+/* General */
+"app.name" = "My App";
+"app.version" = "Version %@";
+
+/* Onboarding */
+"onboarding.welcome.title" = "Welcome to My App";
+"onboarding.welcome.subtitle" = "The best app for managing your tasks";
+"onboarding.get_started" = "Get Started";
+"onboarding.skip" = "Skip";
+
+/* Authentication */
+"auth.login.title" = "Sign In";
+"auth.login.email_placeholder" = "Email address";
+"auth.login.password_placeholder" = "Password";
+"auth.login.button" = "Sign In";
+"auth.login.forgot_password" = "Forgot password?";
+"auth.login.no_account" = "Don't have an account? Sign Up";
+"auth.logout" = "Sign Out";
+
+/* Home */
+"home.greeting" = "Hello, %@!";
+"home.empty_state" = "No tasks yet. Tap + to add one.";
+"home.tasks_count" = "%d tasks remaining";
+
+/* Errors */
+"error.generic" = "Something went wrong. Please try again.";
+"error.network" = "No internet connection.";
+"error.invalid_email" = "Please enter a valid email address.";
+"error.invalid_password" = "Password must be at least 8 characters.";
+
+/* Buttons */
+"button.ok" = "OK";
+"button.cancel" = "Cancel";
+"button.save" = "Save";
+"button.delete" = "Delete";
+"button.edit" = "Edit";
+"button.done" = "Done";
+"button.retry" = "Retry";
+
+/* Accessibility */
+"accessibility.close_button" = "Close";
+"accessibility.back_button" = "Go back";
+"accessibility.settings" = "Open settings";

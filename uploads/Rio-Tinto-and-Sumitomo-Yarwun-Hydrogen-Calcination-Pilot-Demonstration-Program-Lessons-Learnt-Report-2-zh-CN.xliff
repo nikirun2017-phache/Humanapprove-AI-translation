@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="en-US" target-language="zh-CN" original="Rio-Tinto-and-Sumitomo-Yarwun-Hydrogen-Calcination-Pilot-Demonstration-Program-Lessons-Learnt-Report-2" datatype="plaintext">
+    <body>
+      <trans-unit id="h1_0" xml:space="preserve">
+        <source>Yarwun Hydrogen Calcination Pilot Demonstration Program</source>
+        <target state="needs-review-translation">亚伦氢煅烧试点示范计划</target>
+      </trans-unit>
+      <trans-unit id="p_1" xml:space="preserve">
+        <source>**17th November 2024**</source>
+        <target state="needs-review-translation">**2024年11月17日**</target>
+      </trans-unit>
+      <trans-unit id="p_2" xml:space="preserve">
+        <source>**Lessons Learnt Report no.2 (July 2024 – Sept 2024)**</source>
+        <target state="needs-review-translation">**经验教训报告第2号（2024年7月至2024年9月）**</target>
+      </trans-unit>
+      <trans-unit id="p_3" xml:space="preserve">
+        <source>Rio Tinto Aluminium Limited Summit Hydrogen Gladstone</source>
+        <target state="needs-review-translation">力拓铝业有限公司 Summit氢能格拉德斯通</target>
+      </trans-unit>
+      <trans-unit id="p_4" xml:space="preserve">
+        <source>Authors: Austin John, Natasha Penno and Koji Kanamaru</source>
+        <target state="needs-review-translation">作者：Austin John、Natasha Penno 和 Koji Kanamaru</target>
+      </trans-unit>
+      <trans-unit id="p_5" xml:space="preserve">
+        <source>*This Project received funding from the Australian government through the Central Queensland Hydrogen Hub (CQHH) and the Australian Renewable Energy Agency (ARENA) as part of ARENA&apos;s Advancing Renewables Program.*</source>
+        <target state="needs-review-translation">*本项目通过中央昆士兰氢能枢纽（CQHH）和澳大利亚可再生能源署（ARENA）获得澳大利亚政府资助，是ARENA推进可再生能源计划的组成部分。*</target>
+      </trans-unit>
+      <trans-unit id="p_6" xml:space="preserve">
+        <source>*The views expressed herein are not necessarily the views of the Australian Government, and the Australian Government does not accept responsibility for any information or advice contained herein.*</source>
+        <target state="needs-review-translation">*本文所表达的观点不一定代表澳大利亚政府的立场，澳大利亚政府对本文所含任何信息或建议不承担责任。*</target>
+      </trans-unit>
+      <trans-unit id="h2_7" xml:space="preserve">
+        <source>Table of Contents</source>
+        <target state="needs-review-translation">目录</target>
+      </trans-unit>
+      <trans-unit id="li_8" xml:space="preserve">
+        <source>Project background</source>
+        <target state="needs-review-translation">项目背景</target>
+      </trans-unit>
+      <trans-unit id="li_9" xml:space="preserve">
+        <source>Executive summary</source>
+        <target state="needs-review-translation">执行摘要</target>
+      </trans-unit>
+      <trans-unit id="li_10" xml:space="preserve">
+        <source>Key learnings</source>
+        <target state="needs-review-translation">主要经验</target>
+      </trans-unit>
+      <trans-unit id="li_11" xml:space="preserve">
+        <source>Safety Critical Task Analysis</source>
+        <target state="needs-review-translation">安全关键任务分析</target>
+      </trans-unit>
+      <trans-unit id="li_12" xml:space="preserve">
+        <source>Construction Access - Mitigating Business Risk to Operating Site</source>
+        <target state="needs-review-translation">施工通道——降低运营现场的业务风险</target>
+      </trans-unit>
+      <trans-unit id="li_13" xml:space="preserve">
+        <source>Performance Measurement: Custody transfer metering</source>
+        <target state="needs-review-translation">绩效测量：交接计量</target>
+      </trans-unit>
+      <trans-unit id="li_14" xml:space="preserve">
+        <source>Flow Meter Joints</source>
+        <target state="needs-review-translation">流量计接头</target>
+      </trans-unit>
+      <trans-unit id="li_15" xml:space="preserve">
+        <source>Piling delay: Coordination with Principal Turnkey contractor and engagement of piling sub-contractor</source>
+        <target state="needs-review-translation">打桩延误：与主要统包承包商的协调及打桩分包商的参与</target>
+      </trans-unit>
+      <trans-unit id="li_16" xml:space="preserve">
+        <source>Conclusion</source>
+        <target state="needs-review-translation">结论</target>
+      </trans-unit>
+      <trans-unit id="h2_17" xml:space="preserve">
+        <source>1.0 Project background</source>
+        <target state="needs-review-translation">1.0 项目背景</target>
+      </trans-unit>
+      <trans-unit id="p_18" xml:space="preserve">
+        <source>The alumina refining industry in Australia emits approximately 14.9 Mt of CO2-e per annum, or 3% of Australia&apos;s Greenhouse Gas emissions. Calciners, which use high temperatures to extract chemically bound water from alumina crystals, traditionally use fossil fuels for process heat and contribute 25% of emissions from alumina refining.</source>
+        <target state="needs-review-translation">澳大利亚氧化铝精炼行业每年排放约1490万吨二氧化碳当量，占澳大利亚温室气体排放总量的3%。煅烧炉利用高温从氧化铝晶体中提取化学结合水，传统上使用化石燃料作为工艺热源，占氧化铝精炼排放量的25%。</target>
+      </trans-unit>
+      <trans-unit id="p_19" xml:space="preserve">
+        <source>Hydrogen calcination technology has the potential to abate about 25% of emissions from Gladstone refineries. At current production levels, full implementation of this technology at Yarwun has the potential to reduce emissions by 500kt CO2e per annum.</source>
+        <target state="needs-review-translation">氢煅烧技术有望减少格拉德斯通炼油厂约25%的排放量。按目前的生产水平，在亚伦全面实施该技术有潜力将排放量每年减少50万吨二氧化碳当量。</target>
+      </trans-unit>
+      <trans-unit id="p_20" xml:space="preserve">
+        <source>Rio Tinto and Summit Hydrogen Gladstone (SHG), a subsidiary of Sumitomo Corporation, aim to jointly deliver a project that will demonstrate the production of hydrogen and operation of hydrogen fuelled calcination for process heating at Rio Tinto&apos;s Yarwun alumina refinery.</source>
+        <target state="needs-review-translation">力拓与住友商事子公司Summit氢能格拉德斯通（SHG）旨在联合开展一个项目，以示范在力拓亚伦氧化铝精炼厂生产氢气并运行氢燃料煅烧工艺加热。</target>
+      </trans-unit>
+      <trans-unit id="p_21" xml:space="preserve">
+        <source>The objective of the project is to prove the hydrogen calcination technology is technically viable for alumina refineries.</source>
+        <target state="needs-review-translation">该项目的目标是证明氢煅烧技术在氧化铝精炼厂具有技术可行性。</target>
+      </trans-unit>
+      <trans-unit id="p_22" xml:space="preserve">
+        <source>The project aims to validate the use of hydrogen for calcination process within an operating refinery and develop the systems, processes, and skills to manage hydrogen onsite and integrate this into existing infrastructure. The project also aims to accelerate the development and commercialisation of hydrogen calcination technology and if successful, will also support the establishment of the Gladstone hydrogen industry.</source>
+        <target state="needs-review-translation">该项目旨在验证氢气在运营中的精炼厂煅烧工艺中的应用，并开发管理现场氢气并将其整合到现有基础设施中的系统、流程和技能。该项目还旨在加速氢煅烧技术的开发和商业化，如果成功，也将支持格拉德斯通氢能产业的建立。</target>
+      </trans-unit>
+      <trans-unit id="p_23" xml:space="preserve">
+        <source>Hydrogen will be produced via a 2.5 MW electrolyser and it will then be compressed to more than 200 barg. Approximately 4,000 kg of hydrogen will be stored, and when required for a trial run at the K1 Calciner unit, it will be let-down from approximately 200 barg to 10 barg which is the delivery pressure for firing at the hydrogen burners. This delivery configuration (i.e., compression-storage-let-down) was selected to achieve the necessary full-scale hydrogen flowrates and durations needed for testing while keeping the electrolyser size to a minimum.</source>
+        <target state="needs-review-translation">氢气将通过一台2.5 MW电解槽生产，然后压缩至超过200 barg。约4,000千克氢气将被储存，当K1煅烧炉机组需要进行试运行时，氢气将从约200 barg减压至10 barg，即氢气燃烧器点火的供给压力。选择这种供应配置（即压缩-储存-减压）是为了在将电解槽规模保持在最小的同时，实现测试所需的全规模氢气流量和持续时间。</target>
+      </trans-unit>
+      <trans-unit id="p_24" xml:space="preserve">
+        <source>The project will be delivered in two concurrent work packages:</source>
+        <target state="needs-review-translation">该项目将通过两个并行工作包交付：</target>
+      </trans-unit>
+      <trans-unit id="li_25" xml:space="preserve">
+        <source>Work Package 1 will be delivered by SHG and involves the installation of a 2.5 MW polymer electrolyte membrane hydrogen electrolyser and associated equipment with a production capacity of 250 to 300 tonnes per annum of hydrogen on site at the Yarwun refinery</source>
+        <target state="needs-review-translation">工作包1将由SHG交付，涉及在亚伦精炼厂现场安装一台2.5 MW聚合物电解质膜氢电解槽及相关设备，年产氢气能力为250至300吨。</target>
+      </trans-unit>
+      <trans-unit id="li_26" xml:space="preserve">
+        <source>Work Package 2 will be delivered by Rio Tinto and involves:</source>
+        <target state="needs-review-translation">工作包2将由力拓交付，涉及：</target>
+      </trans-unit>
+      <trans-unit id="li_27" xml:space="preserve">
+        <source>The design and installation of full-scale hydrogen burners and a steam recycle loop at Rio Tinto&apos;s Yarwun refinery.</source>
+        <target state="needs-review-translation">在力拓亚伦精炼厂设计和安装全规模氢气燃烧器及蒸汽循环回路。</target>
+      </trans-unit>
+      <trans-unit id="li_28" xml:space="preserve">
+        <source>The installation of 4 tonnes of hydrogen storage, which is required to store enough hydrogen to operate the calciner for 2 hours using 100% hydrogen fuel. This is considered the minimum operating window required to simulate and de-risk full scale operation of hydrogen calcination technology.</source>
+        <target state="needs-review-translation">安装4吨氢气储存设施，该设施需储存足够的氢气，以使煅烧炉使用100%氢燃料运行2小时。这被认为是模拟和降低氢煅烧技术全规模运行风险所需的最短运行窗口。</target>
+      </trans-unit>
+      <trans-unit id="h2_29" xml:space="preserve">
+        <source>2.0 Executive summary</source>
+        <target state="needs-review-translation">2.0 执行摘要</target>
+      </trans-unit>
+      <trans-unit id="p_30" xml:space="preserve">
+        <source>This second lessons learnt report covers learnings from both Rio Tinto and SHG, around process safety and risk mitigation during construction stages, specification of metering equipment and the importance of early compliance checks with local regulations as well as engaging third party specialist contractors.</source>
+        <target state="needs-review-translation">本第二份经验教训报告涵盖了力拓和SHG在施工阶段的过程安全与风险缓解、计量设备规范以及尽早检查地方法规合规性和引入第三方专业承包商的重要性等方面的经验。</target>
+      </trans-unit>
+      <trans-unit id="p_31" xml:space="preserve">
+        <source>Key learnings include:</source>
+        <target state="needs-review-translation">主要经验包括：</target>
+      </trans-unit>
+      <trans-unit id="li_32" xml:space="preserve">
+        <source>The use of a Safety Critical Task Analysis (SCTA) is recommended for high-risk projects.</source>
+        <target state="needs-review-translation">建议在高风险项目中使用安全关键任务分析（SCTA）。</target>
+      </trans-unit>
+      <trans-unit id="li_33" xml:space="preserve">
+        <source>The impact of brownfield construction within an operating site can potentially introduce both safety and business production risks. Risks were mitigated by securing an adjacent easement corridor and establishing a safe and secure access route for Sumitomo&apos;s construction workforce.</source>
+        <target state="needs-review-translation">在运营现场内进行棕地施工可能同时带来安全和业务生产风险。通过获取相邻地役权走廊并为住友施工人员建立安全可靠的通道，有效降低了相关风险。</target>
+      </trans-unit>
+      <trans-unit id="li_34" xml:space="preserve">
+        <source>2017 Qld Regulation (Petroleum and Gas (Production and Safety) Act 2004 (Qld)) requires hydrogen measurement accuracy of ±1%. An external flow meter with flanged connection is required and this necessitated changes to the piping design to comply with ASME B31.12 (Hydrogen Piping and Pipelines) and associated hazardous area assessments. The flow meter was relocated within a shield wall to mitigate potential jet releases.</source>
+        <target state="needs-review-translation">2017年昆士兰州法规（《石油和天然气（生产和安全）法》2004年（昆士兰州））要求氢气计量精度为±1%。需要采用带法兰连接的外置流量计，这就需要对管道设计进行变更，以符合ASME B31.12（氢气管道和管线）标准及相关危险区域评估要求。流量计被重新安置在防护墙内，以降低潜在喷射泄漏的风险。</target>
+      </trans-unit>
+      <trans-unit id="li_35" xml:space="preserve">
+        <source>The project has also experienced delays due to coordination issues with sub-vendors, impacting civil design and government approvals. Early subcontractor engagement can help align design paths. Incorporating design flexibility and considering skilled local labour availability can also help manage timelines more effectively.</source>
+        <target state="needs-review-translation">该项目还因与分包商的协调问题而出现延误，影响了土建设计和政府审批。早期引入分包商有助于协调设计路径。在设计中融入灵活性并考虑当地熟练劳动力的可用性，也有助于更有效地管理工期。</target>
+      </trans-unit>
+      <trans-unit id="h2_36" xml:space="preserve">
+        <source>3.0 Key learnings</source>
+        <target state="needs-review-translation">3.0 主要经验</target>
+      </trans-unit>
+      <trans-unit id="h3_37" xml:space="preserve">
+        <source>3.1 Safety Critical Task Analysis</source>
+        <target state="needs-review-translation">3.1 安全关键任务分析</target>
+      </trans-unit>
+      <trans-unit id="p_38" xml:space="preserve">
+        <source>**Category:** Risk</source>
+        <target state="needs-review-translation">**类别：** 风险</target>
+      </trans-unit>
+      <trans-unit id="p_39" xml:space="preserve">
+        <source>As part of the safety assurance process for this project, an external specialist was engaged to facilitate a workshop to assess the impact of human errors to process safety risk.</source>
+        <target state="needs-review-translation">作为本项目安全保障流程的一部分，聘请了外部专家主持研讨会，以评估人为失误对过程安全风险的影响。</target>
+      </trans-unit>
+      <trans-unit id="p_40" xml:space="preserve">
+        <source>The Safety Critical Task Analysis (SCTA) workshop consisted of three distinct stages:</source>
+        <target state="needs-review-translation">安全关键任务分析（SCTA）研讨会由三个不同阶段组成：</target>
+      </trans-unit>
+      <trans-unit id="li_41" xml:space="preserve">
+        <source>critical task selection</source>
+        <target state="needs-review-translation">关键任务筛选</target>
+      </trans-unit>
+      <trans-unit id="li_42" xml:space="preserve">
+        <source>task prioritisation and screening to identify potential for high consequence events</source>
+        <target state="needs-review-translation">任务优先级排序和筛查，以识别高后果事件的潜在可能性</target>
+      </trans-unit>
+      <trans-unit id="li_43" xml:space="preserve">
+        <source>critical task analysis to identify single-point human failures.</source>
+        <target state="needs-review-translation">关键任务分析，以识别单点人为失误。</target>
+      </trans-unit>
+      <trans-unit id="p_44" xml:space="preserve">
+        <source>The SHERPA software uses hierarchical task analysis to map how operators will likely perform a given task and breaks these into individual constituent parts. The negative consequences of any human failure will be modelled with the use of performance influencing factors (PIFs) to identify causal factors and potential interventions to reduce probability of risk.</source>
+        <target state="needs-review-translation">SHERPA软件采用层次任务分析法，描绘操作人员执行特定任务的可能方式，并将其分解为各个组成部分。任何人为失误的负面后果将通过绩效影响因素（PIFs）进行建模，以识别因果因素和降低风险概率的潜在干预措施。</target>
+      </trans-unit>
+      <trans-unit id="p_45" xml:space="preserve">
+        <source>The analysis of the critical tasks did not identify any obvious single point human failures that would, by themselves, lead to any major unwanted events sequence (e.g. loss of containment from hydrogen transfer pipework etc). The analysis did however identify opportunities for maximising human reliability during all foreseeable operating conditions, by providing specific recommendations which may both:</source>
+        <target state="needs-review-translation">对关键任务的分析未发现任何明显的单点人为失误，该类失误本身会导致任何重大非预期事件序列（例如氢气输送管道的泄漏等）。然而，分析确实发现了在所有可预见操作条件下最大化人员可靠性的机会，通过提供具体建议，这些建议可能同时：</target>
+      </trans-unit>
+      <trans-unit id="p_46" xml:space="preserve">
+        <source>a) optimise performance influencing factors; and b) reduce human contribution to risk</source>
+        <target state="needs-review-translation">a) 优化绩效影响因素；以及 b) 降低人为因素对风险的贡献</target>
+      </trans-unit>
+      <trans-unit id="p_47" xml:space="preserve">
+        <source>**Implication for future projects:** To mitigate against risk of human failures on process safety critical tasks, and in particular, procedures which involve introducing new, high consequence hazards to a facility, the use of SCTA as part of the overall process safety assurance should be considered.</source>
+        <target state="needs-review-translation">**对未来项目的启示：** 为降低过程安全关键任务中人为失误的风险，特别是涉及向设施引入新的高后果危害的程序，应考虑将SCTA纳入整体过程安全保障体系。</target>
+      </trans-unit>
+      <trans-unit id="h3_48" xml:space="preserve">
+        <source>3.2 Construction Access - Mitigating Business Risk to Operating Site</source>
+        <target state="needs-review-translation">3.2 施工通道——降低运营现场的业务风险</target>
+      </trans-unit>
+      <trans-unit id="p_49" xml:space="preserve">
+        <source>**Category:** Project Management</source>
+        <target state="needs-review-translation">**类别：** 项目管理</target>
+      </trans-unit>
+      <trans-unit id="p_50" xml:space="preserve">
+        <source>The impact of brownfield construction within the battery limit of an operating site can potentially introduce both safety and business production risks, given the significant ramp-up of new personnel and equipment of a third-party workforce. The project team has constructed a temporary site access road and fenced gate area to allow Sumitomo and its principal turnkey contractor to independently access the new leased area for electrolyser plant construction, while minimising risk of incursions or interactions between the construction team and the operating refinery. Following comprehensive stakeholder engagement, the construction road was custom-built across a services corridor with temporary access permits in place to allow safe transportation of project personnel without any disruption of traffic or other personnel movements within the refinery.</source>
+        <target state="needs-review-translation">在运营现场电池边界内进行棕地施工，可能会同时带来安全和业务生产风险，原因在于第三方施工人员和设备大量涌入。项目团队修建了临时现场通道道路和围栏门区，使住友及其主要统包承包商能够独立进入新租赁区域开展电解槽装置施工，同时最大限度地降低施工团队与运营精炼厂之间的越界或交叉风险。经过全面的利益相关方沟通，施工道路经过一条管线走廊定制修建，并设有临时通行许可，以确保项目人员安全通行，不干扰精炼厂内的交通或其他人员流动。</target>
+      </trans-unit>
+      <trans-unit id="p_51" xml:space="preserve">
+        <source>A risk assessment was carried out to identify control measures as well as on-going interface management, including emergency response between both Rio Tinto and Sumitomo&apos;s respective workforce. From a regulatory perspective, this included the appointment of Sumitomo&apos;s nominated construction contractor as the Principal Contractor under Queensland&apos;s Work Health and Safety Regulation 2011.</source>
+        <target state="needs-review-translation">项目进行了风险评估，以确定控制措施及持续的界面管理，包括力拓和住友各自施工队伍之间的应急响应。从监管角度来看，这包括根据昆士兰州《2011年工作健康与安全条例》，将住友指定的施工承包商任命为主要承包商。</target>
+      </trans-unit>
+      <trans-unit id="p_52" xml:space="preserve">
+        <source>**Implication for future projects:** A dedicated access/egress or physical separation into a construction site may both reduce risk of incidents and appoint single point of accountability and ownership of Health, Safety, Security and Environment (HSSE) site policies during execution phase.</source>
+        <target state="needs-review-translation">**对未来项目的启示：** 为施工现场设置专用出入通道或物理隔离，既可降低事故风险，又可在执行阶段明确健康、安全、保安和环境（HSSE）现场政策的单一责任主体。</target>
+      </trans-unit>
+      <trans-unit id="h3_53" xml:space="preserve">
+        <source>3.3 Performance Measurement: Custody transfer metering</source>
+        <target state="needs-review-translation">3.3 绩效测量：交接计量</target>
+      </trans-unit>
+      <trans-unit id="p_54" xml:space="preserve">
+        <source>**Category:** Technical</source>
+        <target state="needs-review-translation">**类别：** 技术</target>
+      </trans-unit>
+      <trans-unit id="p_55" xml:space="preserve">
+        <source>2017 Qld Regulation (Petroleum and Gas (Production and Safety) Act 2004 (Qld)) requires the measurement accuracy of hydrogen metering instrument to be +/- 1%. The project team initially considered that hydrogen metering unit inside the electrolyser could be utilised for custody transfer metering, however the standard metering unit provided by the electrolyser vendor did not comply with Qld regulations *Petroleum and Gas (Production and Safety) Act 2004 (Qld)*; This necessitated an external flow meter to be installed that can measure within the tolerance. A new flow meter was added to the balance of plant piping, modifying the plant piping design to accommodate.</source>
+        <target state="needs-review-translation">2017年昆士兰州法规（《石油和天然气（生产和安全）法》2004年（昆士兰州））要求氢气计量仪器的测量精度为±1%。项目团队最初考虑利用电解槽内部的氢气计量单元用于交接计量，但电解槽供应商提供的标准计量单元不符合昆士兰州《石油和天然气（生产和安全）法》2004年（昆士兰州）的规定；因此需要另外安装一台能够在允许误差范围内测量的外置流量计。在辅助工厂管道中新增了一台流量计，并对工厂管道设计进行了修改以适应该变更。</target>
+      </trans-unit>
+      <trans-unit id="p_56" xml:space="preserve">
+        <source>**Implication for future projects:** Engagement and compliance check of instruments with local regulations for hydrogen should be considered at early stage.</source>
+        <target state="needs-review-translation">**对未来项目的启示：** 应在早期阶段考虑对仪器进行氢气相关地方法规的合规性审查。</target>
+      </trans-unit>
+      <trans-unit id="h3_57" xml:space="preserve">
+        <source>3.4 Flow Meter Joints</source>
+        <target state="needs-review-translation">3.4 流量计接头</target>
+      </trans-unit>
+      <trans-unit id="p_58" xml:space="preserve">
+        <source>**Category:** Technical</source>
+        <target state="needs-review-translation">**类别：** 技术</target>
+      </trans-unit>
+      <trans-unit id="p_59" xml:space="preserve">
+        <source>Despite the preference for welded joints to prevent hydrogen leaks, the principal turnkey contractor was constrained to use flanged-end flow meters. These meters, supplied by hydrogen flow meter vendors, necessitate the use of gaskets for connection. While gaskets can potentially lead to hydrogen leaks due to the molecule&apos;s small size, welding flanges could also damage the highly sensitive instruments, compromising measurement accuracy.</source>
+        <target state="needs-review-translation">尽管出于防止氢气泄漏的考虑优先采用焊接接头，但主要统包承包商被限制使用法兰端流量计。这些由氢气流量计供应商提供的仪表，在连接时需要使用垫片。虽然由于氢分子体积小，垫片可能导致氢气泄漏，但对法兰进行焊接也可能损坏高度精密的仪器，从而影响测量精度。</target>
+      </trans-unit>
+      <trans-unit id="p_60" xml:space="preserve">
+        <source>To accommodate flanged end connections, the piping design was revised to adhere to ASME B31.12 standards for hydrogen systems. A concurrent hazardous area assessment, conducted in accordance with AS 60079, identified a new location for the flow meter within a shielded wall. This strategic placement mitigates the risk of jet releases from the flange.</source>
+        <target state="needs-review-translation">为适应法兰端连接，管道设计进行了修订，以符合氢气系统ASME B31.12标准。依据AS 60079进行的同步危险区域评估，在防护墙内为流量计确定了新的安装位置。这一布置策略可降低法兰处发生喷射泄漏的风险。</target>
+      </trans-unit>
+      <trans-unit id="p_61" xml:space="preserve">
+        <source>Hazardous area calculations confirmed that the anticipated release grade would remain secondary, with a potential escalation to primary. This assessment was based on the venting frequency, which is projected to stay below the acceptable threshold of 10 hours per year as outlined in AS 60079.</source>
+        <target state="needs-review-translation">危险区域计算确认，预期泄漏等级将维持在二级，可能升级至一级。该评估基于排气频率，预计排气频率将低于AS 60079规定的每年10小时的可接受阈值。</target>
+      </trans-unit>
+      <trans-unit id="p_62" xml:space="preserve">
+        <source>**Implication for future projects:** Early compliance checks and vendor liaison to determine design specifications will help minimise the chances of needing to modify the design.</source>
+        <target state="needs-review-translation">**对未来项目的启示：** 尽早进行合规性检查并与供应商联络以确定设计规范，将有助于最大程度地减少需要修改设计的可能性。</target>
+      </trans-unit>
+      <trans-unit id="h3_63" xml:space="preserve">
+        <source>3.5 Piling delay: Coordination with Principal Turnkey contractor and engagement of piling sub-contractor</source>
+        <target state="needs-review-translation">3.5 打桩延误：与主要统包承包商的协调及打桩分包商的参与</target>
+      </trans-unit>
+      <trans-unit id="p_64" xml:space="preserve">
+        <source>**Category:** Project Management</source>
+        <target state="needs-review-translation">**类别：** 项目管理</target>
+      </trans-unit>
+      <trans-unit id="p_65" xml:space="preserve">
+        <source>The project experienced some delays related to the coordination of sub-vendor management and the finalization of critical packages. Due to the complexity of the inputs required from both the vendor and the principal turnkey contractor, there was an impact on the timeline for civil design, which in turn delayed the government building approvals. This sequence of events led to a later-than-expected engagement of the piling contractor, whose availability window was then extended by approximately three months from the initial plan.</source>
+        <target state="needs-review-translation">该项目在分包商管理协调及关键采购包最终确定方面经历了一些延误。由于总包商和业主方所需投入的复杂性，民用设计时间表受到影响，进而导致政府建筑审批延迟。这一系列事件造成桩基承包商的介入时间晚于预期，其可用时间窗口因此比初始计划延后约三个月。</target>
+      </trans-unit>
+      <trans-unit id="p_66" xml:space="preserve">
+        <source>It is noted that, while the recommended alternative piling subcontractors and technologies outlined in the geotechnical report were not pursued, these may present additional flexibility in similar future situations.</source>
+        <target state="needs-review-translation">值得注意的是，尽管岩土工程报告中推荐的替代打桩分包商及技术方案未被采用，但这些方案在未来类似情况下可能提供额外的灵活性。</target>
+      </trans-unit>
+      <trans-unit id="p_67" xml:space="preserve">
+        <source>**Implications for future projects:**</source>
+        <target state="needs-review-translation">**对未来项目的启示：**</target>
+      </trans-unit>
+      <trans-unit id="p_68" xml:space="preserve">
+        <source>For future projects, it may be beneficial to explore earlier engagement with subcontractors, ensuring that critical design paths and milestones are aligned more closely with vendor inputs. Considering the high volume of upcoming projects in this region, incorporating design flexibility—such as alternative foundation solutions—may prove advantageous in preventing delays and accommodating local resource availability.</source>
+        <target state="needs-review-translation">对于未来项目，提前与分包商接洽可能大有裨益，以确保关键设计路径和里程碑与供应商输入更紧密地对齐。考虑到本地区即将开展的大量项目，纳入设计灵活性——例如替代基础解决方案——可能有助于防止延误并适应当地资源的可用性。</target>
+      </trans-unit>
+      <trans-unit id="p_69" xml:space="preserve">
+        <source>The importance of skilled local labour will also be a key factor to consider in managing future project timelines.</source>
+        <target state="needs-review-translation">熟练本地劳动力的重要性也将是管理未来项目时间表时需要重点考量的关键因素。</target>
+      </trans-unit>
+      <trans-unit id="h2_70" xml:space="preserve">
+        <source>4.0 Conclusion</source>
+        <target state="needs-review-translation">4.0 结论</target>
+      </trans-unit>
+      <trans-unit id="p_71" xml:space="preserve">
+        <source>In conclusion, the project highlighted several key lessons learned across various domains. The Safety Critical Task Analysis (SCTA) underscored the importance of identifying and mitigating human errors to enhance process safety, recommending the integration of SCTA in future safety assurance processes. Construction access management demonstrated the value of dedicated access routes to minimize operational disruptions and enhance safety. Technical evaluations, such as those for custody transfer and flow meter joints, emphasized the necessity of early compliance checks and vendor engagement to ensure regulatory adherence. Lastly, the coordination with subcontractors revealed the need for early engagement and flexible design strategies to mitigate delays and optimize project timelines. These insights collectively provide a robust framework for improving safety, compliance, and efficiency in future projects.</source>
+        <target state="needs-review-translation">总体而言，本项目在多个领域揭示了若干重要经验教训。安全关键任务分析（SCTA）强调了识别和缓解人为错误以提升过程安全的重要性，并建议将SCTA纳入未来的安全保证流程。施工通道管理展示了设置专用通道在减少运营干扰和提升安全性方面的价值。针对交接计量和流量计接头等技术评估，强调了早期合规检查和供应商参与对确保法规遵从的必要性。最后，与分包商的协调工作揭示了提前介入和灵活设计策略对于缓解延误、优化项目时间表的必要性。这些见解共同为提升未来项目的安全性、合规性和效率提供了坚实的框架。</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

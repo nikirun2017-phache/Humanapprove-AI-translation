@@ -1,0 +1,3094 @@
+<xliff xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 http://docs.oasis-open.org/xliff/v1.2/os/xliff-core-1.2-strict.xsd"
+  version="1.2" xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:space="preserve"
+  xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file original="course" datatype="plaintext" source-language="en-us">
+        <body>
+            <trans-unit id="title">
+                <source>En-GB
+          of High Voltage Electrical Safety: Essential Practices and Procedures</source>
+            </trans-unit>
+            <trans-unit id="description">
+                <source>Are
+          you prepared to work safely with high voltage electricity? In this comprehensive course,
+          you'll discover the essential knowledge and practical steps needed to recognize and
+          mitigate electrical hazards, select the right protective equipment, and respond
+          confidently to emergencies. Whether you're refreshing your expertise or building a
+          foundation, this course will empower you to stay safe, protect your team, and ensure
+          compliance with industry standards in high voltage environments.</source>
+            </trans-unit>
+        </body>
+    </file>
+    <file original="785ewx9pxRaSZCbMrh0_pbYaes-ZNv_W" datatype="plaintext" source-language="en-us">
+        <body>
+            <trans-unit id="title">
+                <source>Understanding
+          High Voltage Hazards</source>
+            </trans-unit>
+            <trans-unit id="items|id:zl7hqnry8vm2235z3jbl1lig|items|id:cha2xl9h4wtf706u378plcoh|heading">
+                <source>Understanding
+          High Voltage Hazards</source>
+            </trans-unit>
+            <trans-unit id="items|id:zl7hqnry8vm2235z3jbl1lig|items|id:cha2xl9h4wtf706u378plcoh|paragraph">
+                <source>High voltage
+          electricity is a powerful force that enables modern life, but it also presents unique and
+          severe dangers. In this lesson, you'll learn why recognizing high voltage hazards is
+          essential for anyone working in or around electrical systems. By understanding these
+          risks, you’ll be better prepared to protect yourself and others, forming the foundation
+          for all safe work practices covered in this course.</source>
+            </trans-unit>
+            <trans-unit id="items|id:h14l7gf3aprnbhxrewksh4nx|items|id:vvjo35xuf76wdofefarh5z0v|paragraph">
+                <source>
+          <g id="sZLcMk2X6nbP8FD_" ctype="x-html-UL">
+            <g id="XyeF03fMChVswHhd" ctype="x-html-LI">Identify the main hazards associated with
+          high voltage electricity and explain why they are dangerous.</g>
+                        <g id="4o9iwT1xZx2pQ2Xu"
+              ctype="x-html-LI">Describe the types of injuries and damage that can result from high
+          voltage incidents.</g>
+                        <g id="4VcVARB2cCIMiyr8" ctype="x-html-LI">Recognize key terminology
+          and definitions related to high voltage work.</g>
+                        <g id="-cxODqARc0BYXav7"
+              ctype="x-html-LI">Apply fundamental safety principles to reduce risk when working with
+          or near high voltage systems.</g>
+          </g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6draho002n357l5u1oltjt|items|id:cmn6draho002o357laqh4ndyj|title">
+                <source>
+          CONTINUE</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6draho002n357l5u1oltjt|items|id:cmn6draho002o357laqh4ndyj|completeHint">
+                <source>Complete the content
+          above before moving on.</source>
+            </trans-unit>
+            <trans-unit id="items|id:jxeij6lhrc5oqrtt4q9t0m32|items|id:uvqy0a4xpp9bdif211czeymk|heading">
+                <source>Key Terms
+          and Definitions</source>
+            </trans-unit>
+            <trans-unit id="items|id:jxeij6lhrc5oqrtt4q9t0m32|items|id:uvqy0a4xpp9bdif211czeymk|paragraph">
+                <source>
+          <g id="giL2rAJp4LvFEaGi" ctype="x-html-P">Review each flashcard to familiarize yourself
+          with essential terminology before moving forward.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:p00cdwlnghi6zg1h4mwm14yr|items|id:x7wms04tl6rzfv0swxngjzl8|front|description">
+                <source>
+          <g id="R2v2YEiSlctEAQR-" ctype="x-html-P">High Voltage</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:p00cdwlnghi6zg1h4mwm14yr|items|id:x7wms04tl6rzfv0swxngjzl8|back|description">
+                <source>
+          <g id="-zAi6aJMOhtc-1vm" ctype="x-html-P">A voltage exceeding 1,000 volts AC or 1,500
+          volts DC, as defined by industry standards and safety regulations.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:p00cdwlnghi6zg1h4mwm14yr|items|id:rxz8upknhzwsr7uja1h7oxe5|front|description">
+                <source>
+          <g id="kfl1759MoY9PaGPo" ctype="x-html-P">Standard Electrical Work</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:p00cdwlnghi6zg1h4mwm14yr|items|id:rxz8upknhzwsr7uja1h7oxe5|back|description">
+                <source>
+          <g id="NEY1Gg_eoRqPxaeq" ctype="x-html-P">Tasks involving lower voltages, typically below
+          1,000 volts AC, with less severe hazards than high voltage work.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:p00cdwlnghi6zg1h4mwm14yr|items|id:idwf2z2lf28ookn0mp3u1oec|front|description">
+                <source>
+          <g id="0El4_NwhoffhLLQe" ctype="x-html-P">Energised</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:p00cdwlnghi6zg1h4mwm14yr|items|id:idwf2z2lf28ookn0mp3u1oec|back|description">
+                <source>
+          <g id="xpkDStVJyA5bLHXP" ctype="x-html-P">Connected to a source of electrical supply;
+          capable of delivering dangerous current.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:p00cdwlnghi6zg1h4mwm14yr|items|id:gefslfur7ovlxaig3rx367gc|front|description">
+                <source>
+          <g id="OxTFf53jsuFgz3wS" ctype="x-html-P">De-energised</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:p00cdwlnghi6zg1h4mwm14yr|items|id:gefslfur7ovlxaig3rx367gc|back|description">
+                <source>
+          <g id="8ZxnQhYDfs4kFXwa" ctype="x-html-P">Not connected to any source of electrical
+          supply, but not necessarily isolated from all hazards.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:p00cdwlnghi6zg1h4mwm14yr|items|id:o8e7b5h1mtxrbzye9zctskmz|front|description">
+                <source>
+          <g id="OfX4_MKBPIKCcTaT" ctype="x-html-P">Arc Flash</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:p00cdwlnghi6zg1h4mwm14yr|items|id:o8e7b5h1mtxrbzye9zctskmz|back|description">
+                <source>
+          <g id="o-uIwu0qJc8m6ymH" ctype="x-html-P">A sudden release of energy between conductors,
+          causing intense heat, light, and pressure that can result in severe injury.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:eqcc752uy1ok50bim98i9qbd|items|id:fqx25g2bj4wcb0in6z6b213b|heading">
+                <source>Why
+          High Voltage is Uniquely Hazardous</source>
+            </trans-unit>
+            <trans-unit id="items|id:eqcc752uy1ok50bim98i9qbd|items|id:fqx25g2bj4wcb0in6z6b213b|paragraph">
+                <source>High
+          voltage electricity poses significantly greater dangers compared to standard electrical
+          systems. The hazards associated with high voltage are often not immediately apparent, as
+          the risks can be invisible and silent. Even brief contact can result in severe injury or
+          death. Recognizing the unique dangers of high voltage is essential for maintaining safety
+          and preventing accidents.</source>
+            </trans-unit>
+            <trans-unit id="items|id:niys8uyhjm9nk32s14yu6ahp|items|id:mdmi6cjqogm2n2r3ety66ai6|heading">
+                <source>The
+          Main Hazards of High Voltage Electricity</source>
+            </trans-unit>
+            <trans-unit id="items|id:niys8uyhjm9nk32s14yu6ahp|items|id:mdmi6cjqogm2n2r3ety66ai6|paragraph">
+                <source>
+          <g id="H85966tRKLp51C8l" ctype="x-html-P">Expand each section to learn about the primary
+          hazards associated with high voltage systems. Each hazard includes a real-world example or
+          consequence to help you recognize and remember the risks.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp002p357lp41vnrxt|items|id:cmn6drahp002q357lox9loaz9|title">
+                <source>Severe
+          Burns (Surface and Internal)</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp002p357lp41vnrxt|items|id:cmn6drahp002q357lox9loaz9|description">
+                <source>
+          <g id="bG3bAawuVe3e1ydK" ctype="x-html-P">High voltage can cause rapid heating of skin and
+          deep tissue, resulting in severe burns both on the surface and inside the body. Even brief
+          exposure can lead to second-degree burns at energy levels as low as 1.2 calories per
+          square centimeter per second.</g>
+                    <g id="OnJfgrVc4tdgLaKJ" ctype="x-html-P" />
+                    <g
+            id="8DDDKfrgNRmsi06u" ctype="x-html-P">For example, a worker accidentally contacting a
+          live conductor may suffer deep tissue burns that require extensive medical treatment.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp002p357lp41vnrxt|items|id:cmn6drahp002r357lg6u1ikgc|title">
+                <source>Arc
+          Flash (Energy Release, Blast Wave)</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp002p357lp41vnrxt|items|id:cmn6drahp002r357lg6u1ikgc|description">
+                <source>
+          <g id="9BAi4ut184dNXant" ctype="x-html-P">An arc flash is a sudden, explosive release of
+          energy between conductive objects. This can create a powerful blast wave, intense heat,
+          and airborne shrapnel, all of which pose serious risks to anyone nearby.</g>
+                    <g
+            id="8_S5HPHfYgL-ezPl" ctype="x-html-P" />
+                    <g id="5cZ8V8X7-a_l3J6k" ctype="x-html-P">For
+          instance, a tool dropped near energized equipment can trigger an arc flash, causing burns
+          and injuries to multiple workers in the vicinity.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp002p357lp41vnrxt|items|id:cmn6drahp002s357lhiigj9xa|title">
+                <source>Involuntary
+          Muscle Contractions (Can’t Let Go)</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp002p357lp41vnrxt|items|id:cmn6drahp002s357lhiigj9xa|description">
+                <source>
+          <g id="eODUbgh82HeBX7x2" ctype="x-html-P">High voltage can trigger rapid, involuntary
+          muscle contractions, making it impossible to release a live conductor once contact is
+          made. This increases the duration and severity of the shock.</g>
+                    <g id="df7pHP5MBLKr8FYP"
+            ctype="x-html-P" />
+                    <g id="p1GO9AmBRB3XZUhi" ctype="x-html-P">A real-world consequence is
+          a worker becoming trapped, unable to let go, with electricity continuing to flow through
+          their body.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp002p357lp41vnrxt|items|id:cmn6drahp002t357lfqd20mez|title">
+                <source>Fires and
+          Explosions (Ignition, Blast, Damage)</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp002p357lp41vnrxt|items|id:cmn6drahp002t357lfqd20mez|description">
+                <source>
+          <g id="Pgb5g_JKm9OOkywR" ctype="x-html-P">High voltage incidents can ignite surrounding
+          materials, cause explosions, and result in major damage to equipment and infrastructure.
+          The thermal energy released can set clothing and nearby objects on fire.</g>
+                    <g
+            id="bMNMp58lhou2_MYy" ctype="x-html-P" />
+                    <g id="m98Uw_Bu1MztQG0g" ctype="x-html-P">For
+          example, an electrical fault in a high voltage panel may lead to a fire that spreads
+          rapidly throughout a facility.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp002p357lp41vnrxt|items|id:cmn6drahp002u357lj2f4s580|title">
+                <source>Indirect
+          Contact/Arcing (No Direct Touch Needed)</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp002p357lp41vnrxt|items|id:cmn6drahp002u357lj2f4s580|description">
+                <source>
+          <g id="k9LBkTP8upLa-rR6" ctype="x-html-P">High voltage can arc through air, creating a
+          dangerous electrical bridge between the source and a person or object nearby. This means
+          you can be injured without ever directly touching a live conductor.</g>
+                    <g
+            id="XORIoNMf3X9F4Fbo" ctype="x-html-P" />
+                    <g id="iV6FAx_vUXoGIW9m" ctype="x-html-P">A
+          worker standing too close to energized equipment may be injured by an arc that jumps the
+          gap, even without physical contact.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:lg60htloiwhgsmfiznk1wvk3|items|id:st0b6gwfif783aj815etnacr|heading">
+                <source>Sorting
+          Hazard Descriptions</source>
+            </trans-unit>
+            <trans-unit id="items|id:lg60htloiwhgsmfiznk1wvk3|items|id:st0b6gwfif783aj815etnacr|paragraph">
+                <source>Test your
+          understanding by sorting the following descriptions into the correct hazard categories.
+          Drag each item to where it belongs and challenge yourself to recall what you’ve learned.</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp003a357lq2scfuhj|piles|id:cmn6drahp002v357ldxc80v5o|title">
+                <source>Severe
+          Personal Injury</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp003a357lq2scfuhj|items|id:cmn6drahp002z357lpmb357dh|title">
+                <source>Rapid heating of
+          skin and tissue</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp003a357lq2scfuhj|items|id:cmn6drahp0030357llmdqk0if|title">
+                <source>Internal tissue
+          damage deep beneath the skin surface</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp003a357lq2scfuhj|items|id:cmn6drahp0031357lrmv0p3k0|title">
+                <source>Second-degree
+          burns occurring at 1.2 calories per cm² per second</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp003a357lq2scfuhj|piles|id:cmn6drahp002w357l6p8v7ibr|title">
+                <source>Arc
+          Hazards</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp003a357lq2scfuhj|items|id:cmn6drahp0032357lpudt7r1x|title">
+                <source>Rapid release of energy
+          between conductive objects</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp003a357lq2scfuhj|items|id:cmn6drahp0033357lx291s1ex|title">
+                <source>Explosive
+          blast wave caused by ionized air expansion</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp003a357lq2scfuhj|items|id:cmn6drahp0034357lpodmc9iw|title">
+                <source>Energy
+          traveling through air between two conductive points</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp003a357lq2scfuhj|piles|id:cmn6drahp002x357lo7dcotsi|title">
+                <source>Equipment/Environmental
+          Damage</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp003a357lq2scfuhj|items|id:cmn6drahp0035357lej7lginq|title">
+                <source>Ignition of surrounding
+          materials due to extreme heat</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp003a357lq2scfuhj|items|id:cmn6drahp0036357l6ru1suf8|title">
+                <source>Thermal
+          energy that can ignite clothing or nearby materials</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp003a357lq2scfuhj|piles|id:cmn6drahp002y357lgqpgo0ta|title">
+                <source>Loss
+          of Muscle Control</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp003a357lq2scfuhj|items|id:cmn6drahp0037357ln4lhwbbh|title">
+                <source>Loss of Muscle
+          Control</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp003a357lq2scfuhj|items|id:cmn6drahp0038357llp3g0skt|title">
+                <source>Rapid, involuntary muscle
+          contractions preventing release</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahp003a357lq2scfuhj|items|id:cmn6drahp0039357lm46cwnbq|title">
+                <source>Inability
+          to let go of a live conductor due to body response</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drahq003b357l3lc3bqtv|items|id:cmn6drahq003c357laq0u2qau|paragraph">
+                <source>High
+          voltage hazards are extremely dangerous but can be avoided. The key to prevention is
+          recognizing potential dangers and being properly prepared. Awareness and readiness are
+          your best protection against high voltage risks.</source>
+            </trans-unit>
+            <trans-unit id="items|id:k6ti9nyxk41bsv3eunmdigme|items|id:v2p0iqoygilm0pvm1pwlnhm1|heading">
+                <source>Fundamental
+          Principles of Electrical Safety</source>
+            </trans-unit>
+            <trans-unit id="items|id:k6ti9nyxk41bsv3eunmdigme|items|id:v2p0iqoygilm0pvm1pwlnhm1|paragraph">
+                <source>Now
+          that you understand the hazards, let’s focus on the core safety principles that will guide
+          your actions when working with or near high voltage systems.</source>
+            </trans-unit>
+            <trans-unit id="items|id:tvio8qpmto9a3rxgerivzqk0|items|id:nim2tztyuvqomjrxpgq2i63e|paragraph">
+                <source>
+          <g id="gvl-icCcC6G6PD2J" ctype="x-html-P">Understanding and applying key electrical safety
+          principles is essential for anyone working with high voltage systems. The following five
+          principles are fundamental to ensuring your safety and the safety of those around you.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:m4wmzj3i5b21g2vrw6s8lz2i|items|id:r2wfk13fe4oa5gggqwxuj2n5|paragraph">
+                <source>
+          <g id="Noiw0EX4_9SbmGoX" ctype="x-html-P">
+            <g id="qv37nkB4EV4TgRG2" ctype="x-html-STRONG">Assume All Circuits Are Live:</g> Always
+          treat every circuit as if it is energized until you have verified otherwise. This mindset
+          prevents accidental contact with live parts. </g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:m4wmzj3i5b21g2vrw6s8lz2i|items|id:wpnugyqmou57xnao8geqjqkw|paragraph">
+                <source>
+          <g id="0EYXP1gGC1ncHV_1" ctype="x-html-P">
+            <g id="IyAHowxWiFpC9nr3" ctype="x-html-STRONG">Use the Right PPE:</g> Wear insulated
+          gloves, dielectric boots, face shields, and flame-resistant clothing designed for high
+          voltage environments. The correct PPE can mean the difference between a close call and a
+          serious injury. </g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:m4wmzj3i5b21g2vrw6s8lz2i|items|id:z0djrq66y96dcxw7zj5m78am|paragraph">
+                <source>
+          <g id="YnuIqTXEZ2PPimUs" ctype="x-html-P">
+            <g id="QSV9_vqINFBeKfxu" ctype="x-html-STRONG">Follow Lockout-Tagout Procedures:</g>
+          Ensure all equipment is de-energized, locked, and tagged before starting any work. This
+          process protects you and your team from unexpected energization. </g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:m4wmzj3i5b21g2vrw6s8lz2i|items|id:tm7p0mdy3nuqk6jt1y4t0xmd|paragraph">
+                <source>
+          <g id="pmPMnR1URSFMNarC" ctype="x-html-P">
+            <g id="1myXl8dPTTeoyJ3T" ctype="x-html-STRONG">Maintain Safe Distances:</g> High voltage
+          can arc through air, so always keep the minimum safe approach distance based on voltage
+          levels. Never assume you are safe just because you are not touching the equipment. </g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:76087e40-1438-40c5-875c-b12c1336c549|items|id:e721bced-558f-4ebb-91d5-9936290647bd|title">
+                <source>True
+          or False: You should always assume all circuits are live until proven otherwise.</source>
+            </trans-unit>
+            <trans-unit id="items|id:76087e40-1438-40c5-875c-b12c1336c549|items|id:e721bced-558f-4ebb-91d5-9936290647bd|answers|id:c259467b-8367-4bc7-ad0a-4402dcfc0e71|title">
+                <source>
+          True</source>
+            </trans-unit>
+            <trans-unit id="items|id:76087e40-1438-40c5-875c-b12c1336c549|items|id:e721bced-558f-4ebb-91d5-9936290647bd|answers|id:26cec73a-370d-4ede-82de-cde3782cb62d|title">
+                <source>False</source>
+            </trans-unit>
+            <trans-unit id="items|id:76087e40-1438-40c5-875c-b12c1336c549|items|id:e721bced-558f-4ebb-91d5-9936290647bd|feedbackCorrect">
+                <source>Correct.
+          Assuming all circuits are live is the most important safety principle in high voltage
+          work.</source>
+            </trans-unit>
+            <trans-unit id="items|id:76087e40-1438-40c5-875c-b12c1336c549|items|id:e721bced-558f-4ebb-91d5-9936290647bd|feedbackIncorrect">
+                <source>Incorrect. Never assume a
+          circuit is safe until you have verified it is de-energized.</source>
+            </trans-unit>
+            <trans-unit id="items|id:jm3bv8g5glo8roi5pgnntgbg|items|id:eusiok8xuamuk8n3u0ot008j|paragraph">
+                <source>
+          <g id="syWgM3pQ7XM-aQ_W" ctype="x-html-P">In this lesson, you explored the unique hazards
+          of high voltage electricity, including severe burns, arc flashes, involuntary muscle
+          contractions, and the potential for fires and explosions. You learned why high voltage is
+          especially dangerous and how indirect contact can still result in injury. By mastering the
+          key safety principles—such as always assuming circuits are live, using the right PPE, and
+          following lockout-tagout procedures—you are taking essential steps to protect yourself and
+          your team.</g>
+                    <g id="UDM1hS6GauM_axqU" ctype="x-html-P">Remember, hazard recognition and
+          preparation are your strongest defenses against electrical incidents. Carry these lessons
+          forward as you continue your training.</g>
+        </source>
+            </trans-unit>
+        </body>
+    </file>
+    <file original="h4ZEFjEM0vxKGusoZ8jFbqsjcA9by63L" datatype="plaintext" source-language="en-us">
+        <body>
+            <trans-unit id="title">
+                <source>Workplace
+          Preparation and DNOT Procedures</source>
+            </trans-unit>
+            <trans-unit id="items|id:femxqoouhdxwpc8g9e1rlase|items|id:r9r1ds97f0vb53qmdozp3h57|heading">
+                <source>Workplace
+          Preparation and DNOT Procedures</source>
+            </trans-unit>
+            <trans-unit id="items|id:femxqoouhdxwpc8g9e1rlase|items|id:r9r1ds97f0vb53qmdozp3h57|paragraph">
+                <source>Before
+          any high voltage work begins, thorough preparation and strict adherence to procedures are
+          non-negotiable. This lesson will show you why careful planning and compliance with safety
+          protocols are essential—not just for regulatory reasons, but because lives depend on it.
+          Building on your understanding of high voltage hazards, you'll now learn the practical
+          steps that keep you and your team safe before the work even starts.</source>
+            </trans-unit>
+            <trans-unit id="items|id:s4orzkho758bgmfhs4lp0pg6|items|id:kcbo3rrajge1td5hixmba62x|paragraph">
+                <source>
+          <g id="GPcrch0h-YIbEXsq" ctype="x-html-P">This lesson will equip you with the necessary
+          knowledge and skills to safely prepare for and conduct high voltage work. You will learn
+          about critical preparation steps, safety analysis, and essential procedures to maintain a
+          safe work environment.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:lz641mdn5ox333x50ir6n7bx|items|id:una2hfwub7ac5lfybwcfswfo|paragraph">
+                <source>
+          <g id="aDN39r-HmFkVFJ1Y" ctype="x-html-P">Identify Key Preparation Steps: Recognize the
+          essential actions required before starting high voltage work.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:lz641mdn5ox333x50ir6n7bx|items|id:k53h0ozkehzsp1r6mlt2w8lj|paragraph">
+                <source>
+          <g id="znzv9EOzYpXHhEjC" ctype="x-html-P">Conduct Job Safety Analysis: Understand how to
+          perform and participate in a job safety analysis and pre-work inspection.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:lz641mdn5ox333x50ir6n7bx|items|id:j6ofl0jwlkowe1a336j092sc|paragraph">
+                <source>
+          <g id="3FJMTZ9I3WFoA0Dk" ctype="x-html-P">Master DNOT Procedures: Apply the correct
+          sequence of De-energize, Lock/Tag, and Test steps to ensure a safe work environment.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003d357lbzddiv57|items|id:cmn6driff003e357l820rnnye|title">
+                <source>
+          CONTINUE</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003d357lbzddiv57|items|id:cmn6driff003e357l820rnnye|completeHint">
+                <source>Complete the content
+          above before moving on.</source>
+            </trans-unit>
+            <trans-unit id="items|id:s3auh516gole4gbuhdbne356|items|id:swg052chi2wbewym07qh1eji|heading">
+                <source>The Three
+          Pillars of Workplace Preparation</source>
+            </trans-unit>
+            <trans-unit id="items|id:s3auh516gole4gbuhdbne356|items|id:swg052chi2wbewym07qh1eji|paragraph">
+                <source>
+          <g id="HeE3ibXH_ezIKGjg" ctype="x-html-P">Explore the foundational elements that must be
+          in place before any high voltage work begins. Expand each section to understand what is
+          required and why it matters.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003f357la4ht7jq2|items|id:cmn6driff003g357lc3nz58jo|title">
+                <source>Training
+          &amp; Competency</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003f357la4ht7jq2|items|id:cmn6driff003g357lc3nz58jo|description">
+                <source>
+          <g id="HHy1k87RYiSGtRFO" ctype="x-html-P">Only those who are properly trained, authorized,
+          and competent should perform high voltage work. This includes having up-to-date site
+          inductions and being able to demonstrate knowledge of electrical safety rules, rescue, and
+          resuscitation procedures.</g>
+                    <g id="QfBjfXDhLBdaux4p" ctype="x-html-P" />
+                    <g
+            id="AncRbTa3A8i7v6KX" ctype="x-html-P">If you are not authorized, you must always be
+          accompanied and supervised by someone who is.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003f357la4ht7jq2|items|id:cmn6driff003h357l6tsl70c1|title">
+                <source>Pre-Work
+          Inspections</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003f357la4ht7jq2|items|id:cmn6driff003h357l6tsl70c1|description">
+                <source>
+          <g id="94jEHbyxe5VgxC1d" ctype="x-html-P">Before starting any job, a thorough job safety
+          analysis must be completed with your entire work party. All tools and personal protective
+          equipment (PPE) should be inspected to ensure they are fit for use.</g>
+                    <g
+            id="S2mMQHSgrGtMBWhP" ctype="x-html-P" />
+                    <g id="kuYlTDA9zLeqnwyo" ctype="x-html-P">Testing
+          devices must be calibrated and functioning, and warning signs and barriers need to be in
+          place and clearly visible.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003f357la4ht7jq2|items|id:cmn6driff003i357luq4ua2vo|title">
+                <source>Team
+          Readiness</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003f357la4ht7jq2|items|id:cmn6driff003i357luq4ua2vo|description">
+                <source>
+          <g id="4_JypwAuk-xoENhV" ctype="x-html-P">High voltage work is never a solo task. Only
+          authorized personnel should participate, and anyone not fully authorized must be
+          supervised at all times.</g>
+                    <g id="OrKFjzvVZBzE4lpu" ctype="x-html-P" />
+                    <g
+            id="nm6RhLtvCkmm98WA" ctype="x-html-P">Team communication and readiness are critical to
+          ensure everyone understands their role and the safety procedures in place.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:d2yylz1hdi9z2yt0o94dr6d2|items|id:f2pus9v60tscet8he6cj7m03|heading">
+                <source>Pre-Work
+          Inspection Checklist</source>
+            </trans-unit>
+            <trans-unit id="items|id:d2yylz1hdi9z2yt0o94dr6d2|items|id:f2pus9v60tscet8he6cj7m03|paragraph">
+                <source>
+          <g id="xdlzWSMNmHpOg5pU" ctype="x-html-P">Review each flashcard to reinforce the key
+          elements of a thorough pre-work inspection. These steps help ensure the work environment
+          is safe before any high voltage tasks begin.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:j3vff85qzdj42p9tfpbbzjy7|items|id:hbnce91tdqokle69gba66xgp|front|description">
+                <source>
+          <g id="xDBGUiHtLhh9a2zr" ctype="x-html-P">Job Safety Analysis</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:j3vff85qzdj42p9tfpbbzjy7|items|id:hbnce91tdqokle69gba66xgp|back|description">
+                <source>
+          <g id="66nkOkifEau8-zCl" ctype="x-html-P">A structured review of the work to identify
+          hazards and plan controls before starting any high voltage task.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:j3vff85qzdj42p9tfpbbzjy7|items|id:aj2ul3ul8p84sbjmcw7z09c0|front|description">
+                <source>
+          <g id="bZjGBM32M4bociLP" ctype="x-html-P">Tool and PPE Inspection</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:j3vff85qzdj42p9tfpbbzjy7|items|id:aj2ul3ul8p84sbjmcw7z09c0|back|description">
+                <source>
+          <g id="ub-U4wGUc1smslUn" ctype="x-html-P">Carefully check all tools and personal
+          protective equipment for damage or defects to confirm they are safe and suitable for use.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:j3vff85qzdj42p9tfpbbzjy7|items|id:xgcrvzu8wv3ri1427hg4iyfy|front|description">
+                <source>
+          <g id="iLC4pQJ4Urd94HmC" ctype="x-html-P">Calibration and Signage</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:j3vff85qzdj42p9tfpbbzjy7|items|id:xgcrvzu8wv3ri1427hg4iyfy|back|description">
+                <source>
+          <g id="xEhCkPPDnGOoyqre" ctype="x-html-P">Confirm that all testing devices are properly
+          calibrated and that warning signs and barriers are in place and clearly visible.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003j357lm8g2hud3|items|id:cmn6driff003k357ltoyqzsv8|paragraph">
+                <source>
+          <g id="oh9btDDZyu4hbTKf" ctype="x-html-P">Preparation saves lives. Rushing or skipping any
+          step can lead to catastrophic consequences.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:s1b99qvrwgecayi7qaskk41i|items|id:puj38omckkf7s4xc83hlgc6h|heading">
+                <source>DNOT
+          Procedures: Your Last Line of Defense</source>
+            </trans-unit>
+            <trans-unit id="items|id:s1b99qvrwgecayi7qaskk41i|items|id:puj38omckkf7s4xc83hlgc6h|paragraph">
+                <source>
+          <g id="aHeqdxI8qtHPzG8N" ctype="x-html-P">Do Not Operate Tag (DNOT) procedures are your
+          critical safeguard against accidental energization. Strictly following each step in the
+          correct order is essential—there is no room for shortcuts when safety is on the line.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ixsczugbuncmuoq2cnu7jxtz|items|id:a9f6fvmwf1xvdlw9s9ga934v|heading">
+                <source>The
+          DNOT Procedure: Step-by-Step</source>
+            </trans-unit>
+            <trans-unit id="items|id:ixsczugbuncmuoq2cnu7jxtz|items|id:a9f6fvmwf1xvdlw9s9ga934v|paragraph">
+                <source>The
+          DNOT procedure is a sequence of actions designed to ensure that electrical equipment
+          cannot be accidentally energized while work is underway. Each step must be completed in
+          order for maximum safety.</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003r357lgb025epe|items|id:cmn6driff003l357lavay1yvp|title">
+                <source>Introduction
+          to the DNOT Procedure</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003r357lgb025epe|items|id:cmn6driff003l357lavay1yvp|description">
+                <source>
+          <g id="C182_3LBHe9qpv9r" ctype="x-html-P">The DNOT procedure is a sequence of actions
+          designed to ensure that electrical equipment cannot be accidentally energized while work
+          is underway. Each step must be completed in order for maximum safety.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003r357lgb025epe|items|id:cmn6driff003n357l8lr76uiu|title">
+                <source>De-energize
+          All Electrical Sources</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003r357lgb025epe|items|id:cmn6driff003n357l8lr76uiu|description">
+                <source>
+          <g id="nT3uAinaVwmy-gH4" ctype="x-html-P">Turn off and isolate all sources of electrical
+          energy before beginning any work. Verify that all switches and disconnects are in the off
+          position and that no power is present.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003r357lgb025epe|items|id:cmn6driff003o357lv7azbhg8|title">
+                <source>Apply
+          Locks and Tags</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003r357lgb025epe|items|id:cmn6driff003o357lv7azbhg8|description">
+                <source>
+          <g id="GRqBumHfdliLtug3" ctype="x-html-P">Attach locks and Do Not Operate tags to all
+          switches and disconnects. This prevents anyone from accidentally re-energizing the
+          equipment while work is in progress.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003r357lgb025epe|items|id:cmn6driff003p357lkrn4erru|title">
+                <source>Test
+          for Absence of Voltage</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003r357lgb025epe|items|id:cmn6driff003p357lkrn4erru|description">
+                <source>
+          <g id="8IuF7DaFECWUWrEK" ctype="x-html-P">Use approved testing devices to confirm that no
+          voltage is present. Always test after de-energizing and locking/tagging, never before.
+          This step verifies that the equipment is truly safe to touch.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003r357lgb025epe|items|id:cmn6driff003q357lcnuwmfu4|title">
+                <source>Begin
+          Work</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003r357lgb025epe|items|id:cmn6driff003q357lcnuwmfu4|description">
+                <source>
+          <g id="PeJwdudsCN95f8Lj" ctype="x-html-P">Only after all previous steps are completed and
+          confirmed should work begin. Skipping or reordering steps can result in serious injury or
+          death.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003r357lgb025epe|items|id:cmn6driff003m357liub196b4|title">
+                <source>Summary of the
+          DNOT Procedure</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003r357lgb025epe|items|id:cmn6driff003m357liub196b4|description">
+                <source>
+          <g id="5it5GAO70gVj7D4M" ctype="x-html-P">Following the DNOT procedure—De-energize,
+          Lock/Tag, Test, Begin Work—ensures a safe environment for everyone involved. Never assume
+          a step can be skipped or done out of order.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:gaisho72h0gaxvz38w7r3dj7|items|id:xb511yvt5870wnc3ow1xm4rn|heading">
+                <source>Sequence
+          Check: DNOT Steps</source>
+            </trans-unit>
+            <trans-unit id="items|id:gaisho72h0gaxvz38w7r3dj7|items|id:xb511yvt5870wnc3ow1xm4rn|paragraph">
+                <source>Test your
+          understanding of the DNOT procedure by arranging the steps in the correct order. Getting
+          this sequence right is critical for safety.</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003x357l2i8xz7zi|piles|id:cmn6driff003s357lhp9yi4pw|title">
+                <source>DNOT
+          Procedure Steps</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003x357l2i8xz7zi|items|id:cmn6driff003t357lytbs4o55|title">
+                <source>De-energize all
+          electrical sources</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003x357l2i8xz7zi|items|id:cmn6driff003u357l2dgsk6p1|title">
+                <source>Apply locks
+          and tags</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003x357l2i8xz7zi|items|id:cmn6driff003v357lqleb3k90|title">
+                <source>Test for absence of
+          voltage</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003x357l2i8xz7zi|items|id:cmn6driff003w357ly06n5qy7|title">
+                <source>Begin work</source>
+            </trans-unit>
+            <trans-unit id="items|id:93960c61-5290-4252-bc06-3bb0444ce0db|items|id:34a8c00f-7205-4773-a788-2d1ad0a43f0f|title">
+                <source>You’re
+          preparing to work on a high voltage switch. The area is clear. What is the first step in
+          the DNOT process?</source>
+            </trans-unit>
+            <trans-unit id="items|id:93960c61-5290-4252-bc06-3bb0444ce0db|items|id:34a8c00f-7205-4773-a788-2d1ad0a43f0f|answers|id:3b571fd6-43d0-4eea-8236-8d36df8923d0|title">
+                <source>Apply locks and
+          tags</source>
+            </trans-unit>
+            <trans-unit id="items|id:93960c61-5290-4252-bc06-3bb0444ce0db|items|id:34a8c00f-7205-4773-a788-2d1ad0a43f0f|answers|id:3b571fd6-43d0-4eea-8236-8d36df8923d0|feedback">
+                <source>Not yet. You must
+          de-energize all electrical sources before applying locks and tags.</source>
+            </trans-unit>
+            <trans-unit id="items|id:93960c61-5290-4252-bc06-3bb0444ce0db|items|id:34a8c00f-7205-4773-a788-2d1ad0a43f0f|answers|id:204a2dd8-799b-4e3b-bd57-73b35f2be2f1|title">
+                <source>De-energize
+          all electrical sources</source>
+            </trans-unit>
+            <trans-unit id="items|id:93960c61-5290-4252-bc06-3bb0444ce0db|items|id:34a8c00f-7205-4773-a788-2d1ad0a43f0f|answers|id:204a2dd8-799b-4e3b-bd57-73b35f2be2f1|feedback">
+                <source>Correct!
+          The first step is to de-energize before applying any locks or tags.</source>
+            </trans-unit>
+            <trans-unit id="items|id:93960c61-5290-4252-bc06-3bb0444ce0db|items|id:34a8c00f-7205-4773-a788-2d1ad0a43f0f|answers|id:f88d7dec-ae9e-493a-84ee-8da79cdc704b|title">
+                <source>Test
+          for absence of voltage</source>
+            </trans-unit>
+            <trans-unit id="items|id:93960c61-5290-4252-bc06-3bb0444ce0db|items|id:34a8c00f-7205-4773-a788-2d1ad0a43f0f|answers|id:f88d7dec-ae9e-493a-84ee-8da79cdc704b|feedback">
+                <source>Not quite.
+          Testing for absence of voltage comes after de-energizing the equipment.</source>
+            </trans-unit>
+            <trans-unit id="items|id:93960c61-5290-4252-bc06-3bb0444ce0db|items|id:34a8c00f-7205-4773-a788-2d1ad0a43f0f|answers|id:17d7c4c4-31eb-4df3-a45a-0c12052bf0ee|title">
+                <source>Begin
+          work</source>
+            </trans-unit>
+            <trans-unit id="items|id:93960c61-5290-4252-bc06-3bb0444ce0db|items|id:34a8c00f-7205-4773-a788-2d1ad0a43f0f|answers|id:17d7c4c4-31eb-4df3-a45a-0c12052bf0ee|feedback">
+                <source>Not safe. You must
+          de-energize and verify absence of voltage before beginning work.</source>
+            </trans-unit>
+            <trans-unit id="items|id:lccv5i2m3bzo47mb4ap53wg6|items|id:vlm9xoly73ejxrl5zg9mw5e1|heading">
+                <source>What
+          Can Go Wrong? — Consequences of Skipping DNOT Steps</source>
+            </trans-unit>
+            <trans-unit id="items|id:lccv5i2m3bzo47mb4ap53wg6|items|id:vlm9xoly73ejxrl5zg9mw5e1|paragraph">
+                <source>
+          <g id="hS1hGMoR4Gu3FO8Q" ctype="x-html-P">Explore the risks associated with skipping any
+          step in the DNOT procedure. Each section highlights a potential consequence and why strict
+          compliance is essential.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003y357lnft5asfi|items|id:cmn6driff003z357l9wuk687a|title">
+                <source>Skipping
+          De-energizing</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003y357lnft5asfi|items|id:cmn6driff003z357l9wuk687a|description">
+                <source>
+          <g id="ABXOs919gpeutswQ" ctype="x-html-P">If you fail to de-energize equipment, live
+          voltage may still be present, putting anyone who touches it at immediate risk of severe
+          shock or electrocution.</g>
+                    <g id="JZ_NZ5jOmcWhJAqu" ctype="x-html-P" />
+                    <g
+            id="Dm7N_ksBoE-8UOM6" ctype="x-html-P">Even a momentary lapse can result in
+          life-threatening injuries.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003y357lnft5asfi|items|id:cmn6driff0040357l9779j3t2|title">
+                <source>Skipping
+          Lockout/Tagout</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003y357lnft5asfi|items|id:cmn6driff0040357l9779j3t2|description">
+                <source>
+          <g id="7JEbI-iVIKhsJslm" ctype="x-html-P">Without locks and tags, someone else could
+          unknowingly re-energize the equipment while you are working on it.</g>
+                    <g
+            id="9gay8xRCM5XE4s5a" ctype="x-html-P" />
+                    <g id="zXp7N1qQ3upy7ozJ" ctype="x-html-P">This
+          can cause sudden, unexpected energization and catastrophic injury.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003y357lnft5asfi|items|id:cmn6driff0041357leoic6e2i|title">
+                <source>Skipping
+          Voltage Testing</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6driff003y357lnft5asfi|items|id:cmn6driff0041357leoic6e2i|description">
+                <source>
+          <g id="VC8QM8YFp6lZXCm0" ctype="x-html-P">Assuming equipment is safe without testing can
+          lead to a “false safe” situation, where hidden voltage remains present.</g>
+                    <g
+            id="_xUNDtzLlZUibR3Z" ctype="x-html-P" />
+                    <g id="HT8UrCCuHKJgQwaq" ctype="x-html-P">This
+          step is your final confirmation that it is truly safe to begin work.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6drifg0042357lv2f4enii|items|id:cmn6drifg0043357lalxcchym|paragraph">
+                <source>
+          <g id="oOs4qh_jhteslpEF" ctype="x-html-P">Strict compliance with DNOT procedures is
+          mandatory—no shortcuts, no exceptions.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:hfppix4jadpxm7wkxvmtwkmy|items|id:qfobwjue3cgyf3y37zd1oj07|paragraph">
+                <source>
+          <g id="8bNfpOHyPPUfpS-j" ctype="x-html-P">In this lesson, you learned about the three
+          pillars of workplace preparation: training and competency, thorough pre-work inspections,
+          and team readiness. You also mastered the DNOT procedure—De-energize, Lock/Tag, Test, and
+          Begin Work—and saw how skipping any step can have severe consequences.</g>
+                    <g
+            id="yErdhKvhK5touxtW" ctype="x-html-P">Next, you’ll explore the hierarchy of controls
+          and how to select the right personal protective equipment (PPE) to further reduce risk
+          when working with high voltage electricity.</g>
+        </source>
+            </trans-unit>
+        </body>
+    </file>
+    <file original="H0Abx6NVgAubfQJNI1Oxxq4TkS3TFWbc" datatype="plaintext" source-language="en-us">
+        <body>
+            <trans-unit id="title">
+                <source>Hierarchy
+          of Controls and PPE Selection</source>
+            </trans-unit>
+            <trans-unit id="items|id:xe2dqw5x9perio8e3jr8l04l|items|id:udslmzka2fnr1u6fllgypeqi|heading">
+                <source>Hierarchy
+          of Controls and PPE Selection</source>
+            </trans-unit>
+            <trans-unit id="items|id:xe2dqw5x9perio8e3jr8l04l|items|id:udslmzka2fnr1u6fllgypeqi|paragraph">
+                <source>
+          <g id="dpDJ8tn6Z9BkGrqv" ctype="x-html-P">Welcome to this lesson on the hierarchy of
+          controls and PPE selection in high voltage electrical safety. In this lesson, you'll learn
+          how electrical risks are managed using a structured approach, and why personal protective
+          equipment (PPE) is considered the last line of defense. Understanding and applying these
+          concepts is essential for keeping yourself and your team safe when working with high
+          voltage systems.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:mzy8156roe2ov64xcqqejo7v|items|id:o8zrmkbqkv4sy992qwiqw1um|paragraph">
+                <source>
+          <g id="TRvE_5jXJIQ4dg1X" ctype="x-html-P">By the end of this lesson, you will be able to:</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:mw22jqnl2uaz3msoazmk9kcu|items|id:foi1qkzjk7u0pqhuqbxtxe1i|paragraph">
+                <source>
+          <g id="ZE4SPvPc79XzMYMn" ctype="x-html-P">Explain the hierarchy of controls for electrical
+          safety</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:mw22jqnl2uaz3msoazmk9kcu|items|id:flthprz88rcncd2x78lp36dw|paragraph">
+                <source>
+          <g id="a2s976wGRIsqIJZF" ctype="x-html-P">Describe the role and limitations of PPE</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:mw22jqnl2uaz3msoazmk9kcu|items|id:r318gd74w9kwo5trn2h74yux|paragraph">
+                <source>
+          <g id="UR4NLwIxNOkSY5YT" ctype="x-html-P">Apply the five-step process for selecting PPE</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:mw22jqnl2uaz3msoazmk9kcu|items|id:fh0jy5q11tk9wtkvkovwl6j1|paragraph">
+                <source>
+          <g id="JLwAaB-wGWScu9KX" ctype="x-html-P">Identify the minimum PPE requirements for high
+          voltage work</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:mw22jqnl2uaz3msoazmk9kcu|items|id:i5c71g1bgjs8695naie15e95|paragraph">
+                <source>
+          <g id="oFHOs4hN2hvwXm8_" ctype="x-html-P">Match PPE items to the hazards they protect
+          against</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0t0044357l1i0yemfy|items|id:cmn6dru0t0045357l0nq2hxek|title">
+                <source>CONTINUE</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0t0044357l1i0yemfy|items|id:cmn6dru0t0045357l0nq2hxek|completeHint">
+                <source>Complete
+          the content above before moving on.</source>
+            </trans-unit>
+            <trans-unit id="items|id:tq9r01e0hkfk6xilm4v2r9zh|items|id:sagalo4cb6e9xf2btggrnazg|heading">
+                <source>The
+          Hierarchy of Controls in Electrical Safety</source>
+            </trans-unit>
+            <trans-unit id="items|id:tq9r01e0hkfk6xilm4v2r9zh|items|id:sagalo4cb6e9xf2btggrnazg|paragraph">
+                <source>
+          <g id="PZgM2pBMKbuU2Bjl" ctype="x-html-P">Explore each level of the hierarchy of controls
+          to understand how risks are managed in high voltage environments. Each control method
+          plays a specific role in reducing danger, with PPE always being the last resort.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0t0046357lsvvtxjqu|items|id:cmn6dru0t0047357lwuyxii8t|title">
+                <source>
+          Elimination</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0t0046357lsvvtxjqu|items|id:cmn6dru0t0047357lwuyxii8t|description">
+                <source>
+          <g id="Kk2iwuuwqyeAWZ7s" ctype="x-html-P">Elimination means completely removing the
+          electrical hazard from the workplace. For example, decommissioning and removing unused
+          high voltage equipment ensures it can no longer pose a risk.</g>
+                    <g id="2S3xUaC_kxcCb9ea"
+            ctype="x-html-P" />
+                    <g id="lgSVTIU_5BK3Jvr0" ctype="x-html-P">This is the most effective
+          control, but not always possible in operational environments.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0t0046357lsvvtxjqu|items|id:cmn6dru0t0048357lhku5vaje|title">
+                <source>
+          Substitution</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0t0046357lsvvtxjqu|items|id:cmn6dru0t0048357lhku5vaje|description">
+                <source>
+          <g id="mUCIs6vXqwG0ZK-w" ctype="x-html-P">Substitution involves replacing a hazardous
+          process or equipment with something less dangerous. For instance, using lower voltage
+          equipment where possible reduces the risk of severe electrical injury.</g>
+                    <g
+            id="1O2vo_GkLuXlMzbl" ctype="x-html-P" />
+                    <g id="hN675E6yLju_tvoq" ctype="x-html-P">This
+          control is effective but may not always be feasible for essential high voltage systems.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0t0046357lsvvtxjqu|items|id:cmn6dru0t0049357lgbbgef80|title">
+                <source>
+          Isolation</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0t0046357lsvvtxjqu|items|id:cmn6dru0t0049357lgbbgef80|description">
+                <source>
+          <g id="41m1Rxg7qVTfjsVO" ctype="x-html-P">Isolation physically separates people from the
+          hazard. Installing barriers, locked switchrooms, or remote switching devices ensures
+          workers are not exposed to live high voltage parts.</g>
+                    <g id="fkMBp8XeqAOb4_qE"
+            ctype="x-html-P" />
+                    <g id="yGZ-MjCuFB6IzUip" ctype="x-html-P">Isolation reduces the
+          chance of accidental contact and is a key control in electrical safety.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0t0046357lsvvtxjqu|items|id:cmn6dru0t004a357lkja0z4hg|title">
+                <source>Engineering
+          Controls</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0t0046357lsvvtxjqu|items|id:cmn6dru0t004a357lkja0z4hg|description">
+                <source>
+          <g id="dKHS5oVqfKEesQo7" ctype="x-html-P">Engineering controls are design features that
+          minimize risk, such as interlocks, insulation, and automatic shutdown systems. These
+          controls help prevent incidents by making hazardous conditions less likely or less severe.</g>
+                    <g
+            id="wsfnvNGZKY1nDRdD" ctype="x-html-P" />
+                    <g id="cikxIyAEhR2fIphf" ctype="x-html-P">Engineering
+          controls are built into equipment and systems to provide ongoing protection.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0t0046357lsvvtxjqu|items|id:cmn6dru0t004b357lh604n3bx|title">
+                <source>Administrative
+          Controls</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0t0046357lsvvtxjqu|items|id:cmn6dru0t004b357lh604n3bx|description">
+                <source>
+          <g id="2HS9PrcUDpXF2bwS" ctype="x-html-P">Administrative controls include procedures,
+          training, signage, and supervision. Examples are safe work method statements, permits, and
+          regular safety briefings.</g>
+                    <g id="IGeiqyeII_qMlT_1" ctype="x-html-P" />
+                    <g
+            id="AtVH8opIGwlkwFmi" ctype="x-html-P">These controls rely on people following rules and
+          are most effective when combined with other controls.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0t0046357lsvvtxjqu|items|id:cmn6dru0t004c357l0kk14srg|title">
+                <source>Personal
+          Protective Equipment (PPE)</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0t0046357lsvvtxjqu|items|id:cmn6dru0t004c357l0kk14srg|description">
+                <source>
+          <g id="3fxa-zMOwyZezoZP" ctype="x-html-P">PPE is the final barrier between the worker and
+          the hazard. It includes items like gloves, helmets, and arc-rated clothing. PPE does not
+          eliminate the hazard but provides protection if all other controls fail.</g>
+                    <g
+            id="K6cXHoNlkxs0gHiM" ctype="x-html-P" />
+                    <g id="iCP6PmZywFWLoJwA" ctype="x-html-P">Always
+          use PPE in conjunction with higher-level controls, never as the sole protection.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0u004d357lz5ykftkf|items|id:cmn6dru0u004e357lxwm3l3qa|paragraph">
+                <source>PPE
+          is your last line of defense—never rely on it as your only protection.</source>
+            </trans-unit>
+            <trans-unit id="items|id:j92vcm94b7sfqfa2z9g5j55e|items|id:zlrk547b17do5obphfj7phe8|heading">
+                <source>The
+          Five-Step Process for PPE Selection</source>
+            </trans-unit>
+            <trans-unit id="items|id:j92vcm94b7sfqfa2z9g5j55e|items|id:zlrk547b17do5obphfj7phe8|paragraph">
+                <source>
+          <g id="KFV6CNyjiBn38f0x" ctype="x-html-P">To ensure you are properly protected, follow a
+          structured five-step process for selecting PPE in high voltage and arc hazard
+          environments. This process helps you make informed, standards-based decisions every time.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:wdxpdis2znj0cy89djt1lrye|items|id:f2jydpvrydjbpl5e04o8qgux|heading">
+                <source>Five-Step
+          PPE Selection Process</source>
+            </trans-unit>
+            <trans-unit id="items|id:wdxpdis2znj0cy89djt1lrye|items|id:f2jydpvrydjbpl5e04o8qgux|paragraph">
+                <source>Choosing
+          the right PPE is not guesswork—it requires a systematic approach. Follow these five steps
+          to ensure your protection matches the hazards present.</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0x004m357ljnio72ru|items|id:cmn6dru0x004f357lczhhdlno|title">
+                <source>Introduction
+          to PPE Selection</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0x004m357ljnio72ru|items|id:cmn6dru0x004f357lczhhdlno|description">
+                <source>
+          <g id="moNuFZ_uTVDX7EdX" ctype="x-html-P">Choosing the right PPE is not guesswork—it
+          requires a systematic approach. Follow these five steps to ensure your protection matches
+          the hazards present.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0x004m357ljnio72ru|items|id:cmn6dru0x004h357lf4d78get|title">
+                <source>Understand
+          the Hazard</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0x004m357ljnio72ru|items|id:cmn6dru0x004h357lf4d78get|description">
+                <source>
+          <g id="SiizsN1iULrxJ43n" ctype="x-html-P">Identify all electrical and arc hazards in your
+          work area. This includes recognizing sources of high voltage, potential for arc flash, and
+          other risks.</g>
+                    <g id="_MKPhCfhGXb0PUDC" ctype="x-html-P">For example, working near
+          energized switchgear presents both shock and arc flash hazards.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0x004m357ljnio72ru|items|id:cmn6dru0x004i357ltc0beo83|title">
+                <source>Identify
+          Assets with Arc Hazard Potential</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0x004m357ljnio72ru|items|id:cmn6dru0x004i357ltc0beo83|description">
+                <source>
+          <g id="R32PxvKUA6cC4DJx" ctype="x-html-P">Determine which equipment or locations could
+          produce an arc flash. Focus on items like switchgear, transformers, and circuit breakers.</g>
+                    <g
+            id="rIIL_j1GlHGUhjw4" ctype="x-html-P">Not all equipment poses the same risk—prioritize
+          areas with the highest arc hazard potential.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0x004m357ljnio72ru|items|id:cmn6dru0x004j357lx6mablc5|title">
+                <source>Quantify
+          the Hazard</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0x004m357ljnio72ru|items|id:cmn6dru0x004j357lx6mablc5|description">
+                <source>
+          <g id="-bWVZKTIo64_a-gl" ctype="x-html-P">Calculate the incident energy or arc flash level
+          for each identified asset. This is usually measured in calories per square centimeter and
+          should be done by qualified personnel.</g>
+                    <g id="5gahjosW7tZ0E9tg" ctype="x-html-P">Knowing
+          the exact energy level guides you in selecting PPE with the correct arc rating.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0x004m357ljnio72ru|items|id:cmn6dru0x004k357ly8oautz1|title">
+                <source>Assess
+          the Risk</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0x004m357ljnio72ru|items|id:cmn6dru0x004k357ly8oautz1|description">
+                <source>
+          <g id="-4p7-EFyCXkW5wUt" ctype="x-html-P">Use your organization’s risk management
+          framework to evaluate the likelihood and consequences of an arc flash or electrical
+          incident. Consider factors like work duration, proximity, and environmental conditions.</g>
+                    <g
+            id="06MshCvrvfOpWTpL" ctype="x-html-P">This assessment helps determine the level of
+          protection and additional controls needed.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0x004m357ljnio72ru|items|id:cmn6dru0x004l357lcvp9ttkc|title">
+                <source>Select
+          Appropriate PPE</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0x004m357ljnio72ru|items|id:cmn6dru0x004l357lcvp9ttkc|description">
+                <source>
+          <g id="GkhxAUzVnUYwp8dw" ctype="x-html-P">Based on the calculated hazard and risk
+          assessment, choose PPE that meets or exceeds the required arc rating and complies with
+          relevant standards.</g>
+                    <g id="KC3SN54ejZxOAgEU" ctype="x-html-P">Always consult with
+          qualified personnel and never select PPE based on assumptions.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0x004m357ljnio72ru|items|id:cmn6dru0x004g357l31cnks3h|title">
+                <source>Summary
+          of PPE Selection Process</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0x004m357ljnio72ru|items|id:cmn6dru0x004g357l31cnks3h|description">
+                <source>
+          <g id="NXp-hJQIopd_42k-" ctype="x-html-P">Following these five steps ensures your PPE
+          selection is evidence-based, compliant, and tailored to the specific hazards of your work
+          environment.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:a54df86a-5a2a-4d36-800d-0439edbe10e0|items|id:ab2656a4-706c-43b7-bb09-637335afac14|title">
+                <source>Which
+          step in the PPE selection process involves calculating the incident energy exposure level?</source>
+            </trans-unit>
+            <trans-unit id="items|id:a54df86a-5a2a-4d36-800d-0439edbe10e0|items|id:ab2656a4-706c-43b7-bb09-637335afac14|answers|id:1b67d28b-c28e-4de6-bfa1-ee5ac0f6c7b7|title">
+                <source>Understand
+          the Hazard</source>
+            </trans-unit>
+            <trans-unit id="items|id:a54df86a-5a2a-4d36-800d-0439edbe10e0|items|id:ab2656a4-706c-43b7-bb09-637335afac14|answers|id:1b67d28b-c28e-4de6-bfa1-ee5ac0f6c7b7|feedback">
+                <source>This step is about
+          recognizing hazards, not measuring them.</source>
+            </trans-unit>
+            <trans-unit id="items|id:a54df86a-5a2a-4d36-800d-0439edbe10e0|items|id:ab2656a4-706c-43b7-bb09-637335afac14|answers|id:b436479b-d591-4377-8130-dd6244bc49a4|title">
+                <source>Identify
+          Assets with Arc Hazard Potential</source>
+            </trans-unit>
+            <trans-unit id="items|id:a54df86a-5a2a-4d36-800d-0439edbe10e0|items|id:ab2656a4-706c-43b7-bb09-637335afac14|answers|id:b436479b-d591-4377-8130-dd6244bc49a4|feedback">
+                <source>This
+          step is about identifying where arc hazards may exist.</source>
+            </trans-unit>
+            <trans-unit id="items|id:a54df86a-5a2a-4d36-800d-0439edbe10e0|items|id:ab2656a4-706c-43b7-bb09-637335afac14|answers|id:f8141532-9de1-4688-a209-e64c1b64539e|title">
+                <source>Quantify
+          the Hazard</source>
+            </trans-unit>
+            <trans-unit id="items|id:a54df86a-5a2a-4d36-800d-0439edbe10e0|items|id:ab2656a4-706c-43b7-bb09-637335afac14|answers|id:f8141532-9de1-4688-a209-e64c1b64539e|feedback">
+                <source>Correct! Quantifying
+          the hazard means calculating the incident energy, which is critical for choosing the right
+          PPE.</source>
+            </trans-unit>
+            <trans-unit id="items|id:a54df86a-5a2a-4d36-800d-0439edbe10e0|items|id:ab2656a4-706c-43b7-bb09-637335afac14|answers|id:61aaf27d-cebf-4412-989e-bf22a57c30cc|title">
+                <source>Select Appropriate PPE</source>
+            </trans-unit>
+            <trans-unit id="items|id:a54df86a-5a2a-4d36-800d-0439edbe10e0|items|id:ab2656a4-706c-43b7-bb09-637335afac14|answers|id:61aaf27d-cebf-4412-989e-bf22a57c30cc|feedback">
+                <source>This
+          step comes after you have calculated the hazard.</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0x004n357lremferti|items|id:cmn6dru0x004o357lw7c17cjs|title">
+                <source>
+          CONTINUE</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0x004n357lremferti|items|id:cmn6dru0x004o357lw7c17cjs|completeHint">
+                <source>Complete the content
+          above before moving on.</source>
+            </trans-unit>
+            <trans-unit id="items|id:wbeu0n6wsjvhfopcd5w7aept|items|id:bm6mgifoylm0hy420uyrk68h|heading">
+                <source>Minimum
+          PPE Requirements for High Voltage Work</source>
+            </trans-unit>
+            <trans-unit id="items|id:wbeu0n6wsjvhfopcd5w7aept|items|id:bm6mgifoylm0hy420uyrk68h|paragraph">
+                <source>
+          <g id="-elRhki8XGI-qPWY" ctype="x-html-P">Review each flashcard to learn about the
+          essential PPE items required for high voltage electrical work. Understanding what each
+          item protects against is key to staying safe on the job.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ko6jaozwya7g6f4bgnamahhx|items|id:z8za5w84wjd7ee59wkyzxadk|front|description">
+                <source>
+          <g id="Zx3m1z3QQOeeHaQv" ctype="x-html-B">Wrist to Ankle Clothing</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ko6jaozwya7g6f4bgnamahhx|items|id:z8za5w84wjd7ee59wkyzxadk|back|description">
+                <source>Arc-rated
+          shirts and trousers or overalls that cover all exposed skin, reducing the risk of burns
+          and arc flash injury.</source>
+            </trans-unit>
+            <trans-unit id="items|id:ko6jaozwya7g6f4bgnamahhx|items|id:eitk1lgmccgb9kv8x27i2n5y|front|description">
+                <source>
+          <g id="OtCqncS1lxLXRUKE" ctype="x-html-B">Enclosed Footwear with Hard Toe</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ko6jaozwya7g6f4bgnamahhx|items|id:eitk1lgmccgb9kv8x27i2n5y|back|description">
+                <source>Boots
+          or shoes with a hard toe and full enclosure to protect feet from electrical hazards and
+          falling objects.</source>
+            </trans-unit>
+            <trans-unit id="items|id:ko6jaozwya7g6f4bgnamahhx|items|id:rvsq5ilffb0jhgyypydcji8a|front|description">
+                <source>
+          <g id="zkCdJ2sOtA_7FHPG" ctype="x-html-B">Safety Glasses</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ko6jaozwya7g6f4bgnamahhx|items|id:rvsq5ilffb0jhgyypydcji8a|back|description">
+                <source>Eye
+          protection that shields against arc flash, flying debris, and projectiles during
+          electrical work.</source>
+            </trans-unit>
+            <trans-unit id="items|id:ko6jaozwya7g6f4bgnamahhx|items|id:jneu874u6vsm6d5alzybolpf|front|description">
+                <source>
+          <g id="i7BWj-UnSZ28AGmf" ctype="x-html-B">Safety Helmet</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ko6jaozwya7g6f4bgnamahhx|items|id:jneu874u6vsm6d5alzybolpf|back|description">
+                <source>Head
+          protection that guards against falling objects, bumps, and may provide electrical
+          insulation.</source>
+            </trans-unit>
+            <trans-unit id="items|id:ko6jaozwya7g6f4bgnamahhx|items|id:hfpfzf6yn4u2tfgsdgnac2mt|front|description">
+                <source>
+          <g id="Cz68R_CdkNaSUZAR" ctype="x-html-B">Protective Gloves</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ko6jaozwya7g6f4bgnamahhx|items|id:hfpfzf6yn4u2tfgsdgnac2mt|back|description">
+                <source>Insulated
+          gloves designed to protect hands from electrical shock, burns, and cuts.</source>
+            </trans-unit>
+            <trans-unit id="items|id:inyliuwl6zp9p518egilj50f|items|id:f8xl7mgv72j9712woyby8cz2|heading">
+                <source>Match
+          PPE to Protection Needs</source>
+            </trans-unit>
+            <trans-unit id="items|id:inyliuwl6zp9p518egilj50f|items|id:f8xl7mgv72j9712woyby8cz2|paragraph">
+                <source>
+          <g id="vjVS-TxiugQo9csL" ctype="x-html-P">Test your knowledge by matching each PPE item to
+          the part of the body it protects. Drag each item to its correct category to reinforce your
+          understanding of PPE functions.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0y004x357lf6qj1n7z|piles|id:cmn6dru0y004p357lltskzpi2|title">
+                <source>
+          Eyes</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0y004x357lf6qj1n7z|items|id:cmn6dru0y004t357lvpcdijg6|title">
+                <source>Safety Glasses</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0y004x357lf6qj1n7z|piles|id:cmn6dru0y004q357lv3pqbpss|title">
+                <source>
+          Head</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0y004x357lf6qj1n7z|items|id:cmn6dru0y004u357lifaeeri1|title">
+                <source>Safety Helmet</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0y004x357lf6qj1n7z|piles|id:cmn6dru0y004r357l0iul1kww|title">
+                <source>
+          Hands</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0y004x357lf6qj1n7z|items|id:cmn6dru0y004v357lefp71h4o|title">
+                <source>Protective Gloves</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0y004x357lf6qj1n7z|piles|id:cmn6dru0y004s357l82xldzks|title">
+                <source>
+          Feet</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0y004x357lf6qj1n7z|items|id:cmn6dru0y004w357ljpu4rp6s|title">
+                <source>Enclosed Footwear</source>
+            </trans-unit>
+            <trans-unit id="items|id:jgh6zgezx3z9cayzcfdg1vry|items|id:fk0t4jp8kxjmszsezonua1zu|heading">
+                <source>PPE
+          for Specific Electrical Hazards</source>
+            </trans-unit>
+            <trans-unit id="items|id:jgh6zgezx3z9cayzcfdg1vry|items|id:fk0t4jp8kxjmszsezonua1zu|paragraph">
+                <source>
+          <g id="XAwrCznQ3dE8GQJP" ctype="x-html-P">Expand each section to see which PPE is required
+          for different types of electrical hazards. Knowing the right protection for each risk is
+          essential for effective safety management.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0z004y357lpc23kzas|items|id:cmn6dru0z004z357li180fzu6|title">
+                <source>Arc
+          Flash Hazards</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0z004y357lpc23kzas|items|id:cmn6dru0z004z357li180fzu6|description">
+                <source>
+          <g id="LorTWxFzMlzHY_ru" ctype="x-html-P">Arc-rated clothing and face shields are required
+          to protect against the intense heat and energy of an arc flash. These items must meet
+          recognized arc protection standards.</g>
+                    <g id="HgL6zGbKiXog2qE_" ctype="x-html-P" />
+                    <g
+            id="QVSeabXbXpXfyF4p" ctype="x-html-P">Always check the arc rating of your clothing and
+          ensure face shields are rated for electrical work.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0z004y357lpc23kzas|items|id:cmn6dru0z0050357ld7nij4gj|title">
+                <source>Shock
+          Hazards</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0z004y357lpc23kzas|items|id:cmn6dru0z0050357ld7nij4gj|description">
+                <source>
+          <g id="58X5VBMXtJYf5hGb" ctype="x-html-P">Insulated gloves and dielectric boots are
+          essential for preventing electrical shock. These PPE items are tested to withstand high
+          voltage exposure.</g>
+                    <g id="bcYTq_xnkkgsXTSi" ctype="x-html-P" />
+                    <g id="210uYMJOT8VMfJZX"
+            ctype="x-html-P">Use only gloves and boots that are certified for electrical protection
+          and inspect them regularly.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0z004y357lpc23kzas|items|id:cmn6dru0z0051357levfztci8|title">
+                <source>Burns
+          and Thermal Hazards</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0z004y357lpc23kzas|items|id:cmn6dru0z0051357levfztci8|description">
+                <source>
+          <g id="f3ZWoHxrtKu2pPAg" ctype="x-html-P">Flame-resistant base garments provide protection
+          against burns from electrical faults or arc flashes. These garments limit the severity of
+          burn injuries.</g>
+                    <g id="Yg1loy2tUjGTeoNE" ctype="x-html-P" />
+                    <g id="M9pHjbpMj-uGU3Xz"
+            ctype="x-html-P">Ensure all base garments meet flame resistance standards for electrical
+          work.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0z004y357lpc23kzas|items|id:cmn6dru0z0052357lqy2zb7td|title">
+                <source>Impact and
+          Falling Objects</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0z004y357lpc23kzas|items|id:cmn6dru0z0052357lqy2zb7td|description">
+                <source>
+          <g id="on4kzIvflN8y-7t7" ctype="x-html-P">Hard hats and reinforced footwear protect
+          against injuries from falling tools or equipment. These items are especially important in
+          areas with overhead hazards.</g>
+                    <g id="gj2t5O1saraR25ds" ctype="x-html-P" />
+                    <g
+            id="4-zIai4RDNim-w-J" ctype="x-html-P">Choose PPE that is rated for both impact and
+          electrical protection when required.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:b566d811-486d-4189-a293-72a6f00d85a9|items|id:9f922f7e-7ed1-446c-b914-71cd9e38187d|title">
+                <source>Which
+          of the following are minimum required PPE items for high voltage work? (Select all that
+          apply)</source>
+            </trans-unit>
+            <trans-unit id="items|id:b566d811-486d-4189-a293-72a6f00d85a9|items|id:9f922f7e-7ed1-446c-b914-71cd9e38187d|answers|id:57ac7750-c65d-4581-a5c8-02925ed48e7b|title">
+                <source>Wrist to ankle clothing</source>
+            </trans-unit>
+            <trans-unit id="items|id:b566d811-486d-4189-a293-72a6f00d85a9|items|id:9f922f7e-7ed1-446c-b914-71cd9e38187d|answers|id:5361939d-99bd-4785-a4a8-a5ee0f422114|title">
+                <source>Enclosed
+          footwear with hard toe</source>
+            </trans-unit>
+            <trans-unit id="items|id:b566d811-486d-4189-a293-72a6f00d85a9|items|id:9f922f7e-7ed1-446c-b914-71cd9e38187d|answers|id:49e9b2ff-0fd2-4974-a735-21f9bc56a3ba|title">
+                <source>High
+          visibility vest</source>
+            </trans-unit>
+            <trans-unit id="items|id:b566d811-486d-4189-a293-72a6f00d85a9|items|id:9f922f7e-7ed1-446c-b914-71cd9e38187d|answers|id:f35abfb0-9e41-480e-8bd4-de3e64648151|title">
+                <source>Safety helmet</source>
+            </trans-unit>
+            <trans-unit id="items|id:b566d811-486d-4189-a293-72a6f00d85a9|items|id:9f922f7e-7ed1-446c-b914-71cd9e38187d|answers|id:cb9eed6b-da17-43ee-aca0-7ca4811c6a4d|title">
+                <source>
+          Respirator</source>
+            </trans-unit>
+            <trans-unit id="items|id:b566d811-486d-4189-a293-72a6f00d85a9|items|id:9f922f7e-7ed1-446c-b914-71cd9e38187d|answers|id:8041ec18-5bce-4107-a84c-859a1944d87a|title">
+                <source>Safety glasses</source>
+            </trans-unit>
+            <trans-unit id="items|id:b566d811-486d-4189-a293-72a6f00d85a9|items|id:9f922f7e-7ed1-446c-b914-71cd9e38187d|answers|id:e04b0b5f-d1e8-4ae1-a226-7565e4e8ae76|title">
+                <source>Protective
+          gloves</source>
+            </trans-unit>
+            <trans-unit id="items|id:b566d811-486d-4189-a293-72a6f00d85a9|items|id:9f922f7e-7ed1-446c-b914-71cd9e38187d|feedbackCorrect">
+                <source>Great job! You selected
+          all the minimum required PPE items for high voltage work. These items are essential for
+          protecting against electrical hazards such as arc flash, burns, and impact injuries.</source>
+            </trans-unit>
+            <trans-unit id="items|id:b566d811-486d-4189-a293-72a6f00d85a9|items|id:9f922f7e-7ed1-446c-b914-71cd9e38187d|feedbackIncorrect">
+                <source>Some
+          of your selections were incorrect. Review the required PPE for high voltage work: wrist to
+          ankle clothing, enclosed footwear with hard toe, safety helmet, safety glasses, and
+          protective gloves are all essential. High visibility vests and respirators are not minimum
+          requirements for this type of work.</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dru0z0053357lfqajb7je|items|id:cmn6dru0z0054357ladjcnsmm|paragraph">
+                <source>Selecting
+          the right PPE is a science—always base your decisions on hazard assessment and standards,
+          never assumptions.</source>
+            </trans-unit>
+            <trans-unit id="items|id:bvtdhgtxet431ft6zgn6oydk|items|id:oltnz1j9tm58p851bv52swc0|paragraph">
+                <source>
+          <g id="HiOZGPYwLkMbDx3r" ctype="x-html-P">In this lesson, you learned how the hierarchy of
+          controls structures risk management in high voltage environments, with PPE as the final
+          layer of protection. You explored the five-step process for selecting PPE, reviewed the
+          minimum requirements for high voltage work, and practiced matching PPE to specific
+          hazards. Remember, effective safety depends on using the right controls and equipment for
+          every task.</g>
+                    <g id="1tHOgyyUG2SSp4hn" ctype="x-html-P">Next, you'll build on this
+          foundation by learning about roles, responsibilities, and safe approach distances—key
+          elements for coordinated and compliant high voltage work.</g>
+        </source>
+            </trans-unit>
+        </body>
+    </file>
+    <file original="6Fn7QQfuSbcC063b8J0UeexrS7S0gWn-" datatype="plaintext" source-language="en-us">
+        <body>
+            <trans-unit id="title">
+                <source>Roles,
+          Responsibilities, and Safe Approach Distances</source>
+            </trans-unit>
+            <trans-unit id="items|id:ve4d99yzi61d7de6rsgyjdu3|items|id:al07c6az36m8cvoaoyp8thha|heading">
+                <source>Roles,
+          Responsibilities, and Safe Approach Distances</source>
+            </trans-unit>
+            <trans-unit id="items|id:ve4d99yzi61d7de6rsgyjdu3|items|id:al07c6az36m8cvoaoyp8thha|paragraph">
+                <source>
+          <g id="fWyNzJb-VKUmvxkW" ctype="x-html-P">Welcome to this lesson on the critical human and
+          spatial controls that keep high voltage work safe. While equipment and PPE are essential,
+          true safety depends on clear roles, strict authorization, and a disciplined approach to
+          proximity hazards. In this lesson, you'll learn how defined responsibilities and safe
+          approach distances work together to prevent accidents and ensure every team member knows
+          their part in maintaining a safe work environment.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ukb019znqmqaiyf44pufwmhe|items|id:x0r1jffqiyxp2mubm8ly948j|paragraph">
+                <source>
+          <g id="JeBIRccV5w0MQ2Ty" ctype="x-html-P">This lesson will equip you with essential
+          knowledge and skills for working safely around electrical hazards. By mastering the
+          following objectives, you will be better prepared to ensure safety and compliance in your
+          work environment.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:qet4p866ngr23s6jnp5xih7g|items|id:fd3wdwrc9dat7avq4bbadfyg|paragraph">
+                <source>
+          <g id="HtugQgcU8GE5hl1J" ctype="x-html-P">Identify the three main roles and their
+          responsibilities.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:qet4p866ngr23s6jnp5xih7g|items|id:vuq8htbb9nvwjpvplovu7dbz|paragraph">
+                <source>
+          <g id="Q17V2sqpdJsuMSCB" ctype="x-html-P">Explain access permit and isolation
+          requirements.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:qet4p866ngr23s6jnp5xih7g|items|id:o9gej9bixx7bcilp60cyorb8|paragraph">
+                <source>
+          <g id="y1DWjn4eMKV84JXz" ctype="x-html-P">Apply safe approach distances based on voltage.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:qet4p866ngr23s6jnp5xih7g|items|id:pi3wkyl5pzenwrd97wbe0twj|paragraph">
+                <source>
+          <g id="fUDj9feLJIa8SIsb" ctype="x-html-P">Recognize special considerations for mobile
+          plant and equipment.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:qet4p866ngr23s6jnp5xih7g|items|id:qfo2qzug7txu1n0lo7e1l7x6|paragraph">
+                <source>
+          <g id="53eNdTjmMAc6rThb" ctype="x-html-P">Understand the critical function of supervision
+          and separation.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f60055357ln0cyopko|items|id:cmn6ds9f60056357l9nntuopm|title">
+                <source>
+          CONTINUE</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f60055357ln0cyopko|items|id:cmn6ds9f60056357l9nntuopm|completeHint">
+                <source>Complete the content
+          above before moving on.</source>
+            </trans-unit>
+            <trans-unit id="items|id:bv25x8r9o2u2kim9zdzs2o31|items|id:lbxy24ph0omm2a1h3nbb6qxg|heading">
+                <source>Key
+          Personnel Roles for High Voltage Work</source>
+            </trans-unit>
+            <trans-unit id="items|id:bv25x8r9o2u2kim9zdzs2o31|items|id:lbxy24ph0omm2a1h3nbb6qxg|paragraph">
+                <source>
+          <g id="1a6kHrcvudoLlqx2" ctype="x-html-P">Explore the three essential roles that form the
+          backbone of safe high voltage operations. Each role has specific qualifications,
+          responsibilities, and limitations that must be understood and respected to maintain a safe
+          worksite.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f60057357lxyt6sewu|items|id:cmn6ds9f60058357l8lm0wi8m|title">
+                <source>Authorised
+          Person</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f60057357lxyt6sewu|items|id:cmn6ds9f60058357l8lm0wi8m|description">
+                <source>
+          <g id="VMbQvfmM8sOtBCYQ" ctype="x-html-P">An Authorised Person is someone with technical
+          knowledge or sufficient experience, assessed as competent, and officially approved to
+          carry out certain functions under safety rules. They are responsible for issuing access
+          permits, supervising work, and ensuring all safety procedures are followed. For example,
+          an Authorised Person might oversee the isolation and earthing of equipment before
+          maintenance begins.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f60057357lxyt6sewu|items|id:cmn6ds9f60059357lh40j8l1g|title">
+                <source>Instructed
+          Person</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f60057357lxyt6sewu|items|id:cmn6ds9f60059357lh40j8l1g|description">
+                <source>
+          <g id="9PibqLQVBZ5mwcpg" ctype="x-html-P">An Instructed Person works under the direct
+          supervision of an Authorised Person. They are trained to avoid electrical dangers but
+          cannot work independently on high voltage systems. For instance, an Instructed Person may
+          assist with tasks during a shutdown, but only while being closely supervised.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f60057357lxyt6sewu|items|id:cmn6ds9f6005a357lw39ic16z|title">
+                <source>Safety
+          Observer</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f60057357lxyt6sewu|items|id:cmn6ds9f6005a357lw39ic16z|description">
+                <source>
+          <g id="hMBdO5Xwd2UiAAIX" ctype="x-html-P">The Safety Observer is specifically assigned to
+          monitor work near electrical apparatus, warn against unsafe approaches, and provide
+          emergency assistance if needed. They must remain vigilant and cannot be assigned other
+          duties while observing. For example, a Safety Observer might halt work if someone or
+          equipment gets too close to an exclusion zone.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:k2tog429oklfialsqk0fl6k9|items|id:mtzzz6zye8271ygj3730xe3s|heading">
+                <source>Access
+          Permit and Isolation Requirements</source>
+            </trans-unit>
+            <trans-unit id="items|id:k2tog429oklfialsqk0fl6k9|items|id:mtzzz6zye8271ygj3730xe3s|paragraph">
+                <source>
+          <g id="A5_AYC_cPLzLV77o" ctype="x-html-P">Review these flashcards to understand the
+          critical permissions and procedures that must be in place before any high voltage work
+          begins.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:g08q27jbc6sk1m8kw6bk3eas|items|id:tj3v0cf4581r3117uddz1y5x|front|description">
+                <source>
+          <g id="DE8DNxVb2OGo8euw" ctype="x-html-P">What is an Access Permit?</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:g08q27jbc6sk1m8kw6bk3eas|items|id:tj3v0cf4581r3117uddz1y5x|back|description">
+                <source>
+          <g id="iHelshJyJ9k9X9Ei" ctype="x-html-P">An official document confirming that all
+          isolation, de-energization, and earthing procedures have been completed, granting
+          permission for work to proceed.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:g08q27jbc6sk1m8kw6bk3eas|items|id:uiykl5ymaodip34pjgkh1emi|front|description">
+                <source>
+          <g id="mZn99s9hRIqggT5H" ctype="x-html-P">Isolation — What and Why?</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:g08q27jbc6sk1m8kw6bk3eas|items|id:uiykl5ymaodip34pjgkh1emi|back|description">
+                <source>
+          <g id="fta_hCQyOInH1FsU" ctype="x-html-P">Physically disconnecting all electrical sources
+          to prevent any possibility of energization during work, ensuring a safe environment.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:g08q27jbc6sk1m8kw6bk3eas|items|id:lbylco46qte0goh0uhnzit35|front|description">
+                <source>
+          <g id="C-n2kxYansUVKQN0" ctype="x-html-P">Prove Dead and Earthing</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:g08q27jbc6sk1m8kw6bk3eas|items|id:lbylco46qte0goh0uhnzit35|back|description">
+                <source>
+          <g id="Io5gIXYNfESbYhue" ctype="x-html-P">Verifying the absence of voltage with approved
+          testers and applying earths at the worksite to protect against accidental energization or
+          induced voltage.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:dcaa0db6-2486-4368-9dc2-61d21c21017c|items|id:ce1fa491-a7f8-4ab9-a4b6-c6058d0647da|title">
+                <source>Which
+          role is responsible for issuing access permits?</source>
+            </trans-unit>
+            <trans-unit id="items|id:dcaa0db6-2486-4368-9dc2-61d21c21017c|items|id:ce1fa491-a7f8-4ab9-a4b6-c6058d0647da|answers|id:41ec56e6-ba25-426f-b862-5ef62c7159fa|title">
+                <source>Instructed
+          Person</source>
+            </trans-unit>
+            <trans-unit id="items|id:dcaa0db6-2486-4368-9dc2-61d21c21017c|items|id:ce1fa491-a7f8-4ab9-a4b6-c6058d0647da|answers|id:41ec56e6-ba25-426f-b862-5ef62c7159fa|feedback">
+                <source>Instructed Persons must be
+          supervised and cannot issue permits.</source>
+            </trans-unit>
+            <trans-unit id="items|id:dcaa0db6-2486-4368-9dc2-61d21c21017c|items|id:ce1fa491-a7f8-4ab9-a4b6-c6058d0647da|answers|id:60384962-a64d-4331-a83a-f950e72f42c2|title">
+                <source>Safety
+          Observer</source>
+            </trans-unit>
+            <trans-unit id="items|id:dcaa0db6-2486-4368-9dc2-61d21c21017c|items|id:ce1fa491-a7f8-4ab9-a4b6-c6058d0647da|answers|id:60384962-a64d-4331-a83a-f950e72f42c2|feedback">
+                <source>Safety Observers monitor
+          work but do not issue permits.</source>
+            </trans-unit>
+            <trans-unit id="items|id:dcaa0db6-2486-4368-9dc2-61d21c21017c|items|id:ce1fa491-a7f8-4ab9-a4b6-c6058d0647da|answers|id:206447bd-82fb-45e0-8fed-19fa4d0a2a11|title">
+                <source>Authorised
+          Person</source>
+            </trans-unit>
+            <trans-unit id="items|id:dcaa0db6-2486-4368-9dc2-61d21c21017c|items|id:ce1fa491-a7f8-4ab9-a4b6-c6058d0647da|answers|id:206447bd-82fb-45e0-8fed-19fa4d0a2a11|feedback">
+                <source>Only Authorised Persons
+          have the authority to issue access permits.</source>
+            </trans-unit>
+            <trans-unit id="items|id:dcaa0db6-2486-4368-9dc2-61d21c21017c|items|id:ce1fa491-a7f8-4ab9-a4b6-c6058d0647da|answers|id:c67b0f56-2138-4761-8351-97eee9947174|title">
+                <source>Site
+          Visitor</source>
+            </trans-unit>
+            <trans-unit id="items|id:dcaa0db6-2486-4368-9dc2-61d21c21017c|items|id:ce1fa491-a7f8-4ab9-a4b6-c6058d0647da|answers|id:c67b0f56-2138-4761-8351-97eee9947174|feedback">
+                <source>Site Visitors are not
+          permitted to issue access permits.</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f7005b357liuk3q43v|items|id:cmn6ds9f7005c357l6cjsqxl2|paragraph">
+                <source>Only
+          properly authorized and supervised personnel may access high voltage equipment—this is a
+          non-negotiable safety rule.</source>
+            </trans-unit>
+            <trans-unit id="items|id:sca49r2p0k86rwgxlb5gssx4|items|id:pcenpx9q52e3634hmkf6a1p6|heading">
+                <source>Safe
+          Approach Distances: Keeping People and Hazards Apart</source>
+            </trans-unit>
+            <trans-unit id="items|id:sca49r2p0k86rwgxlb5gssx4|items|id:pcenpx9q52e3634hmkf6a1p6|paragraph">
+                <source>
+          <g id="QiiI9flxTqGgH0Oh" ctype="x-html-P">Safe Approach Distances (SAD) are a cornerstone
+          of electrical safety. These regulated distances create exclusion zones around energized
+          conductors, ensuring that no person or object comes close enough to risk an electric arc
+          or accidental contact. Even when equipment appears safe, maintaining these distances is
+          vital to prevent serious injury or fatality.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:fjcsp9yh2qyz7gxelfv7e3cm|items|id:tz37qjcxsqcmm8kbbgyqvc8n|heading">
+                <source>Understanding
+          and Applying Safe Approach Distances</source>
+            </trans-unit>
+            <trans-unit id="items|id:fjcsp9yh2qyz7gxelfv7e3cm|items|id:tz37qjcxsqcmm8kbbgyqvc8n|paragraph">
+                <source>
+          <g id="jwoYyEDQD3fguj2I" ctype="x-html-P">Expand each section to learn what safe approach
+          distances are, how they are determined, and how to apply them in real-world scenarios.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f7005d357lsbfwk15m|items|id:cmn6ds9f7005e357l29a1efky|title">
+                <source>What
+          Are Safe Approach Distances?</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f7005d357lsbfwk15m|items|id:cmn6ds9f7005e357l29a1efky|description">
+                <source>
+          <g id="8xfLYanB-SZyNkFd" ctype="x-html-P">Safe Approach Distances are minimum separation
+          zones established around exposed conductors or energized equipment. These distances are
+          based on legal and industry standards and are designed to prevent accidental contact or
+          arcing. Adhering to these zones is critical, as high voltage can arc through air even
+          without direct contact.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f7005d357lsbfwk15m|items|id:cmn6ds9f7005f357loj2x00wg|title">
+                <source>Voltage-Based
+          Distance Table</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f7005d357lsbfwk15m|items|id:cmn6ds9f7005f357loj2x00wg|description">
+                <source>
+          <g id="7rIUfPapqUZRHYB2" ctype="x-html-P">Safe approach distances increase with voltage.
+          For example, up to 300V requires 300mm, 15kV requires 640mm, 138-145kV requires 1300mm,
+          and 500-550kV requires 3350mm. For the highest voltages, such as 765-800kV, the distance
+          can be up to 4670mm. Mobile plant often requires even greater separation, such as 5.5m for
+          personnel and 10m for equipment at 765kV.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f7005d357lsbfwk15m|items|id:cmn6ds9f7005g357lttbceswj|title">
+                <source>How
+          to Apply SAD in the Field</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f7005d357lsbfwk15m|items|id:cmn6ds9f7005g357lttbceswj|description">
+                <source>
+          <g id="CjAcIO-nUH_Fc0p2" ctype="x-html-P">In practice, safe approach distances are
+          enforced by marking boundaries, using barriers, and constant supervision. Workers must
+          measure and respect these zones at all times, and any encroachment should trigger
+          immediate corrective action. Always confirm the correct distance for the specific voltage
+          before starting work.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:a2itlba7e4qli49wy62xdshe|items|id:qtt2s3djnl9obtt4bvtvn65p|heading">
+                <source>Matching
+          Voltage Levels to Safe Approach Distances</source>
+            </trans-unit>
+            <trans-unit id="items|id:a2itlba7e4qli49wy62xdshe|items|id:qtt2s3djnl9obtt4bvtvn65p|paragraph">
+                <source>Review
+          the voltage levels and their corresponding minimum safe approach distances. Drag each
+          voltage to the correct category based on whether the distance applies to personnel or
+          mobile plant. Pay special attention to the requirements for mobile plant.</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f8005o357l2n7iaod7|piles|id:cmn6ds9f8005h357lsjmti2bi|title">
+                <source>Personnel
+          Approach Distance</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f8005o357l2n7iaod7|items|id:cmn6ds9f8005j357luay1cwym|title">
+                <source>15kV: 640mm</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f8005o357l2n7iaod7|items|id:cmn6ds9f8005k357l5r2zmz51|title">
+                <source>138-145kV:
+          1300mm</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f8005o357l2n7iaod7|items|id:cmn6ds9f8005l357lme2cpenz|title">
+                <source>500-550kV: 3350mm</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f8005o357l2n7iaod7|items|id:cmn6ds9f8005m357l07f4x4y2|title">
+                <source>765-800kV:
+          4670mm</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f8005o357l2n7iaod7|piles|id:cmn6ds9f8005i357lm0u17j33|title">
+                <source>Mobile Plant Approach
+          Distance</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f8005o357l2n7iaod7|items|id:cmn6ds9f8005n357l12hgu31c|title">
+                <source>765-800kV (Mobile
+          Plant): 10m</source>
+            </trans-unit>
+            <trans-unit id="items|id:anvepdxsry0wj7h2hcqvcxny|items|id:wy2rsoqwns0xgujoww34nv7l|heading">
+                <source>Special
+          Considerations for Mobile Plant and Equipment</source>
+            </trans-unit>
+            <trans-unit id="items|id:anvepdxsry0wj7h2hcqvcxny|items|id:wy2rsoqwns0xgujoww34nv7l|paragraph">
+                <source>
+          <g id="UH8ImsHeY-FyIsaV" ctype="x-html-P">Review these flashcards to understand the unique
+          risks and requirements for mobile plant working near high voltage conductors.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:t2d5swhcu1busm3b4psqvblc|items|id:cs1bl5tjtoshjusapvycdii2|front|description">
+                <source>
+          <g id="8JWLdZkjs-WIg6ci" ctype="x-html-P">Why does mobile plant require greater distances
+          from high voltage conductors?</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:t2d5swhcu1busm3b4psqvblc|items|id:cs1bl5tjtoshjusapvycdii2|back|description">
+                <source>
+          <g id="Cf_H7iLhjxK_1FjM" ctype="x-html-P">Mobile plant can move or sway unexpectedly,
+          increasing the risk of breaching exclusion zones. Greater distances account for this
+          movement and help prevent accidental contact.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:t2d5swhcu1busm3b4psqvblc|items|id:zbr3qffqoqmbc91u6fi7sr3j|front|description">
+                <source>
+          <g id="As3SAcxsJ6UvSS7T" ctype="x-html-P">What are the bonding and earthing requirements
+          for mobile plant near electrical apparatus?</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:t2d5swhcu1busm3b4psqvblc|items|id:zbr3qffqoqmbc91u6fi7sr3j|back|description">
+                <source>
+          <g id="nRRaH-sCBXLCpkJc" ctype="x-html-P">Mobile plant must be bonded to an established
+          earth during work near electrical apparatus to prevent dangerous voltages from building
+          up.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:t2d5swhcu1busm3b4psqvblc|items|id:y4edbf8kzvphdk94mnsidyr7|front|description">
+                <source>
+          <g id="U9yItbP7-E6dLDU6" ctype="x-html-P">What should be done if no established earth is
+          available for mobile plant?</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:t2d5swhcu1busm3b4psqvblc|items|id:y4edbf8kzvphdk94mnsidyr7|back|description">
+                <source>
+          <g id="9cykEdoiLAkQeuMp" ctype="x-html-P">If no established earth is available, a
+          temporary earth spike shall be driven into the ground to bond the mobile plant and ensure
+          safety.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:3231f1af-8b0c-4b54-8fcc-6b03645f0082|items|id:a0cfca60-85b0-4aae-81ae-cdbca0e89b85|title">
+                <source>Mobile plant
+          is working near high voltage conductors but no established earth is available. What must
+          be done?</source>
+            </trans-unit>
+            <trans-unit id="items|id:3231f1af-8b0c-4b54-8fcc-6b03645f0082|items|id:a0cfca60-85b0-4aae-81ae-cdbca0e89b85|answers|id:e3781b73-11a3-4c78-9298-553a6ac84a1c|title">
+                <source>Work can proceed without
+          earthing</source>
+            </trans-unit>
+            <trans-unit id="items|id:3231f1af-8b0c-4b54-8fcc-6b03645f0082|items|id:a0cfca60-85b0-4aae-81ae-cdbca0e89b85|answers|id:e3781b73-11a3-4c78-9298-553a6ac84a1c|feedback">
+                <source>Incorrect. Mobile plant
+          must always be earthed.</source>
+            </trans-unit>
+            <trans-unit id="items|id:3231f1af-8b0c-4b54-8fcc-6b03645f0082|items|id:a0cfca60-85b0-4aae-81ae-cdbca0e89b85|answers|id:4c7e4ab0-0144-421d-8ba9-f3a77cb7fc58|title">
+                <source>A
+          temporary earth spike shall be driven into the ground</source>
+            </trans-unit>
+            <trans-unit id="items|id:3231f1af-8b0c-4b54-8fcc-6b03645f0082|items|id:a0cfca60-85b0-4aae-81ae-cdbca0e89b85|answers|id:4c7e4ab0-0144-421d-8ba9-f3a77cb7fc58|feedback">
+                <source>Correct.
+          A temporary earth spike must be used if no established earth is available.</source>
+            </trans-unit>
+            <trans-unit id="items|id:3231f1af-8b0c-4b54-8fcc-6b03645f0082|items|id:a0cfca60-85b0-4aae-81ae-cdbca0e89b85|answers|id:b7f9a845-c569-466f-8c46-572c53ee79ed|title">
+                <source>Wait
+          until an established earth becomes available</source>
+            </trans-unit>
+            <trans-unit id="items|id:3231f1af-8b0c-4b54-8fcc-6b03645f0082|items|id:a0cfca60-85b0-4aae-81ae-cdbca0e89b85|answers|id:b7f9a845-c569-466f-8c46-572c53ee79ed|feedback">
+                <source>Incorrect.
+          Work should not proceed without proper earthing, but a temporary solution is permitted.</source>
+            </trans-unit>
+            <trans-unit id="items|id:3231f1af-8b0c-4b54-8fcc-6b03645f0082|items|id:a0cfca60-85b0-4aae-81ae-cdbca0e89b85|answers|id:cfffb9a9-9d22-472e-937e-bbcb65ffd74f|title">
+                <source>The
+          Safety Observer provides the earth connection</source>
+            </trans-unit>
+            <trans-unit id="items|id:3231f1af-8b0c-4b54-8fcc-6b03645f0082|items|id:a0cfca60-85b0-4aae-81ae-cdbca0e89b85|answers|id:cfffb9a9-9d22-472e-937e-bbcb65ffd74f|feedback">
+                <source>Incorrect.
+          The Safety Observer does not provide the earth connection.</source>
+            </trans-unit>
+            <trans-unit id="items|id:bucjg1u5mxwrdhcmazt8tj0n|items|id:jteyn98pceymk55rkwruc7w5|heading">
+                <source>The
+          Role of the Safety Observer</source>
+            </trans-unit>
+            <trans-unit id="items|id:bucjg1u5mxwrdhcmazt8tj0n|items|id:jteyn98pceymk55rkwruc7w5|paragraph">
+                <source>
+          <g id="hA8hYwMv01T5Zs7I" ctype="x-html-P">Expand each section to understand when a Safety
+          Observer is required, their duties, and the strict limits of their role.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f8005p357lgcc8uup2|items|id:cmn6ds9f9005q357ly5fz274a|title">
+                <source>When
+          is a Safety Observer Required?</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f8005p357lgcc8uup2|items|id:cmn6ds9f9005q357ly5fz274a|description">
+                <source>
+          <g id="dIfLyjtJUcdblCjG" ctype="x-html-P">A Safety Observer must be posted whenever there
+          is a risk that a person, equipment, or mobile plant might inadvertently infringe safe
+          approach distances. This is determined by a risk assessment before work begins.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f8005p357lgcc8uup2|items|id:cmn6ds9f9005r357lyujltcsb|title">
+                <source>Duties
+          and Authority of the Safety Observer</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f8005p357lgcc8uup2|items|id:cmn6ds9f9005r357lyujltcsb|description">
+                <source>
+          <g id="9dmRV48f2UC79113" ctype="x-html-P">The Safety Observer is responsible for
+          monitoring work, warning against approach distance infringements, and has the authority to
+          temporarily suspend work if safety is compromised. They must also be capable of providing
+          emergency assistance and first aid if needed.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f8005p357lgcc8uup2|items|id:cmn6ds9f9005s357l3jrtcyki|title">
+                <source>Limits
+          and Non-Negotiable Rules</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f8005p357lgcc8uup2|items|id:cmn6ds9f9005s357l3jrtcyki|description">
+                <source>
+          <g id="kmEVsIT_OrztYAfZ" ctype="x-html-P">The Safety Observer cannot be assigned any other
+          tasks while observing. Their sole focus must be on maintaining vigilance and ensuring that
+          no one breaches the exclusion zone. This strict limitation is essential for effective
+          supervision and accident prevention.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:6cf14b02-8a9e-41de-866b-cdfe3317e5f4|items|id:7d43f32d-f07d-4573-88e5-9e2afe34c81b|title">
+                <source>Can
+          a Safety Observer be assigned other tasks while responsible for observing safe approach
+          distances?</source>
+            </trans-unit>
+            <trans-unit id="items|id:6cf14b02-8a9e-41de-866b-cdfe3317e5f4|items|id:7d43f32d-f07d-4573-88e5-9e2afe34c81b|answers|id:0a119636-b38e-47de-928a-7a277f9f0735|title">
+                <source>Yes, if the tasks are
+          minor</source>
+            </trans-unit>
+            <trans-unit id="items|id:6cf14b02-8a9e-41de-866b-cdfe3317e5f4|items|id:7d43f32d-f07d-4573-88e5-9e2afe34c81b|answers|id:0a119636-b38e-47de-928a-7a277f9f0735|feedback">
+                <source>Incorrect. The observer
+          cannot be distracted by any other tasks.</source>
+            </trans-unit>
+            <trans-unit id="items|id:6cf14b02-8a9e-41de-866b-cdfe3317e5f4|items|id:7d43f32d-f07d-4573-88e5-9e2afe34c81b|answers|id:207c7205-9878-4cbf-89d0-c509fe3082b0|title">
+                <source>Yes,
+          if approved by an Authorised Person</source>
+            </trans-unit>
+            <trans-unit id="items|id:6cf14b02-8a9e-41de-866b-cdfe3317e5f4|items|id:7d43f32d-f07d-4573-88e5-9e2afe34c81b|answers|id:207c7205-9878-4cbf-89d0-c509fe3082b0|feedback">
+                <source>Incorrect.
+          No exceptions are allowed for the observer's focus.</source>
+            </trans-unit>
+            <trans-unit id="items|id:6cf14b02-8a9e-41de-866b-cdfe3317e5f4|items|id:7d43f32d-f07d-4573-88e5-9e2afe34c81b|answers|id:d4ac375b-bbca-40c7-b5bd-10b213e7673a|title">
+                <source>No,
+          the observer must focus solely on observing</source>
+            </trans-unit>
+            <trans-unit id="items|id:6cf14b02-8a9e-41de-866b-cdfe3317e5f4|items|id:7d43f32d-f07d-4573-88e5-9e2afe34c81b|answers|id:d4ac375b-bbca-40c7-b5bd-10b213e7673a|feedback">
+                <source>Correct.
+          The observer's only duty is to maintain vigilance on safe approach distances.</source>
+            </trans-unit>
+            <trans-unit id="items|id:6cf14b02-8a9e-41de-866b-cdfe3317e5f4|items|id:7d43f32d-f07d-4573-88e5-9e2afe34c81b|answers|id:351ad609-37db-4164-a6d3-c7038fd1cafa|title">
+                <source>Only
+          during breaks in work</source>
+            </trans-unit>
+            <trans-unit id="items|id:6cf14b02-8a9e-41de-866b-cdfe3317e5f4|items|id:7d43f32d-f07d-4573-88e5-9e2afe34c81b|answers|id:351ad609-37db-4164-a6d3-c7038fd1cafa|feedback">
+                <source>Incorrect.
+          The observer must remain focused at all times during work.</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6ds9f9005t357lovf6ab7n|items|id:cmn6ds9f9005u357l18salehh|paragraph">
+                <source>Maintaining
+          safe approach distances and clearly defined roles is not just a best practice—it is a
+          lifesaving measure.</source>
+            </trans-unit>
+            <trans-unit id="items|id:bho58xbgljix24yfex7i3yx4|items|id:p7vp54wctebyct2n9hqrpm12|paragraph">
+                <source>
+          <g id="aiwTrj7_sDTm5mXh" ctype="x-html-P">In this lesson, you learned how clearly defined
+          roles, strict authorization, and safe approach distances work together to protect everyone
+          on a high voltage worksite. Only Authorised Persons can issue permits and supervise,
+          Instructed Persons must always be supervised, and Safety Observers play a critical role in
+          enforcing exclusion zones. You also explored how approach distances vary with voltage, the
+          special requirements for mobile plant, and the non-negotiable focus required for
+          supervision. In the next lesson, you’ll build on this foundation by learning about
+          electromagnetic induction hazards and advanced control measures to further enhance your
+          safety knowledge.</g>
+        </source>
+            </trans-unit>
+        </body>
+    </file>
+    <file original="bs46RluWkdDEA0bjv9gAKMp0WzPH2iRS" datatype="plaintext" source-language="en-us">
+        <body>
+            <trans-unit id="title">
+                <source>Electromagnetic
+          Induction Hazards and Control Measures</source>
+            </trans-unit>
+            <trans-unit id="items|id:o6p5eptosj7ore0bza4ktoaj|items|id:orhylephw3vza57byri4613l|heading">
+                <source>Electromagnetic
+          Induction Hazards and Control Measures</source>
+            </trans-unit>
+            <trans-unit id="items|id:o6p5eptosj7ore0bza4ktoaj|items|id:orhylephw3vza57byri4613l|paragraph">
+                <source>
+          <g id="c_YCOB3b9zHgZMdA" ctype="x-html-P">Working near high voltage lines involves more
+          than just avoiding direct contact—some of the most dangerous hazards are invisible.
+          Electromagnetic induction can create lethal voltages on equipment and conductors, even
+          when they appear de-energized. In this lesson, you'll learn how to recognize, understand,
+          and control these advanced hazards. Building on your knowledge of roles and safe approach
+          distances, we now focus on field effects, exposure limits, and the critical procedures
+          that keep you safe from induction risks.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:z4o2xv5vru0o594r0djni26m|items|id:j4ovicvebnxwbd7jdqdj92hq|paragraph">
+                <source>
+          <g id="KFaAPQdvct5c1y9V" ctype="x-html-P">This lesson will give you the knowledge to
+          identify invisible risks and apply advanced controls to protect yourself and your team.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ptdxi93qu6wd6w05gjpuaks9|items|id:cchdt4jirq147psl8qkm0xy7|paragraph">
+                <source>
+          <g id="HM5tzg-YuRHte2KD" ctype="x-html-P">Explain electromagnetic induction hazards.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ptdxi93qu6wd6w05gjpuaks9|items|id:xy1odu3t67fpdnqwasndbbt7|paragraph">
+                <source>
+          <g id="M02IqgxqknCYIl99" ctype="x-html-P">Distinguish electric and magnetic fields.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ptdxi93qu6wd6w05gjpuaks9|items|id:smttmjwib6yoluo0mtu7w5gu|paragraph">
+                <source>
+          <g id="W9cTFujA3Ci37mxd" ctype="x-html-P">Recognize exposure limits and physiological
+          effects.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ptdxi93qu6wd6w05gjpuaks9|items|id:zt1su1985tz3l0539qgyjmb6|paragraph">
+                <source>
+          <g id="9KQIpwzSndgtskEa" ctype="x-html-P">Describe equipotential zone setup steps.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ptdxi93qu6wd6w05gjpuaks9|items|id:ahwcr1g5mjsltycmcz0tovke|paragraph">
+                <source>
+          <g id="cW22xdqJDRwdTcPo" ctype="x-html-P">Verify induction hazard controls before work.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0j005v357l4xecbvlh|items|id:cmn6dsl0j005w357lakbo96t6|title">
+                <source>
+          CONTINUE</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0j005v357l4xecbvlh|items|id:cmn6dsl0j005w357lakbo96t6|completeHint">
+                <source>Complete the content
+          above before moving on.</source>
+            </trans-unit>
+            <trans-unit id="items|id:k3mipsebwhvx2az7wbhqsvtm|items|id:zox1js0qxw4sgl9tbkwfp5sr|heading">
+                <source>Understanding
+          Electromagnetic Induction Hazards</source>
+            </trans-unit>
+            <trans-unit id="items|id:k3mipsebwhvx2az7wbhqsvtm|items|id:zox1js0qxw4sgl9tbkwfp5sr|paragraph">
+                <source>
+          <g id="rhmTVsjbY9ks6Nh7" ctype="x-html-P">Expand each section to learn what
+          electromagnetic induction is, why it is dangerous, and where these hazards are most likely
+          to occur in high voltage environments.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0j005x357l14j5mhof|items|id:cmn6dsl0j005y357li2i0jrze|title">
+                <source>What
+          is Electromagnetic Induction?</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0j005x357l14j5mhof|items|id:cmn6dsl0j005y357li2i0jrze|description">
+                <source>
+          <g id="zfurQd73JSN4053Z" ctype="x-html-P">Electromagnetic induction occurs when electric
+          and magnetic fields from energized high voltage lines induce voltages onto nearby
+          de-energized or non-commissioned conductors. For example, a de-energized line running
+          parallel to an energized line can become dangerously charged, even if it is not directly
+          connected to a power source.</g>
+                    <g id="IJVWh2zymSELaiOV" ctype="x-html-P" />
+                    <g
+            id="VZ8O66esI4ANZWuY" ctype="x-html-P">This phenomenon is invisible but can create
+          hazardous conditions for workers who may not expect voltage to be present on supposedly
+          safe equipment.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0j005x357l14j5mhof|items|id:cmn6dsl0j005z357ldbuu2qtu|title">
+                <source>Why
+          is it Dangerous?</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0j005x357l14j5mhof|items|id:cmn6dsl0j005z357ldbuu2qtu|description">
+                <source>
+          <g id="OGTP65ygPxfS3gse" ctype="x-html-P">Induced voltages can be high enough to cause
+          severe electric shock or even death. These voltages may appear on lines or equipment that
+          have been de-energized, creating a false sense of security. If a worker touches a
+          conductor with induced voltage, current can flow through their body to ground, resulting
+          in serious injury.</g>
+                    <g id="A-hjC0z1yVtyYTn7" ctype="x-html-P" />
+                    <g id="9M-nCj-ZUOYaKJzb"
+            ctype="x-html-P">Because the hazard is not always obvious, strict controls and awareness
+          are essential to prevent accidental contact with induced voltages.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0j005x357l14j5mhof|items|id:cmn6dsl0j0060357l7lbx1mkk|title">
+                <source>Where
+          Does it Occur?</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0j005x357l14j5mhof|items|id:cmn6dsl0j0060357l7lbx1mkk|description">
+                <source>
+          <g id="7EvF8wg8awUGMxcq" ctype="x-html-P">Induction hazards are most common near energized
+          and de-energized parallel lines, at stringing sites, and in environments where conductive
+          objects run close to high voltage transmission lines. Examples include fences, pipelines,
+          rail lines, or new lines being constructed beside live circuits.</g>
+                    <g
+            id="aKv85R-jN1Z4V50k" ctype="x-html-P" />
+                    <g id="Yal7cJY0EhefrxQc" ctype="x-html-P">Any
+          situation where conductive materials are exposed to strong electric or magnetic fields
+          from nearby energized lines can present a significant induction risk.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:kn5pu9qx1sad6m6eoxbqrm73|items|id:x57l4iw8iy1ntg3dyukekel3|heading">
+                <source>Electric
+          Fields vs. Magnetic Fields</source>
+            </trans-unit>
+            <trans-unit id="items|id:kn5pu9qx1sad6m6eoxbqrm73|items|id:x57l4iw8iy1ntg3dyukekel3|paragraph">
+                <source>
+          <g id="4_NMhDWs2ickutZ5" ctype="x-html-P">Review each flashcard to understand the
+          differences between electric and magnetic fields, and the concept of equipotential
+          fields—key to recognizing and controlling induction hazards.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:i0n7sqhh79gw61gjq43a71eb|items|id:z1wpncjlkr6gudxsl2yf200g|front|description">
+                <source>
+          <g id="erecgHo6SQi_-d14" ctype="x-html-B">Electric Fields</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:i0n7sqhh79gw61gjq43a71eb|items|id:z1wpncjlkr6gudxsl2yf200g|back|description">
+                <source>Produced
+          by voltage on energized conductors. They can induce voltages on nearby objects, especially
+          if insulated from ground.</source>
+            </trans-unit>
+            <trans-unit id="items|id:i0n7sqhh79gw61gjq43a71eb|items|id:a7sh0s2pywfgz1p27a93ak3p|front|description">
+                <source>
+          <g id="di_5Qi05pcgAMiQm" ctype="x-html-B">Magnetic Fields</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:i0n7sqhh79gw61gjq43a71eb|items|id:a7sh0s2pywfgz1p27a93ak3p|back|description">
+                <source>Created
+          by current flowing through transmission lines. They induce voltages in parallel conductive
+          objects, such as pipelines or de-energized lines.</source>
+            </trans-unit>
+            <trans-unit id="items|id:i0n7sqhh79gw61gjq43a71eb|items|id:xauel1q7ih1bdfffnzkn8x0a|front|description">
+                <source>
+          <g id="F1j_srGWdZMbfG0f" ctype="x-html-B">Equipotential Field</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:i0n7sqhh79gw61gjq43a71eb|items|id:xauel1q7ih1bdfffnzkn8x0a|back|description">
+                <source>Lines
+          of equal voltage in the air around conductors. Understanding these helps prevent dangerous
+          voltage differences at worksites.</source>
+            </trans-unit>
+            <trans-unit id="items|id:r1d5v3x4xvc4wnmojf9f97lz|items|id:zro9lapa72yjk0xan5yqzs7h|heading">
+                <source>Exposure
+          Limits and Physiological Effects</source>
+            </trans-unit>
+            <trans-unit id="items|id:r1d5v3x4xvc4wnmojf9f97lz|items|id:zro9lapa72yjk0xan5yqzs7h|paragraph">
+                <source>
+          <g id="Vwo86RIN06tVyKAm" ctype="x-html-P">Explore each section to learn about exposure
+          limits for electric and magnetic fields, and the physiological effects these fields can
+          have on the human body.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l0061357lp4bln6ak|items|id:cmn6dsl0l0062357la7971cjc|title">
+                <source>Electric
+          Field Exposure Limits</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l0061357lp4bln6ak|items|id:cmn6dsl0l0062357la7971cjc|description">
+                <source>
+          <g id="8ZJC95D52x90eX_j" ctype="x-html-P">Occupational exposure to electric fields is
+          limited to 10 kV/m, while the general public limit is 5 kV/m. Near energized conductors,
+          electric field strengths can reach up to 16 kV/m at the surface of high voltage lines.
+          These limits are set to protect against harmful effects and must be strictly observed.</g>
+                    <g
+            id="mBKQ9YFLoKeWC4jZ" ctype="x-html-P" />
+                    <g id="logUjmZN-Qs6bOQS" ctype="x-html-P">Exceeding
+          these limits increases the risk of electric shock and other health hazards for workers and
+          the public.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l0061357lp4bln6ak|items|id:cmn6dsl0l0063357ld6h6q9rf|title">
+                <source>Magnetic
+          Field Exposure Limits</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l0061357lp4bln6ak|items|id:cmn6dsl0l0063357ld6h6q9rf|description">
+                <source>
+          <g id="MAfPvdO8mkf30xbM" ctype="x-html-P">For magnetic fields, the occupational exposure
+          limit is 10,000 mG, and for the general public, it is 2,000 mG. Magnetic field strength
+          depends on the current and distance from the conductor. For example, at 100 mm from a
+          conductor carrying 500A, the field can reach 10,000 mG.</g>
+                    <g id="krv0i6GMMXvrDJa9"
+            ctype="x-html-P" />
+                    <g id="CQuKaCZEMYEXI_15" ctype="x-html-P">Occupational limits are
+          higher because workers are generally healthier and better able to withstand exposure than
+          the general public.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l0061357lp4bln6ak|items|id:cmn6dsl0l0064357lpq46yjr9|title">
+                <source>Physiological
+          Effects</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l0061357lp4bln6ak|items|id:cmn6dsl0l0064357lpq46yjr9|description">
+                <source>
+          <g id="KoFc6xcAxIXnQgLT" ctype="x-html-P">Exposure to strong electric and magnetic fields
+          can cause nerve and muscle stimulation, unpleasant skin discharges, and visual phenomena
+          called phosphenes (flashing lights in the eyes). While some effects are mild, exceeding
+          exposure limits can lead to serious health risks and must be avoided.</g>
+                    <g
+            id="IY_I0xIy7JN9h23r" ctype="x-html-P" />
+                    <g id="J8_jeewgkNaQwdCF" ctype="x-html-P">Understanding
+          these effects helps workers recognize symptoms of overexposure and reinforces the need for
+          strict controls.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:7a3c63e4-6123-4789-9bf7-9d4ed8e0756f|items|id:e76278e3-27d8-4703-848d-04b0072ef877|title">
+                <source>What
+          is the occupational exposure limit for electric fields near high voltage conductors?</source>
+            </trans-unit>
+            <trans-unit id="items|id:7a3c63e4-6123-4789-9bf7-9d4ed8e0756f|items|id:e76278e3-27d8-4703-848d-04b0072ef877|answers|id:dd2d3bb1-fae4-4a91-92b2-72701d726ef3|title">
+                <source>5
+          kV/m</source>
+            </trans-unit>
+            <trans-unit id="items|id:7a3c63e4-6123-4789-9bf7-9d4ed8e0756f|items|id:e76278e3-27d8-4703-848d-04b0072ef877|answers|id:dd2d3bb1-fae4-4a91-92b2-72701d726ef3|feedback">
+                <source>Incorrect. 5 kV/m is the
+          limit for the general public, not occupational exposure.</source>
+            </trans-unit>
+            <trans-unit id="items|id:7a3c63e4-6123-4789-9bf7-9d4ed8e0756f|items|id:e76278e3-27d8-4703-848d-04b0072ef877|answers|id:a88a4842-621f-4545-b4cd-79b692370f6a|title">
+                <source>10
+          kV/m</source>
+            </trans-unit>
+            <trans-unit id="items|id:7a3c63e4-6123-4789-9bf7-9d4ed8e0756f|items|id:e76278e3-27d8-4703-848d-04b0072ef877|answers|id:a88a4842-621f-4545-b4cd-79b692370f6a|feedback">
+                <source>Correct. 10 kV/m is the
+          occupational exposure limit for electric fields near high voltage conductors.</source>
+            </trans-unit>
+            <trans-unit id="items|id:7a3c63e4-6123-4789-9bf7-9d4ed8e0756f|items|id:e76278e3-27d8-4703-848d-04b0072ef877|answers|id:b11719a9-1784-4793-813e-59a0278c0253|title">
+                <source>15
+          kV/m</source>
+            </trans-unit>
+            <trans-unit id="items|id:7a3c63e4-6123-4789-9bf7-9d4ed8e0756f|items|id:e76278e3-27d8-4703-848d-04b0072ef877|answers|id:b11719a9-1784-4793-813e-59a0278c0253|feedback">
+                <source>Incorrect. 15 kV/m exceeds
+          the safe occupational exposure limit.</source>
+            </trans-unit>
+            <trans-unit id="items|id:7a3c63e4-6123-4789-9bf7-9d4ed8e0756f|items|id:e76278e3-27d8-4703-848d-04b0072ef877|answers|id:93cdaf08-d082-4bbb-8cb0-833a907dbd5c|title">
+                <source>20
+          kV/m</source>
+            </trans-unit>
+            <trans-unit id="items|id:7a3c63e4-6123-4789-9bf7-9d4ed8e0756f|items|id:e76278e3-27d8-4703-848d-04b0072ef877|answers|id:93cdaf08-d082-4bbb-8cb0-833a907dbd5c|feedback">
+                <source>Incorrect. 20 kV/m is well
+          above the recommended limit and is unsafe.</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l0065357l3w7sjr4p|items|id:cmn6dsl0l0066357lh8mg0b7g|title">
+                <source>
+          CONTINUE</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l0065357l3w7sjr4p|items|id:cmn6dsl0l0066357lh8mg0b7g|completeHint">
+                <source>Complete the content
+          above before moving on.</source>
+            </trans-unit>
+            <trans-unit id="items|id:c5h00jrv2u36j53zj1qtmgqz|items|id:ta4dbj34tvld3dodkjuczyrn|heading">
+                <source>Six-Step
+          Equipotential Zone Setup</source>
+            </trans-unit>
+            <trans-unit id="items|id:c5h00jrv2u36j53zj1qtmgqz|items|id:ta4dbj34tvld3dodkjuczyrn|paragraph">
+                <source>Follow
+          these six steps to establish a safe equipotential zone at worksites where induction
+          hazards are present. Each step is essential—skipping any step can compromise safety.</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l006f357lhvqqen9a|items|id:cmn6dsl0l0067357lq1eure50|title">
+                <source>Introduction
+          to Equipotential Zone Setup</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l006f357lhvqqen9a|items|id:cmn6dsl0l0067357lq1eure50|description">
+                <source>
+          <g id="wEa1CgJQ-PcRLn1z" ctype="x-html-P">Establishing an equipotential zone is crucial
+          for protecting workers from electrical induction hazards. This process involves creating a
+          safe area where all surfaces are at the same electrical potential, minimizing the risk of
+          dangerous voltage differences. Carefully follow each step to ensure maximum safety at the
+          worksite.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l006f357lhvqqen9a|items|id:cmn6dsl0l0069357l49zh87jd|title">
+                <source>Place Earth
+          Mats Around Equipment</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l006f357lhvqqen9a|items|id:cmn6dsl0l0069357l49zh87jd|description">
+                <source>
+          <g id="XeWiusXnzvqBSf1Y" ctype="x-html-P">Lay earth mats around the perimeter of all
+          machinery and equipment. Ensure there are no gaps where a worker could step off the mat
+          onto bare ground. This provides a continuous safe surface.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l006f357lhvqqen9a|items|id:cmn6dsl0l006a357l8bq05jt4|title">
+                <source>Bond
+          All Mats Together</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l006f357lhvqqen9a|items|id:cmn6dsl0l006a357l8bq05jt4|description">
+                <source>
+          <g id="wftpSXmKyjLO3KaB" ctype="x-html-P">Connect all mats to each other, earth stakes,
+          and machinery using proper earthing lugs and bonding leads. This ensures all surfaces are
+          at the same potential, reducing step and touch voltages.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l006f357lhvqqen9a|items|id:cmn6dsl0l006b357lxwst65g8|title">
+                <source>Install
+          Inner Perimeter Fencing</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l006f357lhvqqen9a|items|id:cmn6dsl0l006b357lxwst65g8|description">
+                <source>
+          <g id="16YfBtFZ6Mr0R9ir" ctype="x-html-P">Set up fencing around the inner edge of the
+          matting to prevent accidental step-off. This physical barrier keeps workers within the
+          protected zone.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l006f357lhvqqen9a|items|id:cmn6dsl0l006c357ly797owk3|title">
+                <source>Install
+          Outer Secondary Fencing</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l006f357lhvqqen9a|items|id:cmn6dsl0l006c357ly797owk3|description">
+                <source>
+          <g id="cpSMKqHMytUew3v3" ctype="x-html-P">Place a secondary fence outside the inner fence.
+          The size and shape should be adapted to the specific site and equipment layout for added
+          protection.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l006f357lhvqqen9a|items|id:cmn6dsl0l006d357loxwwc6w2|title">
+                <source>Bond All
+          Conductive Items Inside Fencing</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l006f357lhvqqen9a|items|id:cmn6dsl0l006d357loxwwc6w2|description">
+                <source>
+          <g id="JorIyrUagqlZzNAB" ctype="x-html-P">Ensure all conductive objects within the fenced
+          area are bonded to the earth mats. This prevents hazardous voltage differences from
+          developing on tools or equipment.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l006f357lhvqqen9a|items|id:cmn6dsl0l006e357li8biew9y|title">
+                <source>Create
+          Entry/Exit Point with Insulated Walkway</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l006f357lhvqqen9a|items|id:cmn6dsl0l006e357li8biew9y|description">
+                <source>
+          <g id="UvLJGnZrCH25wLFG" ctype="x-html-P">Install insulated rubber matting between the
+          inner and outer fences at a designated entry/exit point. This allows safe access for
+          personnel entering or leaving the zone.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l006f357lhvqqen9a|items|id:cmn6dsl0l0068357lw8w2lybr|title">
+                <source>Verify
+          Complete Setup</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0l006f357lhvqqen9a|items|id:cmn6dsl0l0068357lw8w2lybr|description">
+                <source>
+          <g id="ALljY0duwSAKAzOc" ctype="x-html-P">Before starting work, double-check that all
+          steps have been completed correctly. A properly configured equipotential zone is critical
+          for protecting workers from induction hazards.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:rpvuiijfelzusjcti1dmii75|items|id:v9cg2vscdu9ut6mmxoj04n7k|heading">
+                <source>Equipotential
+          Zone Setup: True or False</source>
+            </trans-unit>
+            <trans-unit id="items|id:rpvuiijfelzusjcti1dmii75|items|id:v9cg2vscdu9ut6mmxoj04n7k|paragraph">
+                <source>
+          <g id="1IutBtphg0yhDfZX" ctype="x-html-P">Sort each statement into the correct category to
+          test your understanding of equipotential zone setup and common misconceptions. This
+          activity will help reinforce which practices are essential for safety.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0m006n357lcfi27orh|piles|id:cmn6dsl0l006g357l73cv3u0o|title">
+                <source>
+          True</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0m006n357lcfi27orh|items|id:cmn6dsl0m006i357lfjl0jmdd|title">
+                <source>Both sides of a broken
+          conductor must be earthed in an equipotential zone</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0m006n357lcfi27orh|piles|id:cmn6dsl0l006h357lo9diqhbj|title">
+                <source>
+          False</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0m006n357lcfi27orh|items|id:cmn6dsl0m006j357lnshul1da|title">
+                <source>Earth mats eliminate step
+          and touch voltages at brake and winch sites</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0m006n357lcfi27orh|items|id:cmn6dsl0m006k357lzuz01k4a|title">
+                <source>Earthing
+          at a stringing site completely eliminates all induced voltages</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0m006n357lcfi27orh|items|id:cmn6dsl0m006l357lipkby15j|title">
+                <source>Earth
+          mats can have gaps where workers step between sections</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0m006n357lcfi27orh|items|id:cmn6dsl0m006m357ltl6qcwdi|title">
+                <source>Higher
+          current in nearby circuits decreases induced voltage</source>
+            </trans-unit>
+            <trans-unit id="items|id:qq44k06n4es6m0rnp5hkun5l|items|id:zdyoibstlm9m85nlmh2q108k|heading">
+                <source>Verification
+          of Induction Hazard Controls</source>
+            </trans-unit>
+            <trans-unit id="items|id:qq44k06n4es6m0rnp5hkun5l|items|id:zdyoibstlm9m85nlmh2q108k|paragraph">
+                <source>
+          <g id="9G05EEaCN4c0kefe" ctype="x-html-P">Review each flashcard for best practices in
+          verifying that induction hazard controls are in place and effective before work begins.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:he80vqbps7m99m7lhsgkrjb5|items|id:qyxcq8uj6849qyn2wrg48kfj|front|description">
+                <source>
+          <g id="A0PC7REq_xB_Mbg2" ctype="x-html-P">Verifying Equipotential Zone Integrity</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:he80vqbps7m99m7lhsgkrjb5|items|id:qyxcq8uj6849qyn2wrg48kfj|back|description">
+                <source>
+          <g id="WeOv8NDzCctGStlk" ctype="x-html-P">Check that all mats are bonded, fences are
+          installed, and there are no gaps or exposed ground in the protected area.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:he80vqbps7m99m7lhsgkrjb5|items|id:k7kzyion5mfnsht5dbgv0qwe|front|description">
+                <source>
+          <g id="wTxRJbsLnMe9JJXz" ctype="x-html-P">Earthing Conductors During Breaks</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:he80vqbps7m99m7lhsgkrjb5|items|id:k7kzyion5mfnsht5dbgv0qwe|back|description">
+                <source>
+          <g id="kWBztMcPlGhuOw34" ctype="x-html-P">Always earth both sides of a broken conductor to
+          prevent dangerous voltage differences from developing.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:he80vqbps7m99m7lhsgkrjb5|items|id:g1t1bgwynfrwa3axmq0rs0yl|front|description">
+                <source>
+          <g id="tV_ICQ_r2g2w6yJS" ctype="x-html-P">Warning Signs and Supervision</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:he80vqbps7m99m7lhsgkrjb5|items|id:g1t1bgwynfrwa3axmq0rs0yl|back|description">
+                <source>
+          <g id="py-29ogjQqgIdfOW" ctype="x-html-P">Ensure warning signs are visible and supervision
+          is in place to maintain the integrity of the safe work zone.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:0ab55bf8-d157-49f6-8285-6366a386f452|items|id:34bc34c7-40aa-4bcc-9beb-84b2c1545bb8|title">
+                <source>When
+          setting up an equipotential zone, what must be done if a conductor needs to be broken?</source>
+            </trans-unit>
+            <trans-unit id="items|id:0ab55bf8-d157-49f6-8285-6366a386f452|items|id:34bc34c7-40aa-4bcc-9beb-84b2c1545bb8|answers|id:0e39a263-fb19-43dc-bbe0-7f4676b66dd8|title">
+                <source>Notify
+          supervisor only</source>
+            </trans-unit>
+            <trans-unit id="items|id:0ab55bf8-d157-49f6-8285-6366a386f452|items|id:34bc34c7-40aa-4bcc-9beb-84b2c1545bb8|answers|id:0e39a263-fb19-43dc-bbe0-7f4676b66dd8|feedback">
+                <source>Notification
+          alone does not prevent hazardous voltages.</source>
+            </trans-unit>
+            <trans-unit id="items|id:0ab55bf8-d157-49f6-8285-6366a386f452|items|id:34bc34c7-40aa-4bcc-9beb-84b2c1545bb8|answers|id:cf710599-4c26-41df-b8fa-c36f23595f1f|title">
+                <source>Work
+          quickly</source>
+            </trans-unit>
+            <trans-unit id="items|id:0ab55bf8-d157-49f6-8285-6366a386f452|items|id:34bc34c7-40aa-4bcc-9beb-84b2c1545bb8|answers|id:cf710599-4c26-41df-b8fa-c36f23595f1f|feedback">
+                <source>Speed does not eliminate
+          the risk of induced voltages.</source>
+            </trans-unit>
+            <trans-unit id="items|id:0ab55bf8-d157-49f6-8285-6366a386f452|items|id:34bc34c7-40aa-4bcc-9beb-84b2c1545bb8|answers|id:1fb49d9c-08ec-48f9-9c1b-6e9a01483077|title">
+                <source>Ensure
+          both sides are earthed</source>
+            </trans-unit>
+            <trans-unit id="items|id:0ab55bf8-d157-49f6-8285-6366a386f452|items|id:34bc34c7-40aa-4bcc-9beb-84b2c1545bb8|answers|id:1fb49d9c-08ec-48f9-9c1b-6e9a01483077|feedback">
+                <source>Both sides
+          must be earthed to prevent exposure to dangerous potential differences.</source>
+            </trans-unit>
+            <trans-unit id="items|id:0ab55bf8-d157-49f6-8285-6366a386f452|items|id:34bc34c7-40aa-4bcc-9beb-84b2c1545bb8|answers|id:675da2de-f6b7-464e-a7aa-ecfac5ed7a1f|title">
+                <source>Increase
+          approach distance</source>
+            </trans-unit>
+            <trans-unit id="items|id:0ab55bf8-d157-49f6-8285-6366a386f452|items|id:34bc34c7-40aa-4bcc-9beb-84b2c1545bb8|answers|id:675da2de-f6b7-464e-a7aa-ecfac5ed7a1f|feedback">
+                <source>Distance alone
+          does not control the hazard when breaking conductors.</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dsl0n006o357liijmlpe8|items|id:cmn6dsl0n006p357ldu5n0d98|paragraph">
+                <source>Effective
+          control of electromagnetic induction hazards is essential—thorough setup and verification
+          of equipotential zones are critical for ensuring safety and saving lives.</source>
+            </trans-unit>
+            <trans-unit id="items|id:do35t89ubmdel465zciyp9zr|items|id:hh24bsp56l2mxpw6qdtaqgmi|paragraph">
+                <source>
+          <g id="x4wJ1k4sATeV_hSx" ctype="x-html-P">In this lesson, you explored the invisible but
+          critical risks of electromagnetic induction, learning how electric and magnetic fields can
+          create hazardous voltages even on de-energized equipment. You now understand the
+          difference between electric and magnetic fields, the importance of exposure limits, and
+          the physiological effects of overexposure. Most importantly, you have learned the
+          step-by-step process for setting up and verifying equipotential zones—an advanced control
+          measure that protects workers from induction hazards. In the next lesson, you will build
+          on this knowledge by learning how to respond to electrical incidents and emergencies,
+          ensuring you are prepared for any situation on site.</g>
+        </source>
+            </trans-unit>
+        </body>
+    </file>
+    <file original="Oe5iA0GXlmXfn8_InrH56tSc-ndQgVYz" datatype="plaintext" source-language="en-us">
+        <body>
+            <trans-unit id="title">
+                <source>Emergency
+          Response and Incident Procedures</source>
+            </trans-unit>
+            <trans-unit id="items|id:jix2vhjubww173z8vom6hn7h|items|id:n4cugux1bllxtlsl0gxz6wne|heading">
+                <source>Emergency
+          Response and Incident Procedures</source>
+            </trans-unit>
+            <trans-unit id="items|id:jix2vhjubww173z8vom6hn7h|items|id:n4cugux1bllxtlsl0gxz6wne|paragraph">
+                <source>
+          <g id="uzL0VuKLJsrNYrJC" ctype="x-html-P">Electrical emergencies can happen even in the
+          safest workplaces. Knowing how to respond quickly and correctly is just as important as
+          preventing incidents in the first place. This lesson will equip you with the knowledge and
+          step-by-step actions needed to handle electrical incidents, protect yourself and others,
+          and ensure compliance with workplace safety requirements.</g>
+                    <g id="a3_C7AFrRHPCzaBb"
+            ctype="x-html-P">After learning about hazard prevention and control, it's time to focus
+          on what to do when things go wrong. Being prepared for emergencies can save lives and
+          minimize harm—your response matters.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:iwzrqcgndwb3t0t4ggllrdns|items|id:ncm3onantl25c8bfdibwgemu|paragraph">
+                <source>
+          <g id="A5SMVbvPsLCiZJaQ" ctype="x-html-P">This lesson is designed to equip you with the
+          essential knowledge and skills needed to respond effectively and safely during electrical
+          emergencies and rescue operations. By mastering these objectives, you will be prepared to
+          take decisive action in high-stress situations, ensuring both your safety and the safety
+          of others.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:xxqlur87diguc8ndam6qtbwm|items|id:f2kjxuc9bkx9phqhpzymxd3s|paragraph">
+                <source>
+          <g id="JicpaIk0B6RZ8QnD" ctype="x-html-P">Identify prerequisites for safe rescue
+          operations.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:xxqlur87diguc8ndam6qtbwm|items|id:oqcal2c58041cy8cj59ntjmr|paragraph">
+                <source>
+          <g id="3c_B7XlhU_slnrq_" ctype="x-html-P">Apply step-by-step victim rescue procedures.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:xxqlur87diguc8ndam6qtbwm|items|id:lsk7kqd8rkih1kt3rmq6r367|paragraph">
+                <source>
+          <g id="ngsvGUN5Y1Gtm5__" ctype="x-html-P">Respond appropriately to mobile plant electrical
+          contact incidents.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:xxqlur87diguc8ndam6qtbwm|items|id:ems41ggy7bbtce4gev9dt2wu|paragraph">
+                <source>
+          <g id="0yFA782OnDEPXYyl" ctype="x-html-P">Understand and execute incident reporting and
+          site preservation.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:xxqlur87diguc8ndam6qtbwm|items|id:bcfxx9a2esm1pho6hcauknqp|paragraph">
+                <source>
+          <g id="hJn4RL8caFFDnhEG" ctype="x-html-P">Recall critical actions in electrical
+          emergencies.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi6006q357l6b3450kb|items|id:cmn6dswi6006r357lw0wnsgxl|title">
+                <source>CONTINUE</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi6006q357l6b3450kb|items|id:cmn6dswi6006r357lw0wnsgxl|completeHint">
+                <source>Complete
+          the content above before moving on.</source>
+            </trans-unit>
+            <trans-unit id="items|id:svoj8cnuxqusllekjrxskfmd|items|id:z0kv7p1das7w8fan06ocnoii|heading">
+                <source>Prerequisites
+          for Safe Rescue Operations</source>
+            </trans-unit>
+            <trans-unit id="items|id:svoj8cnuxqusllekjrxskfmd|items|id:z0kv7p1das7w8fan06ocnoii|paragraph">
+                <source>
+          <g id="w_mqxRkIZ1bBhIvV" ctype="x-html-P">Before attempting any rescue in an electrical
+          emergency, certain safety conditions must be met. Expand each section to understand the
+          critical prerequisites that protect both the rescuer and the victim.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi6006s357lzm6jy23u|items|id:cmn6dswi6006t357lhmvgetyi|title">
+                <source>Isolation,
+          Proving De-energised, and Earthing</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi6006s357lzm6jy23u|items|id:cmn6dswi6006t357lhmvgetyi|description">
+                <source>
+          <g id="Myw8aeKXxUiZt4jD" ctype="x-html-P">All conductors must be isolated, proved
+          de-energised, and earthed at every source by an Authorised Person before anyone attempts a
+          rescue within safe approach distances. Skipping this step puts rescuers at extreme risk of
+          becoming victims themselves.</g>
+                    <g id="BBpS5M6wX0TvTKMb" ctype="x-html-P" />
+                    <g
+            id="LmMLCb9slIS6OTgg" ctype="x-html-P">Never assume a conductor is safe—always follow
+          the full isolation and earthing procedure.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi6006s357lzm6jy23u|items|id:cmn6dswi6006u357ldywo03ve|title">
+                <source>Application
+          of Working Earths</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi6006s357lzm6jy23u|items|id:cmn6dswi6006u357ldywo03ve|description">
+                <source>
+          <g id="qPOESLfvixidEkff" ctype="x-html-P">After verifying that the area is de-energised,
+          working earths must be applied at the location. This ensures that any unexpected
+          re-energisation or residual voltage is safely diverted, further protecting everyone
+          involved.</g>
+                    <g id="8aNpYHeM1TmzY2R-" ctype="x-html-P" />
+                    <g id="gejAHUG-EfkHOk8W"
+            ctype="x-html-P">Failing to apply working earths can result in dangerous surprises
+          during rescue operations.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi6006s357lzm6jy23u|items|id:cmn6dswi6006v357lerdiknfi|title">
+                <source>Application
+          of Normal Safety Precautions</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi6006s357lzm6jy23u|items|id:cmn6dswi6006v357lerdiknfi|description">
+                <source>
+          <g id="oB7F8I0DsvLeyk_l" ctype="x-html-P">Once the immediate emergency is under control,
+          standard safety procedures must be restored as soon as possible. This includes proper
+          documentation, incident investigation, and returning to established safety protocols.</g>
+                    <g
+            id="vg8CFGejd7AkatH-" ctype="x-html-P" />
+                    <g id="LIlRBwyCwVtX7GNw" ctype="x-html-P">Neglecting
+          to re-establish normal precautions can lead to further incidents or complicate
+          investigations.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:n4wzn4blbqekdjbnanhhaufa|items|id:xhe00ug7gnv6j3fnnnpz6iea|heading">
+                <source>Step-by-Step
+          Victim Rescue Procedure</source>
+            </trans-unit>
+            <trans-unit id="items|id:n4wzn4blbqekdjbnanhhaufa|items|id:xhe00ug7gnv6j3fnnnpz6iea|paragraph">
+                <source>Review
+          each flashcard to learn the essential actions for rescuing someone affected by electrical
+          contact. Each step is critical for protecting both the victim and the rescuer.</source>
+            </trans-unit>
+            <trans-unit id="items|id:rbvaxp7jc9dc4lquuua6ql3b|items|id:whgijnym66w9cudchhb4pcvb|front|description">
+                <source>Do
+          Not Touch the Victim Directly</source>
+            </trans-unit>
+            <trans-unit id="items|id:rbvaxp7jc9dc4lquuua6ql3b|items|id:whgijnym66w9cudchhb4pcvb|back|description">
+                <source>Never
+          touch a victim who is in contact with a live conductor. Use a non-conductive object to
+          separate them from the electrical source.</source>
+            </trans-unit>
+            <trans-unit id="items|id:rbvaxp7jc9dc4lquuua6ql3b|items|id:jzjv6nurxfkjy0u0q34bb5mb|front|description">
+                <source>Call
+          Emergency Services</source>
+            </trans-unit>
+            <trans-unit id="items|id:rbvaxp7jc9dc4lquuua6ql3b|items|id:jzjv6nurxfkjy0u0q34bb5mb|back|description">
+                <source>Immediately
+          call for professional help. Provide clear information about the location and nature of the
+          incident.</source>
+            </trans-unit>
+            <trans-unit id="items|id:rbvaxp7jc9dc4lquuua6ql3b|items|id:xjkw6bn26owthhbi0flisn5p|front|description">
+                <source>Administer First Aid
+          Safely</source>
+            </trans-unit>
+            <trans-unit id="items|id:rbvaxp7jc9dc4lquuua6ql3b|items|id:xjkw6bn26owthhbi0flisn5p|back|description">
+                <source>Only begin CPR or treat
+          burns after the electrical danger has been eliminated. Never attempt first aid while the
+          victim is still in contact with electricity.</source>
+            </trans-unit>
+            <trans-unit id="items|id:rbvaxp7jc9dc4lquuua6ql3b|items|id:lqwa1sumqustg96zsb3073q0|front|description">
+                <source>Preserve
+          the Site</source>
+            </trans-unit>
+            <trans-unit id="items|id:rbvaxp7jc9dc4lquuua6ql3b|items|id:lqwa1sumqustg96zsb3073q0|back|description">
+                <source>Take only actions needed
+          to prevent further harm. Leave the scene undisturbed for investigation once everyone is
+          safe.</source>
+            </trans-unit>
+            <trans-unit id="items|id:rbvaxp7jc9dc4lquuua6ql3b|items|id:cz09fewo3p9bzubqpi4zk0q1|front|description">
+                <source>Report All Incidents</source>
+            </trans-unit>
+            <trans-unit id="items|id:rbvaxp7jc9dc4lquuua6ql3b|items|id:cz09fewo3p9bzubqpi4zk0q1|back|description">
+                <source>Report
+          every incident, even minor ones, to your supervisor as soon as possible. Proper reporting
+          helps prevent future accidents.</source>
+            </trans-unit>
+            <trans-unit id="items|id:63691e30-66e5-42ad-a868-1de8adb76bb4|items|id:e916c4b8-24e9-4aaf-ac4d-3268ecbef8fd|title">
+                <source>What
+          must be completed before attempting a rescue inside safe approach distances?</source>
+            </trans-unit>
+            <trans-unit id="items|id:63691e30-66e5-42ad-a868-1de8adb76bb4|items|id:e916c4b8-24e9-4aaf-ac4d-3268ecbef8fd|answers|id:e85b3479-b770-4ffe-a63d-b9af0754225f|title">
+                <source>Conductors
+          must be isolated, proved de-energised, and earthed</source>
+            </trans-unit>
+            <trans-unit id="items|id:63691e30-66e5-42ad-a868-1de8adb76bb4|items|id:e916c4b8-24e9-4aaf-ac4d-3268ecbef8fd|answers|id:1669f938-49e4-4857-9bfb-46b3431644c2|title">
+                <source>Emergency
+          services must arrive on site</source>
+            </trans-unit>
+            <trans-unit id="items|id:63691e30-66e5-42ad-a868-1de8adb76bb4|items|id:e916c4b8-24e9-4aaf-ac4d-3268ecbef8fd|answers|id:d3757a41-fc86-42f5-841a-3f9a6ce15e4e|title">
+                <source>A
+          rescue plan must be documented</source>
+            </trans-unit>
+            <trans-unit id="items|id:63691e30-66e5-42ad-a868-1de8adb76bb4|items|id:e916c4b8-24e9-4aaf-ac4d-3268ecbef8fd|answers|id:6373d76d-b1ad-44cc-a301-4f1bf4aeb50a|title">
+                <source>All
+          PPE must be removed</source>
+            </trans-unit>
+            <trans-unit id="items|id:63691e30-66e5-42ad-a868-1de8adb76bb4|items|id:e916c4b8-24e9-4aaf-ac4d-3268ecbef8fd|feedbackCorrect">
+                <source>Correct!
+          Conductors must be isolated, proved de-energised, and earthed at all sources of supply by
+          an Authorised Person before rescue attempts.</source>
+            </trans-unit>
+            <trans-unit id="items|id:63691e30-66e5-42ad-a868-1de8adb76bb4|items|id:e916c4b8-24e9-4aaf-ac4d-3268ecbef8fd|feedbackIncorrect">
+                <source>Not
+          quite right. Review the rescue prerequisites to ensure you understand the critical steps
+          before attempting a rescue.</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi7006w357lduhvcvqg|items|id:cmn6dswi7006x357lw6ji4gd3|paragraph">
+                <source>Your
+          safety comes first—never attempt a rescue until all sources of electrical danger are
+          controlled.</source>
+            </trans-unit>
+            <trans-unit id="items|id:afffq4ww5wf21avy2tiainhj|items|id:p214bbpgmslibkk30vnyyqq5|heading">
+                <source>Emergency Response
+          for Mobile Plant Contact</source>
+            </trans-unit>
+            <trans-unit id="items|id:afffq4ww5wf21avy2tiainhj|items|id:p214bbpgmslibkk30vnyyqq5|paragraph">
+                <source>
+          <g id="9qMhzemdLEDUKsow" ctype="x-html-P">When mobile plant or vehicles accidentally
+          contact live electrical equipment, the risks and required actions are different from
+          standard rescue situations. Understanding and following the correct protocol is essential
+          to prevent further injury or fatalities.</g>
+                    <g id="-5xTLTuWbfSANb5g" ctype="x-html-P">Review
+          the steps below to learn how to respond safely and effectively in these high-risk
+          scenarios.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:u53j0lc9lq5oa88h03jvohrr|items|id:w7uc3kxp06sp3r3obybjwonj|heading">
+                <source>Mobile
+          Plant Contact Protocol — Four Steps</source>
+            </trans-unit>
+            <trans-unit id="items|id:u53j0lc9lq5oa88h03jvohrr|items|id:w7uc3kxp06sp3r3obybjwonj|paragraph">
+                <source>This
+          protocol outlines the essential steps to follow if mobile plant equipment comes into
+          contact with live electrical equipment, ensuring the safety of both operators and
+          bystanders.</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi80074357lkxoyobyp|items|id:cmn6dswi8006y357l596zy83r|title">
+                <source>Introduction to
+          Mobile Plant Contact</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi80074357lkxoyobyp|items|id:cmn6dswi8006y357l596zy83r|description">
+                <source>
+          <g id="DtgrA5HOnqBWBkDW" ctype="x-html-P">When mobile plant contacts live electrical
+          equipment, unique hazards arise. The vehicle and surrounding ground may both be energized,
+          creating life-threatening risks for anyone nearby.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi80074357lkxoyobyp|items|id:cmn6dswi80070357lhukhlppj|title">
+                <source>Stay
+          on the Vehicle if Safe</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi80074357lkxoyobyp|items|id:cmn6dswi80070357lhukhlppj|description">
+                <source>
+          <g id="IlM3Tv8n0pzqAj2h" ctype="x-html-P">If you are on the vehicle, remain there unless
+          it is unsafe to do so. The vehicle may be energized, and stepping off could complete a
+          circuit to ground, resulting in severe injury or death.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi80074357lkxoyobyp|items|id:cmn6dswi80071357lwjjjwwfi|title">
+                <source>Warn
+          Personnel on the Ground</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi80074357lkxoyobyp|items|id:cmn6dswi80071357lwjjjwwfi|description">
+                <source>
+          <g id="iyagdWXRysZwJ4uU" ctype="x-html-P">Alert everyone nearby to stay clear of the
+          vehicle and surrounding area. The ground around the vehicle may be energized, creating
+          step and touch potential hazards for anyone approaching.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi80074357lkxoyobyp|items|id:cmn6dswi80072357lqhabsuma|title">
+                <source>Do
+          Not Attempt Rescue Until Confirmed Isolated and Earthed</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi80074357lkxoyobyp|items|id:cmn6dswi80072357lqhabsuma|description">
+                <source>
+          <g id="L7EnTK2oup4fSvRH" ctype="x-html-P">No one should attempt to rescue or approach the
+          vehicle until the electrical lines and equipment have been isolated and earthed by
+          qualified personnel. Attempting rescue before this is confirmed puts everyone at risk.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi80074357lkxoyobyp|items|id:cmn6dswi80073357lktjp0ebp|title">
+                <source>If
+          Necessary, Jump Clear</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi80074357lkxoyobyp|items|id:cmn6dswi80073357lktjp0ebp|description">
+                <source>
+          <g id="cQFQJpfbCUNQ_pIC" ctype="x-html-P">If you must leave the vehicle due to immediate
+          danger (such as fire), jump well clear without touching the vehicle and ground at the same
+          time. Land with your feet together and shuffle away without lifting your feet to avoid
+          step potential.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi80074357lkxoyobyp|items|id:cmn6dswi8006z357lvw0614e1|title">
+                <source>
+          Summary</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi80074357lkxoyobyp|items|id:cmn6dswi8006z357lvw0614e1|description">
+                <source>
+          <g id="mCOhYkz0OuYPe9-X" ctype="x-html-P">Following these steps ensures the safety of both
+          the operator and bystanders. Never rush or improvise—stick to the protocol for the best
+          chance of a safe outcome.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:3fca5ba2-396d-4fe0-ab77-c41b623cf883|items|id:fa648f79-da35-4771-8bc3-0a493398d4f8|title">
+                <source>Mobile
+          plant has accidentally contacted live electrical equipment. What should the operator do?</source>
+            </trans-unit>
+            <trans-unit id="items|id:3fca5ba2-396d-4fe0-ab77-c41b623cf883|items|id:fa648f79-da35-4771-8bc3-0a493398d4f8|answers|id:3502d29b-a96e-4a87-b270-f201265724cd|title">
+                <source>Immediately
+          exit the vehicle</source>
+            </trans-unit>
+            <trans-unit id="items|id:3fca5ba2-396d-4fe0-ab77-c41b623cf883|items|id:fa648f79-da35-4771-8bc3-0a493398d4f8|answers|id:e471c80c-d87d-4f4b-a80d-095f878fcd5c|title">
+                <source>Stay on the
+          vehicle if safe until confirmed the equipment is no longer energised</source>
+            </trans-unit>
+            <trans-unit id="items|id:3fca5ba2-396d-4fe0-ab77-c41b623cf883|items|id:fa648f79-da35-4771-8bc3-0a493398d4f8|answers|id:8cee670c-efc7-478e-a3fd-558e006b5fda|title">
+                <source>Call
+          for help while touching the vehicle frame</source>
+            </trans-unit>
+            <trans-unit id="items|id:3fca5ba2-396d-4fe0-ab77-c41b623cf883|items|id:fa648f79-da35-4771-8bc3-0a493398d4f8|answers|id:cbf40175-a282-4693-9903-203435de8274|title">
+                <source>Attempt
+          to reverse away from the contact</source>
+            </trans-unit>
+            <trans-unit id="items|id:3fca5ba2-396d-4fe0-ab77-c41b623cf883|items|id:fa648f79-da35-4771-8bc3-0a493398d4f8|feedbackCorrect">
+                <source>That's
+          right! The operator should stay on the vehicle if safe until the equipment is confirmed
+          de-energised. Exiting could complete a circuit to ground.</source>
+            </trans-unit>
+            <trans-unit id="items|id:3fca5ba2-396d-4fe0-ab77-c41b623cf883|items|id:fa648f79-da35-4771-8bc3-0a493398d4f8|feedbackIncorrect">
+                <source>Not
+          quite right. The safest action in this situation is to remain on the vehicle until it is
+          confirmed safe to exit.</source>
+            </trans-unit>
+            <trans-unit id="items|id:j6u5e97hzvbn20awlxfuaew0|items|id:kpdt2ayeki3h4i2faau1ghph|heading">
+                <source>Incident
+          Reporting and Site Preservation</source>
+            </trans-unit>
+            <trans-unit id="items|id:j6u5e97hzvbn20awlxfuaew0|items|id:kpdt2ayeki3h4i2faau1ghph|paragraph">
+                <source>
+          <g id="oiRSeccfx_CD4gls" ctype="x-html-P">After an electrical emergency, what you do next
+          is just as important as your initial response. Explore each section to understand the
+          critical steps for reporting and preserving the site.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi80075357lamt90uec|items|id:cmn6dswi80076357l2htkujak|title">
+                <source>Reporting
+          Requirements</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi80075357lamt90uec|items|id:cmn6dswi80076357l2htkujak|description">
+                <source>
+          <g id="0-ugNwZcyt4O6meg" ctype="x-html-P">All incidents, no matter how minor, must be
+          reported to your immediate supervisor as soon as possible. Prompt reporting ensures that
+          hazards are addressed and helps prevent future incidents.</g>
+                    <g id="MLpFteZNuOlmmvOa"
+            ctype="x-html-P" />
+                    <g id="He5vC_Fm54c_OIDE" ctype="x-html-P">Failing to report can allow
+          dangerous conditions to go unnoticed and uncorrected.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi80075357lamt90uec|items|id:cmn6dswi80077357l7ee936ti|title">
+                <source>Preserving
+          the Site</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi80075357lamt90uec|items|id:cmn6dswi80077357l7ee936ti|description">
+                <source>
+          <g id="ABozWzbGcQEoBdzR" ctype="x-html-P">Only take actions necessary to prevent further
+          harm or damage. Leave the scene undisturbed so investigators can determine the cause and
+          prevent recurrence.</g>
+                    <g id="WrS-VLr2EaFXLcqa" ctype="x-html-P" />
+                    <g
+            id="Es-Nda2vHVJIV3Sk" ctype="x-html-P">Disturbing the site can destroy evidence and
+          hinder the investigation process.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi80075357lamt90uec|items|id:cmn6dswi80078357ljhltblpu|title">
+                <source>Role
+          of Incident Investigation</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi80075357lamt90uec|items|id:cmn6dswi80078357ljhltblpu|description">
+                <source>
+          <g id="529tFsJj9jBgo-CD" ctype="x-html-P">Incident investigations identify root causes and
+          help improve safety procedures. Your accurate reporting and site preservation contribute
+          to a safer workplace for everyone.</g>
+                    <g id="Vuz3_rVU3orIqtGY" ctype="x-html-P" />
+                    <g
+            id="6CQGZT_bMv_S_3Gu" ctype="x-html-P">Neglecting these steps can result in missed
+          lessons and repeated mistakes.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ukcochc9qea0h4026zfudvby|items|id:mxqtdg60whqf6elsgp8y5i0a|heading">
+                <source>Emergency
+          Response Actions — Critical or Not Critical</source>
+            </trans-unit>
+            <trans-unit id="items|id:ukcochc9qea0h4026zfudvby|items|id:mxqtdg60whqf6elsgp8y5i0a|paragraph">
+                <source>Reflect
+          on the actions you might take during and after an electrical emergency. Sort each action
+          into the correct category to reinforce your understanding of what is truly essential.</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi9007g357llvy3mgeh|piles|id:cmn6dswi90079357lyxvl4017|title">
+                <source>Critical
+          Action</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi9007g357llvy3mgeh|items|id:cmn6dswi9007b357l26v17f5r|title">
+                <source>Call emergency services</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi9007g357llvy3mgeh|items|id:cmn6dswi9007c357lysrzfjcb|title">
+                <source>Preserve
+          the site</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi9007g357llvy3mgeh|items|id:cmn6dswi9007d357ll9mdqw24|title">
+                <source>Document the incident</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi9007g357llvy3mgeh|piles|id:cmn6dswi9007a357l34llf560|title">
+                <source>Not
+          Critical</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi9007g357llvy3mgeh|items|id:cmn6dswi9007e357lmgq91lzv|title">
+                <source>Remove PPE before rescue</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi9007g357llvy3mgeh|items|id:cmn6dswi9007f357lcmphna36|title">
+                <source>Start
+          work immediately after incident</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dswi9007h357ldm9e5hd1|items|id:cmn6dswi9007i357l15dd7gpj|paragraph">
+                <source>
+          <g id="ODXtM96QllGh0Nfb" ctype="x-html-P">In electrical emergencies, every second
+          counts—your knowledge and disciplined response protect both lives and livelihoods.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:mwm24u6n2xfopx9v7heqxmf3|items|id:g81hnce9rw5m1liz74gjx91e|paragraph">
+                <source>
+          <g id="hqiSJfX5nCdo_uOe" ctype="x-html-P">This lesson covered the essential steps for
+          responding to electrical emergencies: understanding rescue prerequisites, following a
+          step-by-step victim rescue procedure, applying the correct protocol for mobile plant
+          contact, and ensuring thorough incident reporting and site preservation. Remember, your
+          actions in an emergency can make the difference between life and death, and between a safe
+          workplace and repeated incidents.</g>
+                    <g id="cjDdnd54fzvxnOCY" ctype="x-html-P">In the
+          final lesson, you'll learn about the regulations and standards that underpin all high
+          voltage electrical safety practices, and you'll complete a comprehensive assessment to
+          confirm your understanding and readiness to work safely in high voltage environments.</g>
+        </source>
+            </trans-unit>
+        </body>
+    </file>
+    <file original="GFBTg1Zfi32U_nTlHU9w6seG5xykMhFM" datatype="plaintext" source-language="en-us">
+        <body>
+            <trans-unit id="title">
+                <source>Regulations,
+          Standards, and Course Assessment</source>
+            </trans-unit>
+            <trans-unit id="items|id:zvo9ctc9lm7uywdnfbel2s0k|items|id:kh2yb22egprnfqrch137l6x2|heading">
+                <source>Regulations,
+          Standards, and Course Assessment</source>
+            </trans-unit>
+            <trans-unit id="items|id:zvo9ctc9lm7uywdnfbel2s0k|items|id:kh2yb22egprnfqrch137l6x2|paragraph">
+                <source>
+          <g id="_IChRAFOFhjbW44L" ctype="x-html-P">High voltage electrical safety is built on a
+          foundation of strict regulations and industry standards. These rules are not just
+          guidelines—they are legal and professional requirements that protect lives and ensure safe
+          workplaces. In this lesson, you’ll discover the key organizations and standards that
+          govern high voltage safety, and you’ll have the opportunity to demonstrate your
+          understanding through a comprehensive assessment. Mastery of these regulations is
+          essential for every electrical worker, supervisor, and safety professional.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:q42ibz0rbjln0bchfrhl8kvg|items|id:d6rl3axz4r2am3ukeumvria0|paragraph">
+                <source>
+          <g id="6tivjB1euJ0DNyje" ctype="x-html-P">This lesson will guide you through the essential
+          aspects of the regulatory landscape for high voltage electrical safety. You will learn
+          about the main organizations and standards, the significance of compliance, and how to
+          apply these standards in your workplace.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:xbb9n75pus572376namdsrq3|items|id:wek0ifq47cmixcbx94k86gk8|paragraph">
+                <source>
+          <g id="Jk12WDnAXgGKKOc1" ctype="x-html-P">Identify key organizations and standards
+          governing high voltage electrical safety.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:xbb9n75pus572376namdsrq3|items|id:akf4j36flsq4im09dhibmo36|paragraph">
+                <source>
+          <g id="r4N2Fuk5fK3ClYZx" ctype="x-html-P">Explain the importance of compliance and ongoing
+          training in maintaining a safe work environment.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:xbb9n75pus572376namdsrq3|items|id:ghal7ji8ykqlahpfb723sen9|paragraph">
+                <source>
+          <g id="cibahRnBa5N4q-sR" ctype="x-html-P">Locate and interpret relevant standards for
+          application in your workplace.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:xbb9n75pus572376namdsrq3|items|id:lww40bz086zexulkjkztyybd|paragraph">
+                <source>
+          <g id="2NbrwaVuUlm2f8R4" ctype="x-html-P">Demonstrate your understanding of course
+          concepts through assessment activities.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85w007j357ltn3yiqg7|items|id:cmn6dt85w007k357ldko58q9f|title">
+                <source>
+          CONTINUE</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85w007j357ltn3yiqg7|items|id:cmn6dt85w007k357ldko58q9f|completeHint">
+                <source>Complete the content
+          above before moving on.</source>
+            </trans-unit>
+            <trans-unit id="items|id:ea1her3ak7w45zdba736gvmn|items|id:bx141f9fby6p3hs77wkzbzi3|heading">
+                <source>Key
+          Organizations and Standards in High Voltage Electrical Safety</source>
+            </trans-unit>
+            <trans-unit id="items|id:ea1her3ak7w45zdba736gvmn|items|id:bx141f9fby6p3hs77wkzbzi3|paragraph">
+                <source>
+          <g id="pH9cl1brZWD0TviR" ctype="x-html-P">Expand each section to learn about the major
+          organizations and standards that shape electrical safety practices worldwide.
+          Understanding who sets the rules—and what those rules require—will help you work safely
+          and confidently in any high voltage environment.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85x007l357l8gik8rza|items|id:cmn6dt85x007m357lfelhox2e|title">
+                <source>IEC
+          (International Electrotechnical Commission)</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85x007l357l8gik8rza|items|id:cmn6dt85x007m357lfelhox2e|description">
+                <source>
+          <g id="PxD5tGIS539pXDcZ" ctype="x-html-P">The IEC is a global organization that develops
+          international standards for electrical, electronic, and related technologies. Their
+          standards set the benchmark for high voltage equipment, installation, and safe work
+          practices across many countries. For example, IEC standards define voltage thresholds and
+          testing procedures used in high voltage operations.</g>
+                    <g id="AiBw8_zaJIbW2jZu"
+            ctype="x-html-P" />
+                    <g id="taCIGLF04mLF23xW" ctype="x-html-P">Following IEC standards
+          ensures that equipment and procedures meet internationally recognized safety levels,
+          supporting both compliance and interoperability.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85x007l357l8gik8rza|items|id:cmn6dt85x007n357lqdi2dput|title">
+                <source>OSHA
+          (Occupational Safety and Health Administration)</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85x007l357l8gik8rza|items|id:cmn6dt85x007n357lqdi2dput|description">
+                <source>
+          <g id="vhrpTeHdOTJ15UFh" ctype="x-html-P">OSHA is the primary regulatory body for
+          workplace safety in the United States. OSHA standards are legally enforceable and
+          establish minimum safety requirements for employers and workers, including those related
+          to electrical hazards. For example, OSHA mandates lockout/tagout procedures and safe
+          approach distances for high voltage work.</g>
+                    <g id="a8aEZUuQclX_9lvV" ctype="x-html-P" />
+                    <g
+            id="gdDUQcIKDpGJhMUs" ctype="x-html-P">Compliance with OSHA regulations is mandatory for
+          all U.S. workplaces and is regularly audited to ensure ongoing safety.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85x007l357l8gik8rza|items|id:cmn6dt85x007o357liyzu8krj|title">
+                <source>NFPA
+          70E (National Fire Protection Association)</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85x007l357l8gik8rza|items|id:cmn6dt85x007o357liyzu8krj|description">
+                <source>
+          <g id="SEhFTVbde_hzT637" ctype="x-html-P">NFPA 70E is a standard focused specifically on
+          electrical safety in the workplace. It provides detailed guidance on safe work practices,
+          selection of personal protective equipment (PPE), and arc flash hazard assessment. For
+          instance, NFPA 70E outlines how to determine the correct PPE for various electrical tasks
+          and how to assess arc flash boundaries.</g>
+                    <g id="OiWBm_3yKDd1n2FR" ctype="x-html-P" />
+                    <g
+            id="YPpk3w0dXordH12i" ctype="x-html-P">Adhering to NFPA 70E helps organizations minimize
+          the risk of electrical injuries and maintain a culture of safety.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:l37mg7sjh9grqnt3vfppn33s|items|id:tt1dyotbn9tjtxuhxzqbavyn|heading">
+                <source>Applying
+          Standards and Regulations on the Job</source>
+            </trans-unit>
+            <trans-unit id="items|id:l37mg7sjh9grqnt3vfppn33s|items|id:tt1dyotbn9tjtxuhxzqbavyn|paragraph">
+                <source>
+          <g id="bQSMMIMvw_1HCmCw" ctype="x-html-P">Review each flashcard to understand how to put
+          regulatory knowledge into action and maintain compliance every day.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ftzc2r1hon1ub4vbqhgprhcs|items|id:m65mp4zsn1kdwwpvrp8c8lwd|front|description">
+                <source>
+          <g id="dEUgs4bJawWUFMOh" ctype="x-html-P">Why is compliance with standards and regulations
+          essential?</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ftzc2r1hon1ub4vbqhgprhcs|items|id:m65mp4zsn1kdwwpvrp8c8lwd|back|description">
+                <source>
+          <g id="L83gOESuZyj22stE" ctype="x-html-P">Legal, ethical, and practical reasons make
+          following standards non-negotiable. Compliance protects lives, avoids penalties, and
+          upholds professional reputation.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ftzc2r1hon1ub4vbqhgprhcs|items|id:arp90zh6va96jl8f2ompv1ix|front|description">
+                <source>
+          <g id="_nEQzo7rRsGHvZSE" ctype="x-html-P">Where can you find current standards and
+          regulations?</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ftzc2r1hon1ub4vbqhgprhcs|items|id:arp90zh6va96jl8f2ompv1ix|back|description">
+                <source>
+          <g id="sClRsFxyaWZRXvQA" ctype="x-html-P">Access up-to-date standards through your
+          organization’s safety resources, by consulting supervisors or safety personnel, and by
+          regularly reviewing official updates.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ftzc2r1hon1ub4vbqhgprhcs|items|id:tkezvu109tvjptt57sbo9jbv|front|description">
+                <source>
+          <g id="BzICAQ-yZ857dv77" ctype="x-html-P">Why is ongoing training and competency
+          assessment important for compliance?</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:ftzc2r1hon1ub4vbqhgprhcs|items|id:tkezvu109tvjptt57sbo9jbv|back|description">
+                <source>
+          <g id="ZQ57fSDZrjQBw2Zq" ctype="x-html-P">Regular assessment and refresher training are
+          vital to ensure you remain compliant and up to date with the latest safety requirements.</g>
+        </source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85x007p357l3sbvbitc|items|id:cmn6dt85x007q357l1wtfz29o|paragraph">
+                <source>Compliance
+          with regulations and standards is not optional; it forms the foundation of every safe high
+          voltage workplace.</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85x007r357l0yt0vyfh|items|id:cmn6dt85x007s357ly0rgi22t|title">
+                <source>CONTINUE</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85x007r357l0yt0vyfh|items|id:cmn6dt85x007s357ly0rgi22t|completeHint">
+                <source>Complete
+          the content above before moving on.</source>
+            </trans-unit>
+            <trans-unit id="items|id:40a8603b-2531-41b4-a70e-79697f34fbd9|items|id:71cc1d8b-2f79-4cd9-83e6-3aaab9f31dff|title">
+                <source>Which
+          of the following is a regulation or standard that publishes guidelines for high voltage
+          safety?</source>
+            </trans-unit>
+            <trans-unit id="items|id:40a8603b-2531-41b4-a70e-79697f34fbd9|items|id:71cc1d8b-2f79-4cd9-83e6-3aaab9f31dff|answers|id:8d0cb3d6-9111-431b-b257-a5e12159694c|title">
+                <source>ISO 9001</source>
+            </trans-unit>
+            <trans-unit id="items|id:40a8603b-2531-41b4-a70e-79697f34fbd9|items|id:71cc1d8b-2f79-4cd9-83e6-3aaab9f31dff|answers|id:8d0cb3d6-9111-431b-b257-a5e12159694c|feedback">
+                <source>ISO
+          9001 is a quality management standard and does not address electrical or high voltage
+          safety.</source>
+            </trans-unit>
+            <trans-unit id="items|id:40a8603b-2531-41b4-a70e-79697f34fbd9|items|id:71cc1d8b-2f79-4cd9-83e6-3aaab9f31dff|answers|id:11dc16cb-f98e-48fc-8fa8-fe0fdf601752|title">
+                <source>NFPA 70E</source>
+            </trans-unit>
+            <trans-unit id="items|id:40a8603b-2531-41b4-a70e-79697f34fbd9|items|id:71cc1d8b-2f79-4cd9-83e6-3aaab9f31dff|answers|id:11dc16cb-f98e-48fc-8fa8-fe0fdf601752|feedback">
+                <source>NFPA
+          70E provides comprehensive guidelines for electrical safety in the workplace, including
+          high voltage environments.</source>
+            </trans-unit>
+            <trans-unit id="items|id:40a8603b-2531-41b4-a70e-79697f34fbd9|items|id:71cc1d8b-2f79-4cd9-83e6-3aaab9f31dff|answers|id:92d33e6b-17bd-457c-9cad-7ac215a80c2c|title">
+                <source>ANSI
+          Z87.1</source>
+            </trans-unit>
+            <trans-unit id="items|id:40a8603b-2531-41b4-a70e-79697f34fbd9|items|id:71cc1d8b-2f79-4cd9-83e6-3aaab9f31dff|answers|id:92d33e6b-17bd-457c-9cad-7ac215a80c2c|feedback">
+                <source>ANSI Z87.1 covers eye and
+          face protection standards, not overall electrical or high voltage safety.</source>
+            </trans-unit>
+            <trans-unit id="items|id:40a8603b-2531-41b4-a70e-79697f34fbd9|items|id:71cc1d8b-2f79-4cd9-83e6-3aaab9f31dff|answers|id:a399d766-519a-4910-9f09-ee31da4d1d7a|title">
+                <source>EPA
+          Standards</source>
+            </trans-unit>
+            <trans-unit id="items|id:40a8603b-2531-41b4-a70e-79697f34fbd9|items|id:71cc1d8b-2f79-4cd9-83e6-3aaab9f31dff|answers|id:a399d766-519a-4910-9f09-ee31da4d1d7a|feedback">
+                <source>EPA Standards are
+          focused on environmental protection, not electrical or high voltage safety.</source>
+            </trans-unit>
+            <trans-unit id="items|id:qhvmop476999n3sqd81815e3|items|id:ivggt3n31xvnnu48myr9cn03|heading">
+                <source>Compliance
+          Best Practices — Critical or Not Critical</source>
+            </trans-unit>
+            <trans-unit id="items|id:qhvmop476999n3sqd81815e3|items|id:ivggt3n31xvnnu48myr9cn03|paragraph">
+                <source>Review
+          the actions below and sort them into the appropriate category based on their importance
+          for maintaining compliance with high voltage safety standards.</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85y007z357lnvw5qqts|piles|id:cmn6dt85y007t357lz9r44hgw|title">
+                <source>Critical
+          for Compliance</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85y007z357lnvw5qqts|items|id:cmn6dt85y007v357lck21n9s8|title">
+                <source>Regularly review
+          updated standards</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85y007z357lnvw5qqts|items|id:cmn6dt85y007w357l87uoii7y|title">
+                <source>Complete annual
+          safety training</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85y007z357lnvw5qqts|items|id:cmn6dt85y007x357lw9rn3tu6|title">
+                <source>Consult safety
+          personnel for clarification</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85y007z357lnvw5qqts|piles|id:cmn6dt85y007u357lemol6v1s|title">
+                <source>Not
+          Critical</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85y007z357lnvw5qqts|items|id:cmn6dt85y007y357lc3qvs4v2|title">
+                <source>Rely solely on memory
+          for procedures</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85y0080357lk87k5t2v|items|id:cmn6dt85y0081357lxekwmude|title">
+                <source>CONTINUE</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85y0080357lk87k5t2v|items|id:cmn6dt85y0081357lxekwmude|completeHint">
+                <source>Complete
+          the content above before moving on.</source>
+            </trans-unit>
+            <trans-unit id="items|id:0f8ece4b-e6ba-44f5-81ce-4da5757c4032|items|id:cda40a9c-7d8a-4eae-9468-dc023d4fb6c3|title">
+                <source>Which
+          of the following is a primary hazard of high voltage electricity?</source>
+            </trans-unit>
+            <trans-unit id="items|id:0f8ece4b-e6ba-44f5-81ce-4da5757c4032|items|id:cda40a9c-7d8a-4eae-9468-dc023d4fb6c3|answers|id:02e54d39-cca8-44b1-9ba3-9e6f1c911cd4|title">
+                <source>Severe
+          burns</source>
+            </trans-unit>
+            <trans-unit id="items|id:0f8ece4b-e6ba-44f5-81ce-4da5757c4032|items|id:cda40a9c-7d8a-4eae-9468-dc023d4fb6c3|answers|id:02e54d39-cca8-44b1-9ba3-9e6f1c911cd4|feedback">
+                <source>Severe burns are a major
+          risk when working with high voltage electricity.</source>
+            </trans-unit>
+            <trans-unit id="items|id:0f8ece4b-e6ba-44f5-81ce-4da5757c4032|items|id:cda40a9c-7d8a-4eae-9468-dc023d4fb6c3|answers|id:3e7c9b6c-e5fd-4115-a0c7-f57cd87bf18d|title">
+                <source>Loud
+          noise</source>
+            </trans-unit>
+            <trans-unit id="items|id:0f8ece4b-e6ba-44f5-81ce-4da5757c4032|items|id:cda40a9c-7d8a-4eae-9468-dc023d4fb6c3|answers|id:3e7c9b6c-e5fd-4115-a0c7-f57cd87bf18d|feedback">
+                <source>Loud noise is not a primary
+          hazard of high voltage.</source>
+            </trans-unit>
+            <trans-unit id="items|id:0f8ece4b-e6ba-44f5-81ce-4da5757c4032|items|id:cda40a9c-7d8a-4eae-9468-dc023d4fb6c3|answers|id:f7872b93-0f23-449b-8c93-c62924d7068c|title">
+                <source>Poor
+          lighting</source>
+            </trans-unit>
+            <trans-unit id="items|id:0f8ece4b-e6ba-44f5-81ce-4da5757c4032|items|id:cda40a9c-7d8a-4eae-9468-dc023d4fb6c3|answers|id:f7872b93-0f23-449b-8c93-c62924d7068c|feedback">
+                <source>Poor lighting is a
+          general workplace hazard, not specific to high voltage.</source>
+            </trans-unit>
+            <trans-unit id="items|id:0f8ece4b-e6ba-44f5-81ce-4da5757c4032|items|id:cda40a9c-7d8a-4eae-9468-dc023d4fb6c3|answers|id:9ee0d52f-f225-4b9c-ae2a-425c8a3aa50b|title">
+                <source>Slippery
+          floors</source>
+            </trans-unit>
+            <trans-unit id="items|id:0f8ece4b-e6ba-44f5-81ce-4da5757c4032|items|id:cda40a9c-7d8a-4eae-9468-dc023d4fb6c3|answers|id:9ee0d52f-f225-4b9c-ae2a-425c8a3aa50b|feedback">
+                <source>Slippery floors are
+          unrelated to electrical hazards.</source>
+            </trans-unit>
+            <trans-unit id="items|id:cmn6dt85y0082357lpgg1e901|items|id:cmn6dt85y0083357l8my64i03|paragraph">
+                <source>Well
+          done! You’ve demonstrated your understanding of high voltage electrical safety—your
+          commitment to learning keeps you and your team safe.</source>
+            </trans-unit>
+            <trans-unit id="items|id:o9n4lvahy77bfxe777mawdai|items|id:skvvjviu0deaslq96tpo9ds4|paragraph">
+                <source>
+          <g id="MSaX9l2MTq1lN33f" ctype="x-html-P">Throughout this course, you have explored the
+          essential elements of high voltage electrical safety: recognizing hazards, following
+          strict procedures, selecting and using the right PPE, understanding roles and
+          responsibilities, controlling invisible risks like electromagnetic induction, responding
+          effectively to emergencies, and complying with all relevant regulations and standards.</g>
+                    <g
+            id="uzFOr2-KygOy6MTQ" ctype="x-html-P">Remember, safety is not a one-time
+          achievement—it’s an ongoing commitment. Continue your professional development, regularly
+          review updated standards, and lead by example to foster a culture of safety in your
+          workplace. Thank you for your dedication to learning. To save your results and access your
+          certificate, please close this module using the ‘EXIT COURSE’ button at the top of your
+          screen.</g>
+        </source>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

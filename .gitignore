@@ -4,7 +4,6 @@ node_modules
 .env*.local
 dev.db
 *.db
-uploads/
 tsconfig.tsbuildinfo
 .DS_Store
 README_tmp.html

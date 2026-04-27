@@ -1,0 +1,1958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>High Voltage Electrical Safety — Essential Practices and Procedures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f12;
+    --surface: #161a20;
+    --surface2: #1e2430;
+    --border: #2a3040;
+    --amber: #f5b800;
+    --amber-dim: #c49200;
+    --amber-glow: rgba(245,184,0,0.12);
+    --red: #e03d3d;
+    --green: #2dd58a;
+    --blue: #4da6ff;
+    --text: #e8eaf0;
+    --text-dim: #8490a8;
+    --text-muted: #4a5568;
+    --correct: #1a3d2b;
+    --correct-border: #2dd58a;
+    --incorrect: #3d1a1a;
+    --incorrect-border: #e03d3d;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── TOP BAR ─── */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 2px solid var(--amber);
+    padding: 0 2rem;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+  .topbar-logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber);
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+  .topbar-logo .icon { font-size: 1.4rem; }
+  .topbar-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    flex: 1;
+    text-align: center;
+  }
+  .progress-pill {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--amber);
+    background: var(--amber-glow);
+    border: 1px solid var(--amber-dim);
+    border-radius: 20px;
+    padding: 0.25rem 0.8rem;
+  }
+
+  /* ─── LAYOUT ─── */
+  .layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 1.5rem 0;
+    height: calc(100vh - 60px);
+    position: sticky;
+    top: 60px;
+  }
+  .sidebar-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 0 1.5rem 0.8rem;
+  }
+  .module-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.85rem 1.5rem;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    color: var(--text-dim);
+    transition: all 0.18s;
+    border-left: 3px solid transparent;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .module-btn:hover { background: var(--surface2); color: var(--text); }
+  .module-btn.active {
+    background: var(--amber-glow);
+    border-left-color: var(--amber);
+    color: var(--amber);
+  }
+  .module-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    background: var(--border);
+    color: var(--text-muted);
+    border-radius: 4px;
+    padding: 2px 6px;
+    min-width: 26px;
+    text-align: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .module-btn.active .module-num { background: var(--amber); color: #000; }
+  .module-btn.completed .module-num { background: var(--green); color: #000; }
+  .module-text { font-size: 0.82rem; font-weight: 500; line-height: 1.4; }
+
+  /* ─── MAIN CONTENT ─── */
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2.5rem 3rem 4rem;
+    max-width: 900px;
+  }
+
+  /* ─── MODULE PANEL ─── */
+  .module-panel { display: none; }
+  .module-panel.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ─── LESSON HEADER ─── */
+  .lesson-header {
+    border-left: 4px solid var(--amber);
+    padding-left: 1.25rem;
+    margin-bottom: 2rem;
+  }
+  .lesson-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--amber-dim);
+    margin-bottom: 0.4rem;
+  }
+  .lesson-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 2.4rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+    color: var(--text);
+    text-transform: uppercase;
+  }
+  .lesson-desc {
+    margin-top: 1rem;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--text-dim);
+    max-width: 700px;
+  }
+
+  /* ─── SECTION HEADING ─── */
+  .section-heading {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin: 2.5rem 0 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .section-heading::before {
+    content: '';
+    width: 18px;
+    height: 3px;
+    background: var(--amber);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .section-body {
+    font-size: 0.92rem;
+    line-height: 1.75;
+    color: var(--text-dim);
+    margin-bottom: 1.5rem;
+  }
+
+  /* ─── OBJECTIVES LIST ─── */
+  .objectives {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem 1.75rem;
+    margin: 1.5rem 0 2rem;
+  }
+  .objectives-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 1rem;
+  }
+  .objectives li {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    font-size: 0.88rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+    padding: 0.4rem 0;
+    list-style: none;
+  }
+  .objectives li::before {
+    content: '→';
+    color: var(--amber);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* ─── ACCORDION ─── */
+  .accordion { margin: 1.5rem 0; }
+  .acc-item {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .acc-item.open { border-color: var(--amber-dim); }
+  .acc-trigger {
+    width: 100%;
+    background: var(--surface);
+    border: none;
+    padding: 1rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+    text-align: left;
+    transition: background 0.2s;
+  }
+  .acc-trigger:hover { background: var(--surface2); }
+  .acc-item.open .acc-trigger { background: var(--amber-glow); color: var(--amber); }
+  .acc-arrow {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    transition: transform 0.25s;
+    flex-shrink: 0;
+    margin-left: 1rem;
+  }
+  .acc-item.open .acc-arrow { transform: rotate(180deg); color: var(--amber); }
+  .acc-body {
+    display: none;
+    padding: 1.1rem 1.25rem 1.25rem;
+    font-size: 0.88rem;
+    line-height: 1.75;
+    color: var(--text-dim);
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+  }
+  .acc-item.open .acc-body { display: block; animation: fadeIn 0.2s ease; }
+
+  /* ─── FLASHCARDS ─── */
+  .flashcard-deck {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  .flashcard {
+    width: calc(50% - 0.5rem);
+    min-height: 160px;
+    perspective: 800px;
+    cursor: pointer;
+  }
+  @media (max-width: 600px) { .flashcard { width: 100%; } }
+  .flashcard-inner {
+    width: 100%;
+    height: 100%;
+    min-height: 160px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+  .card-front, .card-back {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border-radius: 10px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 160px;
+  }
+  .card-front {
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .card-back {
+    background: var(--surface2);
+    border: 1px solid var(--amber-dim);
+    transform: rotateY(180deg);
+  }
+  .card-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+  }
+  .card-back .card-label { color: var(--amber-dim); }
+  .card-front p {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .card-back p {
+    font-size: 0.83rem;
+    line-height: 1.65;
+    color: var(--text-dim);
+  }
+  .card-hint {
+    margin-top: auto;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ─── QUIZ ─── */
+  .quiz-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+  }
+  .quiz-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 0.8rem;
+  }
+  .quiz-question {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 1.2rem;
+  }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; }
+  .quiz-option {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    font-size: 0.86rem;
+    color: var(--text-dim);
+    text-align: left;
+    font-family: 'IBM Plex Sans', sans-serif;
+    transition: all 0.18s;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    width: 100%;
+  }
+  .quiz-option:hover:not(:disabled) { border-color: var(--amber-dim); color: var(--text); background: var(--amber-glow); }
+  .quiz-option.correct { background: var(--correct); border-color: var(--correct-border); color: var(--green); }
+  .quiz-option.incorrect { background: var(--incorrect); border-color: var(--incorrect-border); color: var(--red); }
+  .quiz-option:disabled { cursor: default; }
+  .opt-letter {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    background: var(--border);
+    border-radius: 4px;
+    padding: 1px 7px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .quiz-feedback {
+    margin-top: 1rem;
+    padding: 0.9rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    display: none;
+  }
+  .quiz-feedback.show { display: block; animation: fadeIn 0.25s ease; }
+  .quiz-feedback.correct { background: var(--correct); border: 1px solid var(--correct-border); color: #7fffb9; }
+  .quiz-feedback.incorrect { background: var(--incorrect); border: 1px solid var(--incorrect-border); color: #ffaaaa; }
+  .quiz-retry {
+    margin-top: 0.75rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+    transition: all 0.18s;
+    display: none;
+  }
+  .quiz-retry.show { display: inline-block; }
+  .quiz-retry:hover { border-color: var(--amber); color: var(--amber); }
+
+  /* ─── CALLOUT ─── */
+  .callout {
+    display: flex;
+    gap: 1rem;
+    background: var(--amber-glow);
+    border: 1px solid var(--amber-dim);
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+    margin: 1.5rem 0;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  .callout-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+  /* ─── DNOT STEPS ─── */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .step-card::before {
+    content: attr(data-num);
+    position: absolute;
+    top: -0.3rem;
+    right: 0.6rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 4rem;
+    font-weight: 800;
+    color: var(--border);
+    line-height: 1;
+    pointer-events: none;
+  }
+  .step-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 0.5rem;
+  }
+  .step-body { font-size: 0.82rem; line-height: 1.6; color: var(--text-dim); }
+
+  /* ─── HIERARCHY ─── */
+  .hierarchy {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 1.5rem 0;
+  }
+  .hier-level {
+    display: flex;
+    align-items: stretch;
+    position: relative;
+  }
+  .hier-bar {
+    width: 6px;
+    flex-shrink: 0;
+    border-radius: 3px;
+    margin-right: 1rem;
+  }
+  .hier-content {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.9rem 1rem;
+    margin-bottom: 0.4rem;
+  }
+  .hier-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .hier-desc { font-size: 0.8rem; color: var(--text-dim); line-height: 1.5; margin-top: 0.25rem; }
+
+  /* ─── TABLE ─── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.83rem;
+  }
+  .data-table th {
+    background: var(--surface2);
+    color: var(--amber);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.7rem 1rem;
+    text-align: left;
+    border-bottom: 2px solid var(--amber-dim);
+  }
+  .data-table td {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+  .data-table tr:hover td { background: var(--surface); }
+  .data-table td:first-child { color: var(--text); font-weight: 500; }
+
+  /* ─── SUMMARY BOX ─── */
+  .summary-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 1.75rem;
+    margin: 2.5rem 0 1rem;
+  }
+  .summary-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+  }
+  .summary-box p { font-size: 0.88rem; line-height: 1.75; color: var(--text-dim); }
+  .summary-box p + p { margin-top: 0.75rem; }
+
+  /* ─── NAV BUTTONS ─── */
+  .module-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .nav-btn {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.65rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.18s;
+    border: none;
+  }
+  .nav-btn.primary { background: var(--amber); color: #000; }
+  .nav-btn.primary:hover { background: #ffd03a; }
+  .nav-btn.secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--text-dim); }
+  .nav-btn.secondary:hover { border-color: var(--amber); color: var(--amber); }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* ─── COMPLETION ─── */
+  .completion-banner {
+    background: linear-gradient(135deg, #0d2a1a 0%, #1a3d2b 100%);
+    border: 1px solid var(--green);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    margin: 2rem 0;
+  }
+  .completion-banner h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--green);
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+  .completion-banner p { color: #7fffb9; font-size: 0.88rem; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo"><span class="icon">⚡</span> HV Safety</div>
+  <div class="topbar-title">High Voltage Electrical Safety: Essential Practices and Procedures</div>
+  <div class="progress-pill" id="progress-pill">1 / 7</div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-label">Course Modules</div>
+    <button class="module-btn active" onclick="showModule(0)">
+      <span class="module-num">01</span>
+      <span class="module-text">Understanding High Voltage Hazards</span>
+    </button>
+    <button class="module-btn" onclick="showModule(1)">
+      <span class="module-num">02</span>
+      <span class="module-text">Workplace Preparation &amp; DNOT Procedures</span>
+    </button>
+    <button class="module-btn" onclick="showModule(2)">
+      <span class="module-num">03</span>
+      <span class="module-text">Hierarchy of Controls &amp; PPE Selection</span>
+    </button>
+    <button class="module-btn" onclick="showModule(3)">
+      <span class="module-num">04</span>
+      <span class="module-text">Roles, Responsibilities &amp; Safe Approach Distances</span>
+    </button>
+    <button class="module-btn" onclick="showModule(4)">
+      <span class="module-num">05</span>
+      <span class="module-text">Electromagnetic Induction Hazards &amp; Controls</span>
+    </button>
+    <button class="module-btn" onclick="showModule(5)">
+      <span class="module-num">06</span>
+      <span class="module-text">Emergency Response &amp; Incident Procedures</span>
+    </button>
+    <button class="module-btn" onclick="showModule(6)">
+      <span class="module-num">07</span>
+      <span class="module-text">Regulations, Standards &amp; Assessment</span>
+    </button>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ══════════════════════════════════════
+         MODULE 1: Understanding High Voltage Hazards
+    ══════════════════════════════════════ -->
+    <div class="module-panel active" id="module-0">
+      <div class="lesson-header">
+        <div class="lesson-eyebrow">Module 01</div>
+        <div class="lesson-title">Understanding High Voltage Hazards</div>
+      </div>
+      <p class="lesson-desc">High voltage electricity is a powerful force that enables modern life, but it also presents unique and severe dangers. By understanding these risks, you'll be better prepared to protect yourself and others, forming the foundation for all safe work practices covered in this course.</p>
+
+      <div class="objectives">
+        <div class="objectives-label">Learning Objectives</div>
+        <ul>
+          <li>Identify the main hazards associated with high voltage electricity and explain why they are dangerous.</li>
+          <li>Describe the types of injuries and damage that can result from high voltage incidents.</li>
+          <li>Recognize key terminology and definitions related to high voltage work.</li>
+          <li>Apply fundamental safety principles to reduce risk when working with or near high voltage systems.</li>
+        </ul>
+      </div>
+
+      <div class="section-heading">Key Terms and Definitions</div>
+      <p class="section-body">Review each flashcard to familiarise yourself with essential terminology before moving forward. Click to flip.</p>
+
+      <div class="flashcard-deck">
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front">
+              <div class="card-label">Term</div>
+              <p>High Voltage</p>
+              <div class="card-hint">Click to reveal →</div>
+            </div>
+            <div class="card-back">
+              <div class="card-label">Definition</div>
+              <p>A voltage exceeding 1,000 volts AC or 1,500 volts DC, as defined by industry standards and safety regulations.</p>
+            </div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front">
+              <div class="card-label">Term</div>
+              <p>Standard Electrical Work</p>
+              <div class="card-hint">Click to reveal →</div>
+            </div>
+            <div class="card-back">
+              <div class="card-label">Definition</div>
+              <p>Tasks involving lower voltages, typically below 1,000 volts AC, with less severe hazards than high voltage work.</p>
+            </div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front">
+              <div class="card-label">Term</div>
+              <p>Energised</p>
+              <div class="card-hint">Click to reveal →</div>
+            </div>
+            <div class="card-back">
+              <div class="card-label">Definition</div>
+              <p>Connected to a source of electrical supply; capable of delivering dangerous current.</p>
+            </div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front">
+              <div class="card-label">Term</div>
+              <p>De-energised</p>
+              <div class="card-hint">Click to reveal →</div>
+            </div>
+            <div class="card-back">
+              <div class="card-label">Definition</div>
+              <p>Not connected to any source of electrical supply, but not necessarily isolated from all hazards.</p>
+            </div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front">
+              <div class="card-label">Term</div>
+              <p>Arc Flash</p>
+              <div class="card-hint">Click to reveal →</div>
+            </div>
+            <div class="card-back">
+              <div class="card-label">Definition</div>
+              <p>A sudden release of energy between conductors, causing intense heat, light, and pressure that can result in severe injury.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-heading">Why High Voltage is Uniquely Hazardous</div>
+      <p class="section-body">High voltage electricity poses significantly greater dangers compared to standard electrical systems. The hazards are often not immediately apparent — risks can be invisible and silent. Even brief contact can result in severe injury or death.</p>
+
+      <div class="section-heading">The Main Hazards</div>
+      <p class="section-body">Expand each section to learn about the primary hazards. Each includes a real-world example.</p>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Severe Burns (Surface and Internal) <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">
+            <p>High voltage can cause rapid heating of skin and deep tissue, resulting in severe burns both on the surface and inside the body. Even brief exposure can lead to second-degree burns at energy levels as low as 1.2 calories per square centimeter per second.</p>
+            <br><p><strong>Example:</strong> A worker accidentally contacting a live conductor may suffer deep tissue burns that require extensive medical treatment.</p>
+          </div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Arc Flash (Energy Release, Blast Wave) <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">
+            <p>An arc flash is a sudden, explosive release of energy between conductive objects. This can create a powerful blast wave, intense heat, and airborne shrapnel, all of which pose serious risks to anyone nearby.</p>
+            <br><p><strong>Example:</strong> A tool dropped near energised equipment can trigger an arc flash, causing burns and injuries to multiple workers in the vicinity.</p>
+          </div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Involuntary Muscle Contractions (Can't Let Go) <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">
+            <p>High voltage can trigger rapid, involuntary muscle contractions, making it impossible to release a live conductor once contact is made. This increases the duration and severity of the shock.</p>
+            <br><p><strong>Consequence:</strong> A worker becomes trapped, unable to let go, with electricity continuing to flow through their body.</p>
+          </div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Fires and Explosions <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">
+            <p>High voltage incidents can ignite surrounding materials, cause explosions, and result in major damage to equipment and infrastructure. The thermal energy released can set clothing and nearby objects on fire.</p>
+            <br><p><strong>Example:</strong> An electrical fault in a high voltage panel may lead to a fire that spreads rapidly throughout a facility.</p>
+          </div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Indirect Contact / Arcing (No Direct Touch Needed) <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">
+            <p>High voltage can arc through air, creating a dangerous electrical bridge between the source and a person or object nearby. This means you can be injured without ever directly touching a live conductor.</p>
+            <br><p><strong>Example:</strong> A worker standing too close to energised equipment may be injured by an arc that jumps the gap, even without physical contact.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-heading">Fundamental Safety Principles</div>
+      <p class="section-body">Understanding and applying these key principles is essential for anyone working with high voltage systems.</p>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Assume All Circuits Are Live <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Always treat every circuit as if it is energised until you have verified otherwise. This mindset prevents accidental contact with live parts.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Use the Right PPE <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Wear insulated gloves, dielectric boots, face shields, and flame-resistant clothing designed for high voltage environments. The correct PPE can mean the difference between a close call and a serious injury.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Follow Lockout-Tagout Procedures <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Ensure all equipment is de-energised, locked, and tagged before starting any work. This process protects you and your team from unexpected energisation.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Maintain Safe Distances <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">High voltage can arc through air, so always keep the minimum safe approach distance based on voltage levels. Never assume you are safe just because you are not touching the equipment.</div>
+        </div>
+      </div>
+
+      <!-- QUIZ 1 -->
+      <div class="quiz-block" id="quiz-0-1">
+        <div class="quiz-label">Knowledge Check</div>
+        <div class="quiz-question">True or False: You should always assume all circuits are live until proven otherwise.</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-0-1', this, true)"><span class="opt-letter">A</span> True</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-0-1', this, false)"><span class="opt-letter">B</span> False</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-0-1-feedback"></div>
+        <button class="quiz-retry" id="quiz-0-1-retry" onclick="retryQuiz('quiz-0-1')">↺ Try Again</button>
+      </div>
+
+      <div class="summary-box">
+        <div class="summary-label">Lesson Summary</div>
+        <p>You explored the unique hazards of high voltage electricity, including severe burns, arc flashes, involuntary muscle contractions, and the potential for fires and explosions. You also learned why indirect contact can still result in injury.</p>
+        <p>Remember: hazard recognition and preparation are your strongest defenses against electrical incidents. Carry these lessons forward as you continue your training.</p>
+      </div>
+
+      <div class="module-nav">
+        <button class="nav-btn secondary" disabled>← Previous</button>
+        <button class="nav-btn primary" onclick="showModule(1)">Next Module →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         MODULE 2: Workplace Preparation & DNOT
+    ══════════════════════════════════════ -->
+    <div class="module-panel" id="module-1">
+      <div class="lesson-header">
+        <div class="lesson-eyebrow">Module 02</div>
+        <div class="lesson-title">Workplace Preparation &amp; DNOT Procedures</div>
+      </div>
+      <p class="lesson-desc">Before any high voltage work begins, thorough preparation and strict adherence to procedures are non-negotiable. Building on your understanding of high voltage hazards, you'll now learn the practical steps that keep you and your team safe before the work even starts.</p>
+
+      <div class="objectives">
+        <div class="objectives-label">Learning Objectives</div>
+        <ul>
+          <li>Identify the essential actions required before starting high voltage work.</li>
+          <li>Understand how to perform and participate in a job safety analysis and pre-work inspection.</li>
+          <li>Apply the correct sequence of De-energise, Lock/Tag, and Test steps to ensure a safe work environment.</li>
+        </ul>
+      </div>
+
+      <div class="section-heading">The Three Pillars of Workplace Preparation</div>
+      <p class="section-body">Explore the foundational elements that must be in place before any high voltage work begins.</p>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Training &amp; Competency <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">
+            <p>Only those who are properly trained, authorised, and competent should perform high voltage work. This includes having up-to-date site inductions and being able to demonstrate knowledge of electrical safety rules, rescue, and resuscitation procedures.</p>
+            <br><p>If you are not authorised, you must always be accompanied and supervised by someone who is.</p>
+          </div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Pre-Work Inspections <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">
+            <p>Before starting any job, a thorough job safety analysis must be completed with your entire work party. All tools and PPE should be inspected to ensure they are fit for use.</p>
+            <br><p>Testing devices must be calibrated and functioning, and warning signs and barriers need to be in place and clearly visible.</p>
+          </div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Team Readiness <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">
+            <p>High voltage work is never a solo task. Only authorised personnel should participate, and anyone not fully authorised must be supervised at all times.</p>
+            <br><p>Team communication and readiness are critical to ensure everyone understands their role and the safety procedures in place.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-heading">Pre-Work Inspection Checklist</div>
+      <p class="section-body">Review each flashcard to reinforce the key elements of a thorough pre-work inspection.</p>
+
+      <div class="flashcard-deck">
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front">
+              <div class="card-label">Checklist Item</div>
+              <p>Job Safety Analysis</p>
+              <div class="card-hint">Click to reveal →</div>
+            </div>
+            <div class="card-back">
+              <div class="card-label">What It Means</div>
+              <p>A structured review of the work to identify hazards and plan controls before starting any high voltage task.</p>
+            </div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front">
+              <div class="card-label">Checklist Item</div>
+              <p>Tool and PPE Inspection</p>
+              <div class="card-hint">Click to reveal →</div>
+            </div>
+            <div class="card-back">
+              <div class="card-label">What It Means</div>
+              <p>Carefully check all tools and personal protective equipment for damage or defects to confirm they are safe and suitable for use.</p>
+            </div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front">
+              <div class="card-label">Checklist Item</div>
+              <p>Calibration and Signage</p>
+              <div class="card-hint">Click to reveal →</div>
+            </div>
+            <div class="card-back">
+              <div class="card-label">What It Means</div>
+              <p>Confirm that all testing devices are properly calibrated and that warning signs and barriers are in place and clearly visible.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">⚠️</span>
+        <span>Preparation saves lives. Rushing or skipping any step can lead to catastrophic consequences.</span>
+      </div>
+
+      <div class="section-heading">DNOT Procedures: Your Last Line of Defence</div>
+      <p class="section-body">Do Not Operate Tag (DNOT) procedures are your critical safeguard against accidental energisation. Strictly following each step in the correct order is essential — there is no room for shortcuts when safety is on the line.</p>
+
+      <div class="steps">
+        <div class="step-card" data-num="1">
+          <div class="step-title">De-energise</div>
+          <div class="step-body">Turn off and isolate all sources of electrical energy. Verify that all switches and disconnects are in the off position and that no power is present.</div>
+        </div>
+        <div class="step-card" data-num="2">
+          <div class="step-title">Lock &amp; Tag</div>
+          <div class="step-body">Attach locks and Do Not Operate tags to all switches and disconnects to prevent accidental re-energisation while work is in progress.</div>
+        </div>
+        <div class="step-card" data-num="3">
+          <div class="step-title">Test</div>
+          <div class="step-body">Use approved testing devices to confirm that no voltage is present. Always test after de-energising and locking/tagging, never before.</div>
+        </div>
+        <div class="step-card" data-num="4">
+          <div class="step-title">Begin Work</div>
+          <div class="step-body">Only after all previous steps are completed and confirmed should work begin. Skipping or reordering steps can result in serious injury or death.</div>
+        </div>
+      </div>
+
+      <div class="section-heading">What Can Go Wrong?</div>
+      <p class="section-body">Explore the risks associated with skipping any step in the DNOT procedure.</p>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Skipping De-energising <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">If you fail to de-energise equipment, live voltage may still be present, putting anyone who touches it at immediate risk of severe shock or electrocution. Even a momentary lapse can result in life-threatening injuries.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Skipping Lockout/Tagout <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Without locks and tags, someone else could unknowingly re-energise the equipment while you are working on it. This can cause sudden, unexpected energisation and catastrophic injury.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Skipping Voltage Testing <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Assuming equipment is safe without testing can lead to a "false safe" situation, where hidden voltage remains present. This step is your final confirmation that it is truly safe to begin work.</div>
+        </div>
+      </div>
+
+      <!-- QUIZ 2 -->
+      <div class="quiz-block" id="quiz-1-1">
+        <div class="quiz-label">Knowledge Check</div>
+        <div class="quiz-question">You're preparing to work on a high voltage switch. The area is clear. What is the FIRST step in the DNOT process?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-1-1', this, false)"><span class="opt-letter">A</span> Apply locks and tags</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-1-1', this, true)"><span class="opt-letter">B</span> De-energise all electrical sources</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-1-1', this, false)"><span class="opt-letter">C</span> Test for absence of voltage</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-1-1', this, false)"><span class="opt-letter">D</span> Begin work</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-1-1-feedback"></div>
+        <button class="quiz-retry" id="quiz-1-1-retry" onclick="retryQuiz('quiz-1-1')">↺ Try Again</button>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">🔒</span>
+        <span>Strict compliance with DNOT procedures is mandatory — no shortcuts, no exceptions.</span>
+      </div>
+
+      <div class="summary-box">
+        <div class="summary-label">Lesson Summary</div>
+        <p>You learned about the three pillars of workplace preparation: training and competency, thorough pre-work inspections, and team readiness. You also mastered the DNOT procedure — De-energise, Lock/Tag, Test, and Begin Work — and saw how skipping any step can have severe consequences.</p>
+        <p>Next, you'll explore the hierarchy of controls and how to select the right PPE to further reduce risk.</p>
+      </div>
+
+      <div class="module-nav">
+        <button class="nav-btn secondary" onclick="showModule(0)">← Previous</button>
+        <button class="nav-btn primary" onclick="showModule(2)">Next Module →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         MODULE 3: Hierarchy of Controls & PPE
+    ══════════════════════════════════════ -->
+    <div class="module-panel" id="module-2">
+      <div class="lesson-header">
+        <div class="lesson-eyebrow">Module 03</div>
+        <div class="lesson-title">Hierarchy of Controls &amp; PPE Selection</div>
+      </div>
+      <p class="lesson-desc">In this lesson, you'll learn how electrical risks are managed using a structured approach, and why personal protective equipment (PPE) is considered the last line of defence. Understanding and applying these concepts is essential for keeping yourself and your team safe.</p>
+
+      <div class="objectives">
+        <div class="objectives-label">Learning Objectives</div>
+        <ul>
+          <li>Explain the hierarchy of controls for electrical safety.</li>
+          <li>Describe the role and limitations of PPE.</li>
+          <li>Apply the five-step process for selecting PPE.</li>
+          <li>Identify the minimum PPE requirements for high voltage work.</li>
+          <li>Match PPE items to the hazards they protect against.</li>
+        </ul>
+      </div>
+
+      <div class="section-heading">The Hierarchy of Controls</div>
+      <p class="section-body">Each level of the hierarchy plays a specific role in reducing danger, with PPE always being the last resort.</p>
+
+      <div class="hierarchy">
+        <div class="hier-level">
+          <div class="hier-bar" style="background:#e03d3d;"></div>
+          <div class="hier-content">
+            <div class="hier-title" style="color:#e03d3d;">1. Elimination</div>
+            <div class="hier-desc">Completely removing the electrical hazard from the workplace. Most effective control, but not always possible. Example: decommissioning unused high voltage equipment.</div>
+          </div>
+        </div>
+        <div class="hier-level">
+          <div class="hier-bar" style="background:#f5803d;"></div>
+          <div class="hier-content">
+            <div class="hier-title" style="color:#f5803d;">2. Substitution</div>
+            <div class="hier-desc">Replacing a hazardous process or equipment with something less dangerous, such as using lower voltage equipment where possible.</div>
+          </div>
+        </div>
+        <div class="hier-level">
+          <div class="hier-bar" style="background:#f5b800;"></div>
+          <div class="hier-content">
+            <div class="hier-title" style="color:#f5b800;">3. Isolation</div>
+            <div class="hier-desc">Physically separating people from the hazard using barriers, locked switchrooms, or remote switching devices.</div>
+          </div>
+        </div>
+        <div class="hier-level">
+          <div class="hier-bar" style="background:#4da6ff;"></div>
+          <div class="hier-content">
+            <div class="hier-title" style="color:#4da6ff;">4. Engineering Controls</div>
+            <div class="hier-desc">Design features that minimise risk: interlocks, insulation, and automatic shutdown systems built into equipment.</div>
+          </div>
+        </div>
+        <div class="hier-level">
+          <div class="hier-bar" style="background:#8490a8;"></div>
+          <div class="hier-content">
+            <div class="hier-title" style="color:#8490a8;">5. Administrative Controls</div>
+            <div class="hier-desc">Procedures, training, signage, and supervision. Most effective when combined with other controls.</div>
+          </div>
+        </div>
+        <div class="hier-level">
+          <div class="hier-bar" style="background:#2dd58a;"></div>
+          <div class="hier-content">
+            <div class="hier-title" style="color:#2dd58a;">6. Personal Protective Equipment (PPE)</div>
+            <div class="hier-desc">The final barrier. PPE does not eliminate the hazard but provides protection if all other controls fail. Always use in conjunction with higher-level controls, never as the sole protection.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">🛡️</span>
+        <span>PPE is your last line of defence — never rely on it as your only protection.</span>
+      </div>
+
+      <div class="section-heading">Five-Step PPE Selection Process</div>
+      <p class="section-body">Choosing the right PPE is not guesswork — it requires a systematic approach.</p>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Step 1: Understand the Hazard <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Identify all electrical and arc hazards in your work area. Recognise sources of high voltage, potential for arc flash, and other risks. Example: working near energised switchgear presents both shock and arc flash hazards.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Step 2: Identify Assets with Arc Hazard Potential <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Determine which equipment or locations could produce an arc flash — switchgear, transformers, and circuit breakers. Not all equipment poses the same risk; prioritise areas with the highest arc hazard potential.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Step 3: Quantify the Hazard <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Calculate the incident energy or arc flash level for each identified asset, measured in calories per square centimeter. This must be done by qualified personnel. Knowing the exact energy level guides PPE selection.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Step 4: Assess the Risk <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Use your organisation's risk management framework to evaluate the likelihood and consequences of an arc flash. Consider work duration, proximity, and environmental conditions.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Step 5: Select Appropriate PPE <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Based on the calculated hazard and risk assessment, choose PPE that meets or exceeds the required arc rating and complies with relevant standards. Always consult qualified personnel and never select PPE based on assumptions.</div>
+        </div>
+      </div>
+
+      <!-- QUIZ 3 -->
+      <div class="quiz-block" id="quiz-2-1">
+        <div class="quiz-label">Knowledge Check</div>
+        <div class="quiz-question">Which step in the PPE selection process involves calculating the incident energy exposure level?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-2-1', this, false)"><span class="opt-letter">A</span> Understand the Hazard</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-2-1', this, false)"><span class="opt-letter">B</span> Identify Assets with Arc Hazard Potential</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-2-1', this, true)"><span class="opt-letter">C</span> Quantify the Hazard</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-2-1', this, false)"><span class="opt-letter">D</span> Select Appropriate PPE</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-2-1-feedback"></div>
+        <button class="quiz-retry" id="quiz-2-1-retry" onclick="retryQuiz('quiz-2-1')">↺ Try Again</button>
+      </div>
+
+      <div class="section-heading">Minimum PPE for High Voltage Work</div>
+      <p class="section-body">Review each flashcard to learn the essential PPE items required.</p>
+
+      <div class="flashcard-deck">
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">PPE Item</div><p>Wrist to Ankle Clothing</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Protection</div><p>Arc-rated shirts and trousers or overalls covering all exposed skin, reducing the risk of burns and arc flash injury.</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">PPE Item</div><p>Enclosed Footwear with Hard Toe</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Protection</div><p>Boots or shoes with a hard toe and full enclosure to protect feet from electrical hazards and falling objects.</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">PPE Item</div><p>Safety Glasses</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Protection</div><p>Eye protection that shields against arc flash, flying debris, and projectiles during electrical work.</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">PPE Item</div><p>Safety Helmet</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Protection</div><p>Head protection that guards against falling objects, bumps, and may provide electrical insulation.</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">PPE Item</div><p>Protective Gloves</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Protection</div><p>Insulated gloves designed to protect hands from electrical shock, burns, and cuts.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">🔬</span>
+        <span>Selecting the right PPE is a science — always base your decisions on hazard assessment and standards, never assumptions.</span>
+      </div>
+
+      <div class="summary-box">
+        <div class="summary-label">Lesson Summary</div>
+        <p>You learned how the hierarchy of controls structures risk management in high voltage environments, with PPE as the final layer of protection. You explored the five-step process for selecting PPE and reviewed the minimum requirements for high voltage work.</p>
+        <p>Next, you'll learn about roles, responsibilities, and safe approach distances — key elements for coordinated and compliant high voltage work.</p>
+      </div>
+
+      <div class="module-nav">
+        <button class="nav-btn secondary" onclick="showModule(1)">← Previous</button>
+        <button class="nav-btn primary" onclick="showModule(3)">Next Module →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         MODULE 4: Roles, Responsibilities & SAD
+    ══════════════════════════════════════ -->
+    <div class="module-panel" id="module-3">
+      <div class="lesson-header">
+        <div class="lesson-eyebrow">Module 04</div>
+        <div class="lesson-title">Roles, Responsibilities &amp; Safe Approach Distances</div>
+      </div>
+      <p class="lesson-desc">True safety depends on clear roles, strict authorisation, and a disciplined approach to proximity hazards. In this lesson, you'll learn how defined responsibilities and safe approach distances work together to prevent accidents.</p>
+
+      <div class="objectives">
+        <div class="objectives-label">Learning Objectives</div>
+        <ul>
+          <li>Identify the three main roles and their responsibilities.</li>
+          <li>Explain access permit and isolation requirements.</li>
+          <li>Apply safe approach distances based on voltage.</li>
+          <li>Recognise special considerations for mobile plant and equipment.</li>
+          <li>Understand the critical function of supervision and separation.</li>
+        </ul>
+      </div>
+
+      <div class="section-heading">Key Personnel Roles</div>
+      <p class="section-body">The three essential roles form the backbone of safe high voltage operations. Each role has specific qualifications, responsibilities, and limitations.</p>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Authorised Person <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Someone with technical knowledge or sufficient experience, assessed as competent, and officially approved to carry out certain functions under safety rules. Responsible for issuing access permits, supervising work, and ensuring all safety procedures are followed. Example: overseeing the isolation and earthing of equipment before maintenance begins.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Instructed Person <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Works under the direct supervision of an Authorised Person. Trained to avoid electrical dangers but cannot work independently on high voltage systems. Example: may assist with tasks during a shutdown, but only while being closely supervised.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Safety Observer <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Specifically assigned to monitor work near electrical apparatus, warn against unsafe approaches, and provide emergency assistance if needed. Must remain vigilant and cannot be assigned other duties while observing. Example: may halt work if someone or equipment gets too close to an exclusion zone.</div>
+        </div>
+      </div>
+
+      <div class="section-heading">Access Permit and Isolation</div>
+
+      <div class="flashcard-deck">
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">Concept</div><p>What is an Access Permit?</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Answer</div><p>An official document confirming that all isolation, de-energisation, and earthing procedures have been completed, granting permission for work to proceed.</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">Concept</div><p>Isolation — What and Why?</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Answer</div><p>Physically disconnecting all electrical sources to prevent any possibility of energisation during work, ensuring a safe environment.</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">Concept</div><p>Prove Dead and Earthing</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Answer</div><p>Verifying the absence of voltage with approved testers and applying earths at the worksite to protect against accidental energisation or induced voltage.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUIZ 4 -->
+      <div class="quiz-block" id="quiz-3-1">
+        <div class="quiz-label">Knowledge Check</div>
+        <div class="quiz-question">Which role is responsible for issuing access permits?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-3-1', this, false)"><span class="opt-letter">A</span> Instructed Person</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-3-1', this, false)"><span class="opt-letter">B</span> Safety Observer</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-3-1', this, true)"><span class="opt-letter">C</span> Authorised Person</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-3-1', this, false)"><span class="opt-letter">D</span> Site Visitor</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-3-1-feedback"></div>
+        <button class="quiz-retry" id="quiz-3-1-retry" onclick="retryQuiz('quiz-3-1')">↺ Try Again</button>
+      </div>
+
+      <div class="section-heading">Safe Approach Distances (SAD)</div>
+      <p class="section-body">Safe Approach Distances create exclusion zones around energised conductors. Even when equipment appears safe, maintaining these distances is vital to prevent serious injury or fatality.</p>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>Voltage Level</th><th>Personnel SAD</th><th>Mobile Plant SAD</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Up to 300 V</td><td>300 mm</td><td>—</td></tr>
+          <tr><td>15 kV</td><td>640 mm</td><td>—</td></tr>
+          <tr><td>138–145 kV</td><td>1,300 mm</td><td>—</td></tr>
+          <tr><td>500–550 kV</td><td>3,350 mm</td><td>—</td></tr>
+          <tr><td>765–800 kV</td><td>4,670 mm</td><td>10 m</td></tr>
+        </tbody>
+      </table>
+
+      <div class="section-heading">Mobile Plant Considerations</div>
+
+      <div class="flashcard-deck">
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">Mobile Plant</div><p>Why does mobile plant require greater distances?</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Answer</div><p>Mobile plant can move or sway unexpectedly, increasing the risk of breaching exclusion zones. Greater distances account for this movement.</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">Mobile Plant</div><p>No established earth available — what now?</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Answer</div><p>A temporary earth spike shall be driven into the ground to bond the mobile plant and ensure safety.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUIZ 4b -->
+      <div class="quiz-block" id="quiz-3-2">
+        <div class="quiz-label">Knowledge Check</div>
+        <div class="quiz-question">Can a Safety Observer be assigned other tasks while responsible for observing safe approach distances?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-3-2', this, false)"><span class="opt-letter">A</span> Yes, if the tasks are minor</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-3-2', this, false)"><span class="opt-letter">B</span> Yes, if approved by an Authorised Person</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-3-2', this, true)"><span class="opt-letter">C</span> No, the observer must focus solely on observing</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-3-2', this, false)"><span class="opt-letter">D</span> Only during breaks in work</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-3-2-feedback"></div>
+        <button class="quiz-retry" id="quiz-3-2-retry" onclick="retryQuiz('quiz-3-2')">↺ Try Again</button>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">📏</span>
+        <span>Maintaining safe approach distances and clearly defined roles is not just a best practice — it is a lifesaving measure.</span>
+      </div>
+
+      <div class="summary-box">
+        <div class="summary-label">Lesson Summary</div>
+        <p>You learned how clearly defined roles, strict authorisation, and safe approach distances work together to protect everyone on a high voltage worksite. Only Authorised Persons can issue permits, Instructed Persons must always be supervised, and Safety Observers play a critical role in enforcing exclusion zones.</p>
+        <p>Next, you'll explore electromagnetic induction hazards and advanced control measures.</p>
+      </div>
+
+      <div class="module-nav">
+        <button class="nav-btn secondary" onclick="showModule(2)">← Previous</button>
+        <button class="nav-btn primary" onclick="showModule(4)">Next Module →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         MODULE 5: Electromagnetic Induction
+    ══════════════════════════════════════ -->
+    <div class="module-panel" id="module-4">
+      <div class="lesson-header">
+        <div class="lesson-eyebrow">Module 05</div>
+        <div class="lesson-title">Electromagnetic Induction Hazards &amp; Controls</div>
+      </div>
+      <p class="lesson-desc">Working near high voltage lines involves more than just avoiding direct contact — some of the most dangerous hazards are invisible. Electromagnetic induction can create lethal voltages on equipment and conductors, even when they appear de-energised.</p>
+
+      <div class="objectives">
+        <div class="objectives-label">Learning Objectives</div>
+        <ul>
+          <li>Explain electromagnetic induction hazards.</li>
+          <li>Distinguish electric and magnetic fields.</li>
+          <li>Recognise exposure limits and physiological effects.</li>
+          <li>Describe equipotential zone setup steps.</li>
+          <li>Verify induction hazard controls before work.</li>
+        </ul>
+      </div>
+
+      <div class="section-heading">Understanding Electromagnetic Induction</div>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            What is Electromagnetic Induction? <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Electromagnetic induction occurs when electric and magnetic fields from energised high voltage lines induce voltages onto nearby de-energised or non-commissioned conductors. A de-energised line running parallel to an energised line can become dangerously charged, even if not directly connected to a power source. This phenomenon is invisible but can create hazardous conditions for workers who may not expect voltage to be present.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Why is it Dangerous? <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Induced voltages can be high enough to cause severe electric shock or even death. These voltages may appear on lines or equipment that have been de-energised, creating a false sense of security. If a worker touches a conductor with induced voltage, current can flow through their body to ground, resulting in serious injury. Strict controls and awareness are essential.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Where Does it Occur? <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Induction hazards are most common near energised and de-energised parallel lines, at stringing sites, and in environments where conductive objects run close to high voltage transmission lines. Examples: fences, pipelines, rail lines, or new lines being constructed beside live circuits.</div>
+        </div>
+      </div>
+
+      <div class="section-heading">Electric Fields vs. Magnetic Fields</div>
+
+      <div class="flashcard-deck">
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">Field Type</div><p>Electric Fields</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">How They Work</div><p>Produced by voltage on energised conductors. They can induce voltages on nearby objects, especially if insulated from ground.</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">Field Type</div><p>Magnetic Fields</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">How They Work</div><p>Created by current flowing through transmission lines. They induce voltages in parallel conductive objects such as pipelines or de-energised lines.</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">Concept</div><p>Equipotential Field</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Definition</div><p>Lines of equal voltage in the air around conductors. Understanding these helps prevent dangerous voltage differences at worksites.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-heading">Exposure Limits</div>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Electric Field Exposure Limits <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Occupational exposure to electric fields is limited to <strong>10 kV/m</strong>, while the general public limit is <strong>5 kV/m</strong>. Near energised conductors, electric field strengths can reach up to 16 kV/m at the surface of high voltage lines. Exceeding these limits increases the risk of electric shock and other health hazards.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Magnetic Field Exposure Limits <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">For magnetic fields, the occupational exposure limit is <strong>10,000 mG</strong>, and for the general public it is <strong>2,000 mG</strong>. For example, at 100 mm from a conductor carrying 500A, the field can reach 10,000 mG. Occupational limits are higher because workers are generally healthier and better able to withstand exposure.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Physiological Effects <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Exposure to strong electric and magnetic fields can cause nerve and muscle stimulation, unpleasant skin discharges, and visual phenomena called phosphenes (flashing lights in the eyes). Understanding these effects helps workers recognise symptoms of overexposure.</div>
+        </div>
+      </div>
+
+      <!-- QUIZ 5 -->
+      <div class="quiz-block" id="quiz-4-1">
+        <div class="quiz-label">Knowledge Check</div>
+        <div class="quiz-question">What is the occupational exposure limit for electric fields near high voltage conductors?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-4-1', this, false)"><span class="opt-letter">A</span> 5 kV/m</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-4-1', this, true)"><span class="opt-letter">B</span> 10 kV/m</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-4-1', this, false)"><span class="opt-letter">C</span> 15 kV/m</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-4-1', this, false)"><span class="opt-letter">D</span> 20 kV/m</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-4-1-feedback"></div>
+        <button class="quiz-retry" id="quiz-4-1-retry" onclick="retryQuiz('quiz-4-1')">↺ Try Again</button>
+      </div>
+
+      <div class="section-heading">Six-Step Equipotential Zone Setup</div>
+      <p class="section-body">Follow these six steps to establish a safe equipotential zone at worksites where induction hazards are present. Each step is essential.</p>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Step 1: Place Earth Mats Around Equipment <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Lay earth mats around the perimeter of all machinery and equipment. Ensure there are no gaps where a worker could step off the mat onto bare ground. This provides a continuous safe surface.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Step 2: Bond All Mats Together <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Connect all mats to each other, earth stakes, and machinery using proper earthing lugs and bonding leads. This ensures all surfaces are at the same potential, reducing step and touch voltages.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Step 3: Install Inner Perimeter Fencing <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Set up fencing around the inner edge of the matting to prevent accidental step-off. This physical barrier keeps workers within the protected zone.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Step 4: Install Outer Secondary Fencing <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Place a secondary fence outside the inner fence. The size and shape should be adapted to the specific site and equipment layout for added protection.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Step 5: Bond All Conductive Items Inside Fencing <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Ensure all conductive objects within the fenced area are bonded to the earth mats. This prevents hazardous voltage differences from developing on tools or equipment.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Step 6: Create Entry/Exit with Insulated Walkway <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Install insulated rubber matting between the inner and outer fences at a designated entry/exit point. This allows safe access for personnel entering or leaving the zone.</div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">⚡</span>
+        <span>Effective control of electromagnetic induction hazards is essential — thorough setup and verification of equipotential zones are critical for ensuring safety and saving lives.</span>
+      </div>
+
+      <div class="summary-box">
+        <div class="summary-label">Lesson Summary</div>
+        <p>You explored the invisible but critical risks of electromagnetic induction, learning how electric and magnetic fields can create hazardous voltages even on de-energised equipment. You now understand the difference between electric and magnetic fields, the importance of exposure limits, and the step-by-step process for setting up and verifying equipotential zones.</p>
+        <p>In the next lesson, you'll learn how to respond to electrical incidents and emergencies.</p>
+      </div>
+
+      <div class="module-nav">
+        <button class="nav-btn secondary" onclick="showModule(3)">← Previous</button>
+        <button class="nav-btn primary" onclick="showModule(5)">Next Module →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         MODULE 6: Emergency Response
+    ══════════════════════════════════════ -->
+    <div class="module-panel" id="module-5">
+      <div class="lesson-header">
+        <div class="lesson-eyebrow">Module 06</div>
+        <div class="lesson-title">Emergency Response &amp; Incident Procedures</div>
+      </div>
+      <p class="lesson-desc">Electrical emergencies can happen even in the safest workplaces. Knowing how to respond quickly and correctly is just as important as preventing incidents in the first place. Being prepared for emergencies can save lives and minimise harm — your response matters.</p>
+
+      <div class="objectives">
+        <div class="objectives-label">Learning Objectives</div>
+        <ul>
+          <li>Identify prerequisites for safe rescue operations.</li>
+          <li>Apply step-by-step victim rescue procedures.</li>
+          <li>Respond appropriately to mobile plant electrical contact incidents.</li>
+          <li>Understand and execute incident reporting and site preservation.</li>
+          <li>Recall critical actions in electrical emergencies.</li>
+        </ul>
+      </div>
+
+      <div class="section-heading">Prerequisites for Safe Rescue Operations</div>
+      <p class="section-body">Before attempting any rescue in an electrical emergency, certain safety conditions must be met.</p>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Isolation, Proving De-energised, and Earthing <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">All conductors must be isolated, proved de-energised, and earthed at every source by an Authorised Person before anyone attempts a rescue within safe approach distances. Skipping this step puts rescuers at extreme risk of becoming victims themselves. Never assume a conductor is safe — always follow the full isolation and earthing procedure.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Application of Working Earths <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">After verifying that the area is de-energised, working earths must be applied at the location. This ensures that any unexpected re-energisation or residual voltage is safely diverted, further protecting everyone involved.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Application of Normal Safety Precautions <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Once the immediate emergency is under control, standard safety procedures must be restored as soon as possible. This includes proper documentation, incident investigation, and returning to established safety protocols.</div>
+        </div>
+      </div>
+
+      <div class="section-heading">Step-by-Step Victim Rescue Procedure</div>
+
+      <div class="flashcard-deck">
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">Step 1</div><p>Do Not Touch the Victim Directly</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Action</div><p>Never touch a victim who is in contact with a live conductor. Use a non-conductive object to separate them from the electrical source.</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">Step 2</div><p>Call Emergency Services</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Action</div><p>Immediately call for professional help. Provide clear information about the location and nature of the incident.</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">Step 3</div><p>Administer First Aid Safely</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Action</div><p>Only begin CPR or treat burns after the electrical danger has been eliminated. Never attempt first aid while the victim is still in contact with electricity.</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">Step 4</div><p>Preserve the Site</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Action</div><p>Take only actions needed to prevent further harm. Leave the scene undisturbed for investigation once everyone is safe.</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">Step 5</div><p>Report All Incidents</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Action</div><p>Report every incident, even minor ones, to your supervisor as soon as possible. Proper reporting helps prevent future accidents.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUIZ 6a -->
+      <div class="quiz-block" id="quiz-5-1">
+        <div class="quiz-label">Knowledge Check</div>
+        <div class="quiz-question">What must be completed before attempting a rescue inside safe approach distances?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-5-1', this, true)"><span class="opt-letter">A</span> Conductors must be isolated, proved de-energised, and earthed</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-5-1', this, false)"><span class="opt-letter">B</span> Emergency services must arrive on site</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-5-1', this, false)"><span class="opt-letter">C</span> A rescue plan must be documented</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-5-1', this, false)"><span class="opt-letter">D</span> All PPE must be removed</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-5-1-feedback"></div>
+        <button class="quiz-retry" id="quiz-5-1-retry" onclick="retryQuiz('quiz-5-1')">↺ Try Again</button>
+      </div>
+
+      <div class="section-heading">Emergency Response for Mobile Plant Contact</div>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Stay on the Vehicle if Safe <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">If you are on the vehicle, remain there unless it is unsafe to do so. The vehicle may be energised, and stepping off could complete a circuit to ground, resulting in severe injury or death.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Warn Personnel on the Ground <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Alert everyone nearby to stay clear of the vehicle and surrounding area. The ground around the vehicle may be energised, creating step and touch potential hazards for anyone approaching.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Do Not Attempt Rescue Until Isolated &amp; Earthed <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">No one should attempt to rescue or approach the vehicle until the electrical lines and equipment have been isolated and earthed by qualified personnel.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            If Necessary, Jump Clear <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">If you must leave the vehicle due to immediate danger (such as fire), jump well clear without touching the vehicle and ground at the same time. Land with your feet together and shuffle away without lifting your feet to avoid step potential.</div>
+        </div>
+      </div>
+
+      <!-- QUIZ 6b -->
+      <div class="quiz-block" id="quiz-5-2">
+        <div class="quiz-label">Knowledge Check</div>
+        <div class="quiz-question">Mobile plant has accidentally contacted live electrical equipment. What should the operator do?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-5-2', this, false)"><span class="opt-letter">A</span> Immediately exit the vehicle</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-5-2', this, true)"><span class="opt-letter">B</span> Stay on the vehicle if safe until confirmed the equipment is no longer energised</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-5-2', this, false)"><span class="opt-letter">C</span> Call for help while touching the vehicle frame</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-5-2', this, false)"><span class="opt-letter">D</span> Attempt to reverse away from the contact</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-5-2-feedback"></div>
+        <button class="quiz-retry" id="quiz-5-2-retry" onclick="retryQuiz('quiz-5-2')">↺ Try Again</button>
+      </div>
+
+      <div class="section-heading">Incident Reporting and Site Preservation</div>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Reporting Requirements <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">All incidents, no matter how minor, must be reported to your immediate supervisor as soon as possible. Prompt reporting ensures that hazards are addressed and helps prevent future incidents. Failing to report can allow dangerous conditions to go unnoticed and uncorrected.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Preserving the Site <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Only take actions necessary to prevent further harm or damage. Leave the scene undisturbed so investigators can determine the cause and prevent recurrence. Disturbing the site can destroy evidence and hinder the investigation process.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            Role of Incident Investigation <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">Incident investigations identify root causes and help improve safety procedures. Your accurate reporting and site preservation contribute to a safer workplace for everyone.</div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">🚨</span>
+        <span>In electrical emergencies, every second counts — your knowledge and disciplined response protect both lives and livelihoods.</span>
+      </div>
+
+      <div class="summary-box">
+        <div class="summary-label">Lesson Summary</div>
+        <p>This lesson covered the essential steps for responding to electrical emergencies: understanding rescue prerequisites, following a step-by-step victim rescue procedure, applying the correct protocol for mobile plant contact, and ensuring thorough incident reporting and site preservation.</p>
+        <p>In the final lesson, you'll learn about the regulations and standards that underpin all high voltage electrical safety practices.</p>
+      </div>
+
+      <div class="module-nav">
+        <button class="nav-btn secondary" onclick="showModule(4)">← Previous</button>
+        <button class="nav-btn primary" onclick="showModule(6)">Final Module →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         MODULE 7: Regulations, Standards & Assessment
+    ══════════════════════════════════════ -->
+    <div class="module-panel" id="module-6">
+      <div class="lesson-header">
+        <div class="lesson-eyebrow">Module 07 — Final</div>
+        <div class="lesson-title">Regulations, Standards &amp; Course Assessment</div>
+      </div>
+      <p class="lesson-desc">High voltage electrical safety is built on a foundation of strict regulations and industry standards. These rules are not just guidelines — they are legal and professional requirements that protect lives and ensure safe workplaces.</p>
+
+      <div class="objectives">
+        <div class="objectives-label">Learning Objectives</div>
+        <ul>
+          <li>Identify key organisations and standards governing high voltage electrical safety.</li>
+          <li>Explain the importance of compliance and ongoing training.</li>
+          <li>Locate and interpret relevant standards for application in your workplace.</li>
+          <li>Demonstrate understanding through assessment activities.</li>
+        </ul>
+      </div>
+
+      <div class="section-heading">Key Organisations and Standards</div>
+
+      <div class="accordion">
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            IEC — International Electrotechnical Commission <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">A global organisation that develops international standards for electrical, electronic, and related technologies. IEC standards define voltage thresholds and testing procedures used in high voltage operations. Following IEC standards ensures equipment and procedures meet internationally recognised safety levels.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            OSHA — Occupational Safety and Health Administration <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">The primary regulatory body for workplace safety in the United States. OSHA standards are legally enforceable and establish minimum safety requirements for employers and workers, including those related to electrical hazards. OSHA mandates lockout/tagout procedures and safe approach distances for high voltage work. Compliance is mandatory for all U.S. workplaces.</div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-trigger" onclick="toggleAcc(this)">
+            NFPA 70E — National Fire Protection Association <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">A standard focused specifically on electrical safety in the workplace. Provides detailed guidance on safe work practices, selection of PPE, and arc flash hazard assessment. NFPA 70E outlines how to determine the correct PPE for various electrical tasks and how to assess arc flash boundaries. Adhering to NFPA 70E helps organisations minimise the risk of electrical injuries.</div>
+        </div>
+      </div>
+
+      <div class="section-heading">Applying Standards on the Job</div>
+
+      <div class="flashcard-deck">
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">Question</div><p>Why is compliance with standards and regulations essential?</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Answer</div><p>Legal, ethical, and practical reasons make following standards non-negotiable. Compliance protects lives, avoids penalties, and upholds professional reputation.</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">Question</div><p>Where can you find current standards and regulations?</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Answer</div><p>Access up-to-date standards through your organisation's safety resources, by consulting supervisors or safety personnel, and by regularly reviewing official updates.</p></div>
+          </div>
+        </div>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="card-front"><div class="card-label">Question</div><p>Why is ongoing training and competency assessment important?</p><div class="card-hint">Click to reveal →</div></div>
+            <div class="card-back"><div class="card-label">Answer</div><p>Regular assessment and refresher training are vital to ensure you remain compliant and up to date with the latest safety requirements.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">📋</span>
+        <span>Compliance with regulations and standards is not optional; it forms the foundation of every safe high voltage workplace.</span>
+      </div>
+
+      <!-- ── FINAL ASSESSMENTS ── -->
+      <div class="section-heading">Course Assessment</div>
+      <p class="section-body">Test your understanding of the complete course material. Answer all questions below.</p>
+
+      <!-- Assessment Q1 -->
+      <div class="quiz-block" id="quiz-6-1">
+        <div class="quiz-label">Assessment Question 1</div>
+        <div class="quiz-question">Which of the following is a regulation or standard that publishes guidelines for high voltage safety?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-1', this, false)"><span class="opt-letter">A</span> ISO 9001</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-1', this, true)"><span class="opt-letter">B</span> NFPA 70E</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-1', this, false)"><span class="opt-letter">C</span> ANSI Z87.1</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-1', this, false)"><span class="opt-letter">D</span> EPA Standards</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-6-1-feedback"></div>
+        <button class="quiz-retry" id="quiz-6-1-retry" onclick="retryQuiz('quiz-6-1')">↺ Try Again</button>
+      </div>
+
+      <!-- Assessment Q2 -->
+      <div class="quiz-block" id="quiz-6-2">
+        <div class="quiz-label">Assessment Question 2</div>
+        <div class="quiz-question">Which of the following is a primary hazard of high voltage electricity?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-2', this, true)"><span class="opt-letter">A</span> Severe burns</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-2', this, false)"><span class="opt-letter">B</span> Loud noise</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-2', this, false)"><span class="opt-letter">C</span> Poor lighting</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-2', this, false)"><span class="opt-letter">D</span> Slippery floors</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-6-2-feedback"></div>
+        <button class="quiz-retry" id="quiz-6-2-retry" onclick="retryQuiz('quiz-6-2')">↺ Try Again</button>
+      </div>
+
+      <!-- Assessment Q3 (multi-select shown as single-best) -->
+      <div class="quiz-block" id="quiz-6-3">
+        <div class="quiz-label">Assessment Question 3</div>
+        <div class="quiz-question">Which minimum PPE item is required for high voltage work to protect your eyes?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-3', this, false)"><span class="opt-letter">A</span> High visibility vest</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-3', this, true)"><span class="opt-letter">B</span> Safety glasses</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-3', this, false)"><span class="opt-letter">C</span> Respirator</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-3', this, false)"><span class="opt-letter">D</span> Ear defenders</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-6-3-feedback"></div>
+        <button class="quiz-retry" id="quiz-6-3-retry" onclick="retryQuiz('quiz-6-3')">↺ Try Again</button>
+      </div>
+
+      <!-- Assessment Q4 -->
+      <div class="quiz-block" id="quiz-6-4">
+        <div class="quiz-label">Assessment Question 4</div>
+        <div class="quiz-question">What is the first step of the DNOT procedure?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-4', this, true)"><span class="opt-letter">A</span> De-energise all electrical sources</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-4', this, false)"><span class="opt-letter">B</span> Apply locks and tags</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-4', this, false)"><span class="opt-letter">C</span> Test for absence of voltage</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-4', this, false)"><span class="opt-letter">D</span> Begin work</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-6-4-feedback"></div>
+        <button class="quiz-retry" id="quiz-6-4-retry" onclick="retryQuiz('quiz-6-4')">↺ Try Again</button>
+      </div>
+
+      <!-- Assessment Q5 -->
+      <div class="quiz-block" id="quiz-6-5">
+        <div class="quiz-label">Assessment Question 5</div>
+        <div class="quiz-question">True or False: A high voltage of 1,000 V AC or above is defined as high voltage by industry standards.</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-5', this, true)"><span class="opt-letter">A</span> True — high voltage is above 1,000 V AC or 1,500 V DC</button>
+          <button class="quiz-option" onclick="answerQuiz('quiz-6-5', this, false)"><span class="opt-letter">B</span> False — high voltage only applies above 10,000 V</button>
+        </div>
+        <div class="quiz-feedback" id="quiz-6-5-feedback"></div>
+        <button class="quiz-retry" id="quiz-6-5-retry" onclick="retryQuiz('quiz-6-5')">↺ Try Again</button>
+      </div>
+
+      <div class="completion-banner">
+        <h2>🎉 Course Complete</h2>
+        <p>Well done! You've demonstrated your understanding of high voltage electrical safety — your commitment to learning keeps you and your team safe.</p>
+        <br>
+        <p>Throughout this course, you explored: recognising hazards, following strict procedures, selecting and using the right PPE, understanding roles and responsibilities, controlling invisible risks like electromagnetic induction, responding effectively to emergencies, and complying with all relevant regulations and standards.</p>
+        <br>
+        <p><em>Remember, safety is not a one-time achievement — it's an ongoing commitment. Continue your professional development, regularly review updated standards, and lead by example to foster a culture of safety in your workplace.</em></p>
+      </div>
+
+      <div class="module-nav">
+        <button class="nav-btn secondary" onclick="showModule(5)">← Previous</button>
+        <button class="nav-btn primary" disabled>Course Complete ✓</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  let currentModule = 0;
+
+  function showModule(idx) {
+    document.querySelectorAll('.module-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.module-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('module-' + idx).classList.add('active');
+    document.querySelectorAll('.module-btn')[idx].classList.add('active');
+    currentModule = idx;
+    document.getElementById('progress-pill').textContent = (idx + 1) + ' / 7';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // mark previous as completed
+    if (idx > 0) {
+      document.querySelectorAll('.module-btn')[idx - 1].classList.add('completed');
+    }
+  }
+
+  function toggleAcc(btn) {
+    const item = btn.closest('.acc-item');
+    const isOpen = item.classList.contains('open');
+    // Close all in same accordion
+    const accordion = item.closest('.accordion');
+    accordion.querySelectorAll('.acc-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  const feedbacks = {
+    'quiz-0-1': { correct: 'Correct. Assuming all circuits are live is the most important safety principle in high voltage work.', incorrect: 'Incorrect. Never assume a circuit is safe until you have verified it is de-energised.' },
+    'quiz-1-1': { correct: 'Correct! The first step is to de-energise before applying any locks or tags.', incorrect: 'Not quite right. De-energising must always come first in the DNOT process.' },
+    'quiz-2-1': { correct: 'Correct! Quantifying the hazard means calculating the incident energy, which is critical for choosing the right PPE.', incorrect: 'Not quite. Quantifying the hazard is the specific step where incident energy is calculated.' },
+    'quiz-3-1': { correct: 'Correct! Only Authorised Persons have the authority to issue access permits.', incorrect: 'Incorrect. Only Authorised Persons may issue access permits.' },
+    'quiz-3-2': { correct: "Correct. The observer's only duty is to maintain vigilance on safe approach distances.", incorrect: 'Incorrect. No exceptions are allowed — the observer cannot be distracted by any other tasks.' },
+    'quiz-4-1': { correct: 'Correct. 10 kV/m is the occupational exposure limit for electric fields near high voltage conductors.', incorrect: 'Incorrect. The occupational limit is 10 kV/m. The 5 kV/m limit applies to the general public.' },
+    'quiz-5-1': { correct: 'Correct! Conductors must be isolated, proved de-energised, and earthed at all sources of supply by an Authorised Person before rescue attempts.', incorrect: 'Not quite right. Review the rescue prerequisites to ensure you understand the critical steps.' },
+    'quiz-5-2': { correct: "That's right! The operator should stay on the vehicle if safe until the equipment is confirmed de-energised. Exiting could complete a circuit to ground.", incorrect: 'Not quite right. The safest action in this situation is to remain on the vehicle until it is confirmed safe to exit.' },
+    'quiz-6-1': { correct: 'NFPA 70E provides comprehensive guidelines for electrical safety in the workplace, including high voltage environments.', incorrect: 'Incorrect. NFPA 70E is the standard focused on electrical safety. The others address different topics.' },
+    'quiz-6-2': { correct: 'Correct! Severe burns are a major risk when working with high voltage electricity.', incorrect: 'Incorrect. Severe burns are the correct primary hazard of high voltage electricity.' },
+    'quiz-6-3': { correct: 'Correct! Safety glasses are the required minimum PPE for eye protection during high voltage work.', incorrect: 'Incorrect. Safety glasses are the correct minimum PPE item for eye protection.' },
+    'quiz-6-4': { correct: 'Correct! De-energising all electrical sources is always the first step.', incorrect: 'Incorrect. De-energising comes before applying locks, tags, or testing.' },
+    'quiz-6-5': { correct: 'Correct! High voltage is defined as exceeding 1,000 V AC or 1,500 V DC.', incorrect: 'Incorrect. The threshold is 1,000 V AC or 1,500 V DC by industry standards.' },
+  };
+
+  function answerQuiz(id, btn, isCorrect) {
+    const block = document.getElementById(id);
+    const options = block.querySelectorAll('.quiz-option');
+    const feedback = document.getElementById(id + '-feedback');
+    const retry = document.getElementById(id + '-retry');
+
+    options.forEach(o => { o.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'incorrect');
+
+    const fb = feedbacks[id];
+    feedback.textContent = isCorrect ? fb.correct : fb.incorrect;
+    feedback.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'incorrect');
+
+    if (!isCorrect) retry.classList.add('show');
+  }
+
+  function retryQuiz(id) {
+    const block = document.getElementById(id);
+    const options = block.querySelectorAll('.quiz-option');
+    const feedback = document.getElementById(id + '-feedback');
+    const retry = document.getElementById(id + '-retry');
+
+    options.forEach(o => { o.disabled = false; o.classList.remove('correct', 'incorrect'); });
+    feedback.className = 'quiz-feedback';
+    feedback.textContent = '';
+    retry.classList.remove('show');
+  }
+</script>
+</body>
+</html>
