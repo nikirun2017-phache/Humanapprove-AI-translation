@@ -65,6 +65,14 @@ function IconApplications() {
   )
 }
 
+function IconIntegrations() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.75}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+    </svg>
+  )
+}
+
 function IconSupport() {
   return (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.75}>
@@ -114,6 +122,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     { href: "/media-studio",       label: "Media Studio",       match: "/media-studio",       icon: <IconMedia /> },
     { href: "/jobs",               label: "My Jobs",            match: "/jobs",               icon: <IconJobs /> },
     { href: "/billing",            label: "Billing",            match: "/billing",            icon: <IconBilling /> },
+    { href: "/integrations",       label: "Integrations",       match: "/integrations",       icon: <IconIntegrations /> },
     { href: "/support",            label: "Support & FAQ",      match: "/support",            icon: <IconSupport /> },
     ...(role === "admin" ? [
       { href: "/admin/users",         label: "Users",        match: "/admin/users",         icon: <IconUsers /> },

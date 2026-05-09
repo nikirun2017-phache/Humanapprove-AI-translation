@@ -31,6 +31,7 @@ model User {
   sessions               Session[]
   translationJobs        TranslationJob[]
   auditLogs              AuditLog[]
+  integrations           Integration[]
   apiKeys                ApiKey[]
   monthlyCharges         MonthlyCharge[]
   reviewerApplications   ReviewerApplication[]
@@ -231,6 +232,10 @@ model TranslationJob {
   callbackUrl  String?  // webhook URL called when all tasks complete
   apiKeyId     String?  // which ApiKey was used to create this job (null = browser session)
 
+  // CMS integration fields (set when job was imported from a connector)
+  integrationId   String? // FK to Integration record
+  integrationMeta String? // JSON: connector-specific metadata (e.g. { guideId, collectionId })
+
   createdBy User              @relation(fields: [createdById], references: [id])
   tasks     TranslationTask[]
 }
@@ -357,6 +362,24 @@ model MediaRun {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+// CMS / third-party integration credentials stored per user
+model Integration {
+  id           String    @id @default(cuid())
+  userId       String
+  connector    String    // "pendo" | "webflow" | "salesforce"
+  credentials  String    // JSON: { apiKey?, instanceUrl?, accessToken?, ... }
+  config       String    @default("{}") // JSON: connector-specific config (e.g. siteId)
+  status       String    @default("disconnected") // "connected" | "disconnected" | "error"
+  lastTestedAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, connector])
+  @@index([userId])
 }
 
 // Tracks monthly billing charges to prevent double-charging
