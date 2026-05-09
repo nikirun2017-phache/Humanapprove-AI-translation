@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
-import { Navbar } from "@/components/navbar"
+import { AppShell } from "@/components/app-shell"
 import { JobProgress } from "@/components/job-progress"
 
 export const dynamic = "force-dynamic"
@@ -29,11 +29,10 @@ export default async function JobProgressPage({
   if (role !== "admin" && job.createdById !== userId) redirect("/translation-studio")
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <AppShell>
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <JobProgress initialJob={job} />
       </main>
-    </div>
+    </AppShell>
   )
 }

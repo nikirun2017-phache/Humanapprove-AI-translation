@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense, useRef } from "react"
 import { useSearchParams } from "next/navigation"
-import { Navbar } from "@/components/navbar"
+import { AppShell } from "@/components/app-shell"
 import { useSession } from "next-auth/react"
 import { cn } from "@/lib/utils"
 
@@ -351,8 +351,7 @@ function BillingPageInner() {
   const monthLabel = new Date().toLocaleString("en-US", { month: "long" })
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <AppShell>
       <main className="max-w-5xl mx-auto px-6 py-10">
 
         {/* Header */}
@@ -417,7 +416,7 @@ function BillingPageInner() {
         )}
 
       </main>
-    </div>
+    </AppShell>
   )
 }
 

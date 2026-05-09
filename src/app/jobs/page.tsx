@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Navbar } from "@/components/navbar"
+import { AppShell } from "@/components/app-shell"
 import Link from "next/link"
 
 // ─── Translation Jobs ─────────────────────────────────────────────────────────
@@ -333,8 +333,7 @@ export default function JobsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <AppShell>
       <main className="max-w-5xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
@@ -473,6 +472,6 @@ export default function JobsPage() {
           )
         )}
       </main>
-    </div>
+    </AppShell>
   )
 }

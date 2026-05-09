@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
-import { Navbar } from "@/components/navbar"
+import { AppShell } from "@/components/app-shell"
 
 interface ApiKeyEntry {
   id: string
@@ -114,8 +114,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <AppShell>
       <main className="max-w-xl mx-auto px-6 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
@@ -314,6 +313,6 @@ export default function AccountPage() {
           </div>
         )}
       </main>
-    </div>
+    </AppShell>
   )
 }

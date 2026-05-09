@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
-import { Navbar } from "@/components/navbar"
+import { AppShell } from "@/components/app-shell"
 import { UserManager } from "@/components/user-manager"
 
 export const dynamic = "force-dynamic"
@@ -24,12 +24,11 @@ export default async function AdminUsersPage() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <AppShell>
       <main className="max-w-4xl mx-auto px-6 py-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">User management</h1>
         <UserManager initialUsers={users} currentUserId={session.user.id} />
       </main>
-    </div>
+    </AppShell>
   )
 }
