@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
 import { Link } from "@/i18n/navigation"
-import NextLink from "next/link"
 import { CostEstimator } from "@/components/cost-estimator"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 import { getTranslations } from "next-intl/server"
@@ -15,106 +14,88 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
-      {/* Nav */}
-      <header className="border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-6xl mx-auto">
-        <span className="font-bold text-indigo-600 text-xl tracking-tight">{t("nav.brand")}</span>
-        <div className="flex items-center gap-4">
-          <LocaleSwitcher />
-          <Link
-            href="/vision"
-            className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
-          >
-            {t("nav.vision")}
-          </Link>
-          <Link
-            href="/login"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            {t("nav.signIn")}
-          </Link>
-          <Link
-            href="/login?mode=signup"
-            className="text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg transition-colors"
-          >
-            {t("nav.signUp")}
-          </Link>
+
+      {/* ── Nav ───────────────────────────────────────────────────────────────── */}
+      <header className="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-gray-100 px-6 py-3">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Image src="/logo.png" alt="Summon Translator" width={28} height={28} className="rounded-full" />
+            <span className="font-bold text-indigo-600 text-lg tracking-tight hidden sm:block">{t("nav.brand")}</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <LocaleSwitcher />
+            <Link href="/vision" className="text-sm text-gray-500 hover:text-gray-900 transition-colors hidden sm:block">
+              {t("nav.vision")}
+            </Link>
+            <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+              {t("nav.signIn")}
+            </Link>
+            <Link
+              href="/login?mode=signup"
+              className="text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg transition-colors"
+            >
+              {t("nav.signUp")}
+            </Link>
+          </div>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="max-w-4xl mx-auto px-6 pt-24 pb-20 text-center">
-        <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 text-xs font-medium px-3 py-1.5 rounded-full mb-4">
-          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-          {t("hero.badge")}
+      {/* ── Hero ─────────────────────────────────────────────────────────────── */}
+      <section className="max-w-5xl mx-auto px-6 pt-16 pb-12 text-center">
+        <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
+          🎁 First 10,000 words free — use code{" "}
+          <span className="font-mono bg-green-100 text-green-800 px-1.5 py-0.5 rounded">1TIME</span>
         </div>
-        <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-6 ml-2">
-          🎁 Translate your first 10,000 words free — use code <span className="font-mono bg-green-100 px-1.5 py-0.5 rounded">1TIME</span>
-        </div>
-        <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 leading-tight mb-6">
+        <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight text-gray-900 leading-tight mb-5">
           {t("hero.h1Line1")}<br />
           <span className="text-indigo-600">{t("hero.h1Line2")}</span>
         </h1>
-        <p className="text-lg text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
+        <p className="text-lg text-gray-500 max-w-2xl mx-auto mb-8 leading-relaxed">
           {t("hero.description")}
         </p>
-        <div className="flex gap-3 justify-center">
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href="/login?mode=signup"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl text-sm transition-colors shadow-sm"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-7 py-3 rounded-xl text-sm transition-colors shadow-sm"
           >
             Start free — 10,000 words on us
           </Link>
           <a
             href="#how-it-works"
-            className="border border-gray-200 hover:border-gray-300 text-gray-700 font-medium px-6 py-3 rounded-xl text-sm transition-colors"
+            className="border border-gray-200 hover:border-gray-300 text-gray-700 font-medium px-7 py-3 rounded-xl text-sm transition-colors"
           >
             {t("hero.cta2")}
           </a>
         </div>
-        <p className="text-xs text-gray-400 mt-3">No credit card required · Cancel anytime</p>
+        <p className="text-xs text-gray-400 mt-3">No credit card required · Pay only for what you use</p>
       </section>
 
-      {/* Product screenshot */}
-      <section className="max-w-5xl mx-auto px-6 pb-24">
+      {/* ── Product screenshot ───────────────────────────────────────────────── */}
+      <section className="max-w-5xl mx-auto px-6 pb-20">
         <div className="rounded-2xl border border-gray-200 shadow-xl overflow-hidden bg-gray-50">
-          {/* Browser chrome */}
-          <div className="bg-gray-100 border-b border-gray-200 px-4 py-3 flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-red-300" />
-            <span className="w-3 h-3 rounded-full bg-yellow-300" />
-            <span className="w-3 h-3 rounded-full bg-green-300" />
-            <span className="ml-4 flex-1 bg-white rounded px-3 py-1 text-xs text-gray-400 border border-gray-200">
+          <div className="bg-gray-100 border-b border-gray-200 px-4 py-2.5 flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-300" />
+            <span className="w-2.5 h-2.5 rounded-full bg-yellow-300" />
+            <span className="w-2.5 h-2.5 rounded-full bg-green-300" />
+            <span className="ml-3 flex-1 bg-white rounded px-3 py-0.5 text-xs text-gray-400 border border-gray-200">
               summontranslator.com/translation-studio
             </span>
           </div>
           <Image
             src="/screenshot-studio.png"
-            alt="Translation Studio showing a JSON file being translated into 5 languages with real-time progress bars"
+            alt="Translation Studio interface"
             width={1200}
             height={720}
             className="w-full h-auto block"
             priority
           />
         </div>
-        <p className="text-center text-xs text-gray-400 mt-3">{t("mockPreview.caption")}</p>
       </section>
 
-      {/* How it works */}
-      <section id="how-it-works" className="bg-gray-50 border-y border-gray-100 py-20">
+      {/* ── How it works ─────────────────────────────────────────────────────── */}
+      <section id="how-it-works" className="bg-gray-50 border-y border-gray-100 py-16">
         <div className="max-w-4xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">{t("howItWorks.heading")}</h2>
-
-          {/* Explainer GIF */}
-          <div className="mb-12 rounded-2xl overflow-hidden border border-gray-200 shadow-md bg-white">
-            <Image
-              src="/how-it-works.gif"
-              alt="30-second walkthrough: upload a file, choose languages and model, see the cost preview, then download translated files"
-              width={1200}
-              height={675}
-              className="w-full h-auto block"
-              unoptimized
-            />
-          </div>
-
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-10">{t("howItWorks.heading")}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { step: "1", title: t("howItWorks.step1Title"), body: t("howItWorks.step1Body") },
@@ -122,10 +103,10 @@ export default async function Home() {
               { step: "3", title: t("howItWorks.step3Title"), body: t("howItWorks.step3Body") },
             ].map((item) => (
               <div key={item.step} className="text-center">
-                <div className="w-10 h-10 rounded-full bg-indigo-600 text-white text-lg font-bold flex items-center justify-center mx-auto mb-4">
+                <div className="w-9 h-9 rounded-full bg-indigo-600 text-white text-sm font-bold flex items-center justify-center mx-auto mb-3">
                   {item.step}
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-2">{item.title}</h3>
+                <h3 className="font-semibold text-gray-900 mb-1.5">{item.title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{item.body}</p>
               </div>
             ))}
@@ -133,292 +114,154 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Features */}
-      <section className="max-w-5xl mx-auto px-6 py-20">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">{t("features.heading")}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[
-            { icon: "⚡", title: t("features.multiModel"), body: t("features.multiModelBody") },
-            { icon: "🧾", title: t("features.costTransparency"), body: t("features.costTransparencyBody") },
-            { icon: "📄", title: t("features.pdfSupport"), body: t("features.pdfSupportBody") },
-            { icon: "🔍", title: t("features.auditTrail"), body: t("features.auditTrailBody") },
-            { icon: "🌍", title: t("features.languages"), body: t("features.languagesBody") },
-            { icon: "🔒", title: t("features.accessControl"), body: t("features.accessControlBody") },
-          ].map((f) => (
-            <div key={f.title} className="bg-white border border-gray-200 rounded-xl p-5">
-              <div className="text-2xl mb-3">{f.icon}</div>
-              <h3 className="font-semibold text-gray-900 mb-1">{f.title}</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">{f.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* LQA Studio */}
-      <section className="max-w-6xl mx-auto px-6 py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-          {/* Left: copy */}
-          <div className="lg:pt-6">
-            <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              {t("lqa.badge")}
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t("lqa.heading")}</h2>
-            <p className="text-gray-500 leading-relaxed mb-6">{t("lqa.description")}</p>
-            <ul className="space-y-3">
-              {(["feature1","feature2","feature3","feature4","feature5"] as const).map((k) => (
-                <li key={k} className="flex items-start gap-2 text-sm text-gray-600">
-                  <span className="text-emerald-500 mt-0.5 shrink-0">✓</span>
-                  {t(`lqa.${k}`)}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-8">
-              <Link href="/login?mode=signup" className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
-                {t("lqa.cta")} →
-              </Link>
-            </div>
-          </div>
-          {/* Right: LQA Studio inline mockup */}
-          <div className="rounded-2xl border border-gray-200 shadow-xl overflow-hidden bg-white">
-            {/* Browser chrome */}
-            <div className="bg-gray-100 border-b border-gray-200 px-4 py-3 flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-red-300" />
-              <span className="w-3 h-3 rounded-full bg-yellow-300" />
-              <span className="w-3 h-3 rounded-full bg-green-300" />
-              <span className="ml-4 flex-1 bg-white rounded px-3 py-1 text-xs text-gray-400 border border-gray-200">
-                summontranslator.com/lqa-studio
-              </span>
-            </div>
-            {/* LQA report mockup */}
-            <div className="p-5 space-y-4">
-              {/* Score header */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Quality Score</p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-3xl font-extrabold text-gray-900">87</span>
-                    <span className="text-xs font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Medium</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-400">12 units analysed</p>
-                  <p className="text-xs text-gray-400">4 findings</p>
-                </div>
-              </div>
-              {/* Error breakdown */}
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { label: "Accuracy", count: 2, color: "bg-red-50 text-red-700 border-red-100" },
-                  { label: "Language", count: 1, color: "bg-amber-50 text-amber-700 border-amber-100" },
-                  { label: "Style", count: 1, color: "bg-blue-50 text-blue-700 border-blue-100" },
-                ].map((cat) => (
-                  <div key={cat.label} className={`rounded-lg border p-2.5 text-center ${cat.color}`}>
-                    <p className="text-lg font-bold">{cat.count}</p>
-                    <p className="text-xs font-medium">{cat.label}</p>
-                  </div>
-                ))}
-              </div>
-              {/* Sample findings */}
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Findings</p>
-                {[
-                  {
-                    type: "Accuracy",
-                    typeColor: "bg-red-100 text-red-700",
-                    source: "Submit your application",
-                    target: "提交您的申请",
-                    suggestion: "递交您的申请",
-                    note: "More formal register expected in legal context",
-                  },
-                  {
-                    type: "Style",
-                    typeColor: "bg-blue-100 text-blue-700",
-                    source: "Please review and confirm",
-                    target: "请审查并确认",
-                    suggestion: "请审阅并确认",
-                    note: "审阅 is preferred in formal document contexts",
-                  },
-                ].map((f, i) => (
-                  <div key={i} className="rounded-lg border border-gray-100 bg-gray-50 p-3 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${f.typeColor}`}>{f.type}</span>
-                      <span className="text-xs text-gray-400 truncate">{f.source}</span>
-                    </div>
-                    <p className="text-xs text-gray-500 line-through">{f.target}</p>
-                    <p className="text-xs font-medium text-gray-800">{f.suggestion}</p>
-                    <p className="text-xs text-gray-400 italic">{f.note}</p>
-                  </div>
-                ))}
-              </div>
-              {/* Action buttons */}
-              <div className="flex gap-2 pt-1">
-                <button className="flex-1 bg-emerald-600 text-white text-xs font-semibold py-2 rounded-lg">Revise File</button>
-                <button className="flex-1 border border-gray-200 text-gray-600 text-xs font-semibold py-2 rounded-lg">Download Report</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <p className="text-center text-xs text-gray-400 mt-6">{t("lqa.caption")}</p>
-      </section>
-
-      {/* Portfolio */}
-      <section className="max-w-6xl mx-auto px-6 py-20">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-gray-900 mb-3">See translated output in action</h2>
-          <p className="text-gray-500 text-sm max-w-xl mx-auto">
-            A real eLearning safety course translated from English to Simplified Chinese — same layout, fonts, and interactions, fully localised.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {[
-            {
-              label: "Original · English",
-              lang: "EN",
-              langColor: "bg-blue-100 text-blue-700",
-              src: "/high-voltage-safety-course.html",
-              title: "High Voltage Electrical Safety",
-            },
-            {
-              label: "Translated · Simplified Chinese",
-              lang: "ZH-CN",
-              langColor: "bg-red-100 text-red-700",
-              src: "/high-voltage-safety-course-zh-CN.html",
-              title: "高压电气安全",
-            },
-          ].map((item) => (
-            <div key={item.lang} className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-white flex flex-col">
-              {/* Card header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${item.langColor}`}>{item.lang}</span>
-                  <span className="text-sm font-medium text-gray-700">{item.label}</span>
-                </div>
-                <a
-                  href={item.src}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-indigo-600 hover:underline"
-                >
-                  Open full screen ↗
-                </a>
-              </div>
-              {/* Iframe preview */}
-              <div className="relative" style={{ paddingBottom: "62.5%" }}>
-                <iframe
-                  src={item.src}
-                  title={item.title}
-                  className="absolute inset-0 w-full h-full border-0"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-        <p className="text-center text-xs text-gray-400 mt-4">
-          Translated with Summon Translator · Claude claude-sonnet-4-6 · XLIFF source format
+      {/* ── Key capabilities ─────────────────────────────────────────────────── */}
+      <section className="max-w-5xl mx-auto px-6 py-16">
+        <h2 className="text-3xl font-bold text-center text-gray-900 mb-3">{t("features.heading")}</h2>
+        <p className="text-center text-gray-500 text-sm mb-10 max-w-xl mx-auto">
+          Everything you need to translate professional content at scale — from single files to multi-language campaigns.
         </p>
+
+        {/* 3 studio cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+          {[
+            {
+              badge: "Translation Studio",
+              badgeColor: "bg-indigo-50 text-indigo-700",
+              icon: "📄",
+              title: "Any file format",
+              body: "JSON, PDF, XLIFF, Markdown, .strings, Android XML, and more. Upload once, download in every language.",
+            },
+            {
+              badge: "LQA Studio",
+              badgeColor: "bg-emerald-50 text-emerald-700",
+              icon: "✅",
+              title: "Quality assurance",
+              body: "AI-powered LQA scores translations on Accuracy, Language, and Style — then auto-revises issues.",
+            },
+            {
+              badge: "Media Studio",
+              badgeColor: "bg-amber-50 text-amber-700",
+              icon: "🎬",
+              title: "Subtitle translation",
+              body: "Upload .srt or .vtt subtitle files and get back a translated version with all timestamps intact.",
+            },
+          ].map((c) => (
+            <div key={c.badge} className="bg-white border border-gray-200 rounded-xl p-5">
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${c.badgeColor}`}>{c.badge}</span>
+              <div className="text-2xl mt-3 mb-2">{c.icon}</div>
+              <h3 className="font-semibold text-gray-900 mb-1">{c.title}</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">{c.body}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Feature pills */}
+        <div className="flex flex-wrap gap-2 justify-center">
+          {[
+            t("features.multiModel"),
+            t("features.costTransparency"),
+            t("features.languages"),
+            t("features.auditTrail"),
+            t("features.accessControl"),
+            "API access",
+            "Real-time progress",
+          ].map((f) => (
+            <span key={f} className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full border border-gray-200">
+              ✓ {f}
+            </span>
+          ))}
+        </div>
       </section>
 
-      {/* Pricing */}
-      <section className="bg-gray-50 border-y border-gray-100 py-20">
-        <div className="max-w-4xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-3">{t("pricing.heading")}</h2>
-          <p className="text-center text-gray-500 text-sm mb-12">{t("pricing.subheading")}</p>
-
-          {/* Examples */}
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest text-center mb-4">{t("pricing.examplesLabel")}</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      {/* ── Portfolio preview ────────────────────────────────────────────────── */}
+      <section className="bg-gray-50 border-y border-gray-100 py-16">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">See it in action</h2>
+            <p className="text-sm text-gray-500 max-w-xl mx-auto">
+              A real eLearning safety course translated from English to Simplified Chinese — layout, fonts, and interactions fully localised.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {[
-              {
-                scenario: t("pricing.scenario1"),
-                detail: t("pricing.scenario1Detail"),
-                charge: t("pricing.scenario1Charge"),
-                note: t("pricing.scenario1Note"),
-                highlight: false,
-              },
-              {
-                scenario: t("pricing.scenario2"),
-                detail: t("pricing.scenario2Detail"),
-                charge: t("pricing.scenario2Charge"),
-                note: t("pricing.scenario2Note"),
-                highlight: true,
-              },
-              {
-                scenario: t("pricing.scenario3"),
-                detail: t("pricing.scenario3Detail"),
-                charge: t("pricing.scenario3Charge"),
-                note: t("pricing.scenario3Note"),
-                highlight: false,
-              },
-            ].map((ex) => (
-              <div
-                key={ex.scenario}
-                className={`relative rounded-xl border p-5 bg-white ${
-                  ex.highlight ? "border-indigo-300 shadow-sm" : "border-gray-200"
-                }`}
-              >
-                {ex.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-indigo-600 text-white text-xs font-medium px-3 py-1 rounded-full">{t("pricing.mostCommon")}</span>
+              { label: "Original · English", lang: "EN", langColor: "bg-blue-100 text-blue-700", src: "/high-voltage-safety-course.html", title: "High Voltage Safety" },
+              { label: "Translated · Simplified Chinese", lang: "ZH-CN", langColor: "bg-red-100 text-red-700", src: "/high-voltage-safety-course-zh-CN.html", title: "高压电气安全" },
+            ].map((item) => (
+              <div key={item.lang} className="rounded-xl border border-gray-200 shadow-sm overflow-hidden bg-white flex flex-col">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 bg-gray-50">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${item.langColor}`}>{item.lang}</span>
+                    <span className="text-sm text-gray-600">{item.label}</span>
                   </div>
-                )}
-                <p className="font-semibold text-gray-900 text-sm mb-1">{ex.scenario}</p>
-                <p className="text-xs text-gray-400 mb-4 leading-relaxed">{ex.detail}</p>
-                <div className="border-t border-gray-100 pt-3 text-right">
-                  <p className="text-xs text-gray-400">{t("pricing.estimatedCost")}</p>
-                  <p className="text-2xl font-bold text-indigo-600">{ex.charge}</p>
+                  <a href={item.src} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-600 hover:underline">
+                    Open ↗
+                  </a>
                 </div>
-                <p className="text-xs text-gray-400 mt-2 italic">{ex.note}</p>
+                <div className="relative" style={{ paddingBottom: "56.25%" }}>
+                  <iframe src={item.src} title={item.title} className="absolute inset-0 w-full h-full border-0" loading="lazy" />
+                </div>
               </div>
             ))}
           </div>
-
-          {/* Estimator */}
-          <div className="mb-4">
-            <CostEstimator />
-          </div>
-          <div className="flex items-center justify-center gap-2 bg-green-50 border border-green-200 text-green-800 text-sm font-medium px-4 py-3 rounded-xl mb-8">
-            🎁 <span>Your first 10,000 words are free — sign up and enter code <span className="font-mono font-bold">1TIME</span> at checkout</span>
-          </div>
-
-          {/* Included */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-6">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">{t("pricing.includedHeading")}</p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {(["included1","included2","included3","included4","included5","included6","included7","included8","included9"] as const).map((key) => (
-                <div key={key} className="flex items-start gap-2 text-sm text-gray-600">
-                  <span className="text-green-500 mt-0.5 shrink-0">✓</span>
-                  {t(`pricing.${key}`)}
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="max-w-2xl mx-auto px-6 py-24 text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">{t("cta.heading")}</h2>
-        <p className="text-gray-500 mb-6">{t("cta.body")}</p>
-        <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-800 text-sm font-medium px-4 py-2 rounded-lg mb-6">
-          🎁 Your first 10,000 words are free — no credit card needed
+      {/* ── Pricing ──────────────────────────────────────────────────────────── */}
+      <section className="max-w-4xl mx-auto px-6 py-16">
+        <h2 className="text-3xl font-bold text-center text-gray-900 mb-2">{t("pricing.heading")}</h2>
+        <p className="text-center text-gray-500 text-sm mb-10">{t("pricing.subheading")}</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {[
+            { scenario: t("pricing.scenario1"), detail: t("pricing.scenario1Detail"), charge: t("pricing.scenario1Charge"), note: t("pricing.scenario1Note"), highlight: false },
+            { scenario: t("pricing.scenario2"), detail: t("pricing.scenario2Detail"), charge: t("pricing.scenario2Charge"), note: t("pricing.scenario2Note"), highlight: true },
+            { scenario: t("pricing.scenario3"), detail: t("pricing.scenario3Detail"), charge: t("pricing.scenario3Charge"), note: t("pricing.scenario3Note"), highlight: false },
+          ].map((ex) => (
+            <div key={ex.scenario} className={`relative rounded-xl border p-5 bg-white ${ex.highlight ? "border-indigo-300 shadow-sm" : "border-gray-200"}`}>
+              {ex.highlight && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="bg-indigo-600 text-white text-xs font-medium px-3 py-1 rounded-full">{t("pricing.mostCommon")}</span>
+                </div>
+              )}
+              <p className="font-semibold text-gray-900 text-sm mb-1">{ex.scenario}</p>
+              <p className="text-xs text-gray-400 mb-4 leading-relaxed">{ex.detail}</p>
+              <div className="border-t border-gray-100 pt-3 text-right">
+                <p className="text-xs text-gray-400">{t("pricing.estimatedCost")}</p>
+                <p className="text-2xl font-bold text-indigo-600">{ex.charge}</p>
+              </div>
+              <p className="text-xs text-gray-400 mt-2 italic">{ex.note}</p>
+            </div>
+          ))}
         </div>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link
-            href="/login?mode=signup"
-            className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 py-3 rounded-xl text-sm transition-colors shadow-sm"
-          >
-            Start free — use code 1TIME at checkout
-          </Link>
-          <Link
-            href="/login"
-            className="inline-block border border-gray-200 hover:border-gray-300 text-gray-700 font-medium px-8 py-3 rounded-xl text-sm transition-colors"
-          >
-            Sign in
-          </Link>
+
+        <CostEstimator />
+
+        <div className="mt-6 flex items-center justify-center gap-2 bg-green-50 border border-green-200 text-green-800 text-sm font-medium px-4 py-3 rounded-xl">
+          🎁 <span>First 10,000 words free — sign up and enter code <span className="font-mono font-bold">1TIME</span></span>
         </div>
-        <p className="text-xs text-gray-400 mt-4">Cancel anytime · Pay only for what you translate</p>
+      </section>
+
+      {/* ── Final CTA ────────────────────────────────────────────────────────── */}
+      <section className="bg-indigo-600 py-16">
+        <div className="max-w-2xl mx-auto px-6 text-center">
+          <h2 className="text-3xl font-bold text-white mb-3">{t("cta.heading")}</h2>
+          <p className="text-indigo-200 mb-8 text-sm leading-relaxed">{t("cta.body")}</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href="/login?mode=signup"
+              className="bg-white text-indigo-600 hover:bg-indigo-50 font-semibold px-8 py-3 rounded-xl text-sm transition-colors shadow-sm"
+            >
+              Start free — use code 1TIME
+            </Link>
+            <Link
+              href="/login"
+              className="border border-indigo-400 hover:border-indigo-300 text-white font-medium px-8 py-3 rounded-xl text-sm transition-colors"
+            >
+              Sign in
+            </Link>
+          </div>
+          <p className="text-indigo-300 text-xs mt-4">No credit card required · Cancel anytime</p>
+        </div>
       </section>
     </div>
   )
