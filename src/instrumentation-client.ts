@@ -5,7 +5,8 @@
 
 if (typeof Performance !== "undefined") {
   const orig = Performance.prototype.measure
-  Performance.prototype.measure = function (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ;(Performance.prototype as any).measure = function (
     ...args: Parameters<typeof Performance.prototype.measure>
   ) {
     try {
