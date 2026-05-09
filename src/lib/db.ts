@@ -5,7 +5,7 @@ import { PrismaPg } from "@prisma/adapter-pg"
 // ("prefer"/"require"/"verify-ca" will change semantics in pg v9).
 function getConnectionString() {
   const url = process.env.DATABASE_URL!
-  if (url.includes("sslmode=")) {
+  if (url?.includes("sslmode=")) {
     return url.replace(/sslmode=[^&?#]+/, "sslmode=verify-full")
   }
   return url
