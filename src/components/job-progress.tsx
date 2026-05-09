@@ -309,7 +309,7 @@ export function JobProgress({ initialJob }: Props) {
             {job.provider} · {job.model} · {totalTasks} language{totalTasks !== 1 ? "s" : ""}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {!allDone && (
             <button
               onClick={() => {
@@ -343,6 +343,14 @@ export function JobProgress({ initialJob }: Props) {
             >
               {autoDownloaded ? `Re-download all (${readyCount})` : `Download all (${readyCount})`}
             </button>
+          )}
+          {allDone && (
+            <a
+              href="/translation-studio"
+              className="px-3 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
+            >
+              + Translate another file
+            </a>
           )}
         </div>
       </div>
