@@ -167,7 +167,7 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
   const [recentJobs, setRecentJobs] = useState<{ id: string; name: string; status: string; tasks: { targetLanguage: string; status: string }[] }[]>([])
 
   // Default provider + model from first provider
-  const defaultProvider = providers[0]?.id ?? "anthropic"
+  const defaultProvider = providers[0]?.name ?? "anthropic"
   const defaultModel = providers[0]?.models[0]?.id ?? ""
 
   const loadIntegrations = useCallback(async () => {
@@ -513,7 +513,7 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
                           className="w-full border border-indigo-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
                           {providers.flatMap((p) => p.models.map((m) => (
-                            <option key={`${p.id}:${m.id}`} value={m.id}>{m.label}</option>
+                            <option key={`${p.name}:${m.id}`} value={m.id}>{m.label}</option>
                           )))}
                         </select>
                       </div>
