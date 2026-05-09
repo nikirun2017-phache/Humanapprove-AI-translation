@@ -3,13 +3,19 @@ import createNextIntlPlugin from "next-intl/plugin"
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
 
+const isProd = process.env.NODE_ENV === "production"
+
 const securityHeaders = [
   // Prevent browsers from MIME-sniffing the content type
   { key: "X-Content-Type-Options", value: "nosniff" },
   // Block the page from loading in an iframe (clickjacking protection)
   { key: "X-Frame-Options", value: "DENY" },
-  // Enforce HTTPS for 1 year (including subdomains)
-  { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" },
+  // Enforce HTTPS for 1 year — production only.
+  // Sending HSTS on localhost causes Chrome to cache it and permanently block
+  // the HTTP dev server. Firefox is more lenient; Chrome is not.
+  ...(isProd
+    ? [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" }]
+    : []),
   // Enable XSS filter in legacy browsers
   { key: "X-XSS-Protection", value: "1; mode=block" },
   // Control cross-origin information leakage in Referer header
@@ -35,7 +41,9 @@ const securityHeaders = [
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
-      "upgrade-insecure-requests",
+      // upgrade-insecure-requests: production only — in dev Chrome would try to
+      // upgrade the localhost HTTP dev server to HTTPS and fail.
+      ...(isProd ? ["upgrade-insecure-requests"] : []),
     ].join("; "),
   },
 ]

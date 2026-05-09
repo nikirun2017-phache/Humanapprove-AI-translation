@@ -334,15 +334,15 @@ export async function POST(
       }))
       xliff = buildXliffFromTranslations(units, allTranslatedPdf, job.sourceLanguage, task.targetLanguage, job.name)
 
-    } else if (job.sourceFormat === "csv") {
-      // ── CSV path: markdown-based translation ──────────────────────────────────
-      // CSV strings often contain quoted text, commas, and special characters that
-      // cause the model to produce invalid JSON in the JSON-array approach.
-      // Markdown batching (same as XLIFF/PDF) avoids all JSON escaping issues.
-      const csvMarkdownBatches = buildMarkdownBatches(units)
-      const csvTranslationMap = new Map<string, string>()
+    } else if (job.sourceFormat === "csv" || job.sourceFormat === "md" || job.sourceFormat === "txt") {
+      // ── CSV / Markdown / plain-text path: markdown-based translation ──────────
+      // These formats often contain quoted text, long prose, or special characters
+      // (including CJK quotation marks in the AI response) that corrupt the JSON
+      // output in the JSON-array approach. Markdown batching avoids all JSON escaping issues.
+      const mdBatches = buildMarkdownBatches(units)
+      const mdTranslationMap = new Map<string, string>()
 
-      for (const { markdown, indexToId } of csvMarkdownBatches) {
+      for (const { markdown, indexToId } of mdBatches) {
         const translated = await withRetry(() =>
           translateMarkdownBatch(
             markdown,
@@ -357,20 +357,42 @@ export async function POST(
         const indexedMap = parseMarkdownTranslation(translated)
         for (const [idx, text] of indexedMap) {
           const unitId = indexToId.get(idx)
-          if (unitId) csvTranslationMap.set(unitId, text)
+          if (unitId) mdTranslationMap.set(unitId, text)
         }
 
         await db.translationTask.update({
           where: { id: taskId },
-          data: { completedUnits: csvTranslationMap.size },
+          data: { completedUnits: mdTranslationMap.size },
         })
       }
 
-      const allTranslatedCsv = units.map((u: SourceUnit) => ({
+      // Gap-fill: re-send any units the AI skipped
+      const mdMissingUnits = units.filter((u: SourceUnit) => !mdTranslationMap.has(u.id))
+      if (mdMissingUnits.length > 0) {
+        const gapBatches = buildMarkdownBatches(mdMissingUnits)
+        for (const { markdown: gapMd, indexToId: gapIdx } of gapBatches) {
+          try {
+            const translated = await withRetry(() =>
+              translateMarkdownBatch(gapMd, job.sourceLanguage, task.targetLanguage, job.provider as ProviderName, apiKey, job.model, glossaryTerms)
+            )
+            const indexedMap = parseMarkdownTranslation(translated)
+            for (const [idx, text] of indexedMap) {
+              const unitId = gapIdx.get(idx)
+              if (unitId) mdTranslationMap.set(unitId, text)
+            }
+          } catch { /* gap-fill is best-effort */ }
+        }
+        await db.translationTask.update({
+          where: { id: taskId },
+          data: { completedUnits: mdTranslationMap.size },
+        })
+      }
+
+      const allTranslatedMd = units.map((u: SourceUnit) => ({
         id: u.id,
-        translatedText: csvTranslationMap.get(u.id) ?? "",
+        translatedText: mdTranslationMap.get(u.id) ?? "",
       }))
-      xliff = buildXliffFromTranslations(units, allTranslatedCsv, job.sourceLanguage, task.targetLanguage, job.name)
+      xliff = buildXliffFromTranslations(units, allTranslatedMd, job.sourceLanguage, task.targetLanguage, job.name)
 
     } else {
       // ── Non-XLIFF path: JSON-array batching (JSON, Markdown, etc.) ────────────
