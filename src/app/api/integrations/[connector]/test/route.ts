@@ -4,6 +4,16 @@ import { db } from "@/lib/db"
 import * as Pendo from "@/lib/connectors/pendo"
 import * as Webflow from "@/lib/connectors/webflow"
 import * as Salesforce from "@/lib/connectors/salesforce"
+import * as Zendesk from "@/lib/connectors/zendesk"
+import * as Contentful from "@/lib/connectors/contentful"
+import * as WordPress from "@/lib/connectors/wordpress"
+import * as HubSpot from "@/lib/connectors/hubspot"
+import * as Jira from "@/lib/connectors/jira"
+import * as Slack from "@/lib/connectors/slack"
+import * as Qualtrics from "@/lib/connectors/qualtrics"
+import * as Marketo from "@/lib/connectors/marketo"
+import * as GoogleDrive from "@/lib/connectors/googledrive"
+import * as SharePoint from "@/lib/connectors/sharepoint"
 
 export async function POST(
   req: NextRequest,
@@ -14,7 +24,6 @@ export async function POST(
 
   const { connector } = await params
 
-  // Read credentials from DB (never trust client to send raw keys)
   const integration = await db.integration.findUnique({
     where: { userId_connector: { userId: session.user.id, connector } },
   })
@@ -29,23 +38,57 @@ export async function POST(
 
   let result: { ok: boolean; error?: string }
 
-  if (connector === "pendo") {
-    result = await Pendo.testConnection(creds.apiKey ?? "")
-  } else if (connector === "webflow") {
-    result = await Webflow.testConnection(creds.apiKey ?? "")
-  } else if (connector === "salesforce") {
-    result = await Salesforce.testConnection(creds.instanceUrl ?? config.instanceUrl ?? "", creds.accessToken ?? "")
-  } else {
-    return NextResponse.json({ error: "Unknown connector" }, { status: 400 })
+  try {
+    switch (connector) {
+      case "pendo":
+        result = await Pendo.testConnection(creds.apiKey ?? "")
+        break
+      case "webflow":
+        result = await Webflow.testConnection(creds.apiKey ?? "")
+        break
+      case "salesforce":
+        result = await Salesforce.testConnection(creds.instanceUrl ?? config.instanceUrl ?? "", creds.accessToken ?? "")
+        break
+      case "zendesk":
+        result = await Zendesk.testConnection(creds.subdomain ?? "", creds.email ?? "", creds.apiToken ?? "")
+        break
+      case "contentful":
+        result = await Contentful.testConnection(creds.spaceId ?? "", creds.accessToken ?? "")
+        break
+      case "wordpress":
+        result = await WordPress.testConnection(creds.siteUrl ?? "", creds.username ?? "", creds.applicationPassword ?? "")
+        break
+      case "hubspot":
+        result = await HubSpot.testConnection(creds.apiToken ?? "")
+        break
+      case "jira":
+        result = await Jira.testConnection(creds.cloudUrl ?? "", creds.email ?? "", creds.apiToken ?? "")
+        break
+      case "slack":
+        result = await Slack.testConnection(creds.botToken ?? "")
+        break
+      case "qualtrics":
+        result = await Qualtrics.testConnection(creds.apiToken ?? "", creds.dataCenter ?? "")
+        break
+      case "marketo":
+        result = await Marketo.testConnection(creds.munchkinId ?? "", creds.clientId ?? "", creds.clientSecret ?? "")
+        break
+      case "googledrive":
+        result = await GoogleDrive.testConnection(creds.accessToken ?? "")
+        break
+      case "sharepoint":
+        result = await SharePoint.testConnection(creds.siteUrl ?? "", creds.accessToken ?? "")
+        break
+      default:
+        return NextResponse.json({ error: "Unknown connector" }, { status: 400 })
+    }
+  } catch (err) {
+    result = { ok: false, error: (err as Error).message }
   }
 
-  // Update status in DB
   await db.integration.update({
     where: { userId_connector: { userId: session.user.id, connector } },
-    data: {
-      status: result.ok ? "connected" : "error",
-      lastTestedAt: new Date(),
-    },
+    data: { status: result.ok ? "connected" : "error", lastTestedAt: new Date() },
   })
 
   return NextResponse.json(result)

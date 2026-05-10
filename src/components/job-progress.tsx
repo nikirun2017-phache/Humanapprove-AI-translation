@@ -49,6 +49,16 @@ const CONNECTOR_ICONS: Record<string, string> = {
   pendo: "🎯",
   webflow: "🌐",
   salesforce: "☁️",
+  zendesk: "🎧",
+  contentful: "🧩",
+  wordpress: "📝",
+  hubspot: "🧲",
+  jira: "🔷",
+  slack: "💬",
+  qualtrics: "📊",
+  marketo: "📧",
+  googledrive: "📁",
+  sharepoint: "🏢",
 }
 
 // If a task stays "running" with no completedUnits progress for this long,

@@ -6,15 +6,25 @@ import { resolveApiKey } from "@/lib/api-key-resolver"
 import * as Pendo from "@/lib/connectors/pendo"
 import * as Webflow from "@/lib/connectors/webflow"
 import * as Salesforce from "@/lib/connectors/salesforce"
+import * as Zendesk from "@/lib/connectors/zendesk"
+import * as Contentful from "@/lib/connectors/contentful"
+import * as WordPress from "@/lib/connectors/wordpress"
+import * as HubSpot from "@/lib/connectors/hubspot"
+import * as Jira from "@/lib/connectors/jira"
+import * as Slack from "@/lib/connectors/slack"
+import * as Qualtrics from "@/lib/connectors/qualtrics"
+import * as Marketo from "@/lib/connectors/marketo"
+import * as GoogleDrive from "@/lib/connectors/googledrive"
+import * as SharePoint from "@/lib/connectors/sharepoint"
 
 interface ImportBody {
-  contentId: string           // guide ID, collection ID, or content ID in the CMS
-  contentName: string         // human-readable name used as job name
-  targetLanguages: string[]   // BCP-47 codes
+  contentId: string
+  contentName: string
+  targetLanguages: string[]
   sourceLanguage?: string
   provider: string
   model: string
-  siteId?: string             // Webflow only
+  siteId?: string
 }
 
 // POST /api/integrations/[connector]/import — pull content from CMS and create a translation job
@@ -47,23 +57,51 @@ export async function POST(
 
   // ── Fetch content from CMS ───────────────────────────────────────────────
   let jsonContent: Record<string, string> = {}
-
   try {
-    if (connector === "pendo") {
-      const guide = await Pendo.fetchGuide(creds.apiKey ?? "", body.contentId)
-      jsonContent = Pendo.guideToJson(guide)
-    } else if (connector === "webflow") {
-      const siteId = body.siteId ?? config.siteId ?? ""
-      const items = await Webflow.fetchCollectionItems(creds.apiKey ?? "", body.contentId)
-      jsonContent = Webflow.itemsToJson(items)
-    } else if (connector === "salesforce") {
-      jsonContent = await Salesforce.fetchContent(
-        creds.instanceUrl ?? config.instanceUrl ?? "",
-        creds.accessToken ?? "",
-        body.contentId
-      )
-    } else {
-      return NextResponse.json({ error: "Unknown connector" }, { status: 400 })
+    switch (connector) {
+      case "pendo":
+        jsonContent = Pendo.guideToJson(await Pendo.fetchGuide(creds.apiKey ?? "", body.contentId))
+        break
+      case "webflow": {
+        const siteId = body.siteId ?? config.siteId ?? ""
+        jsonContent = Webflow.itemsToJson(await Webflow.fetchCollectionItems(creds.apiKey ?? "", body.contentId))
+        break
+      }
+      case "salesforce":
+        jsonContent = await Salesforce.fetchContent(creds.instanceUrl ?? config.instanceUrl ?? "", creds.accessToken ?? "", body.contentId)
+        break
+      case "zendesk":
+        jsonContent = await Zendesk.fetchContent(creds.subdomain ?? "", creds.email ?? "", creds.apiToken ?? "", body.contentId)
+        break
+      case "contentful":
+        jsonContent = await Contentful.fetchContent(creds.spaceId ?? "", creds.accessToken ?? "", config.environmentId || "master", body.contentId)
+        break
+      case "wordpress":
+        jsonContent = await WordPress.fetchContent(creds.siteUrl ?? "", creds.username ?? "", creds.applicationPassword ?? "", body.contentId)
+        break
+      case "hubspot":
+        jsonContent = await HubSpot.fetchContent(creds.apiToken ?? "", body.contentId)
+        break
+      case "jira":
+        jsonContent = await Jira.fetchContent(creds.cloudUrl ?? "", creds.email ?? "", creds.apiToken ?? "", body.contentId)
+        break
+      case "slack":
+        jsonContent = await Slack.fetchContent(creds.botToken ?? "", body.contentId)
+        break
+      case "qualtrics":
+        jsonContent = await Qualtrics.fetchContent(creds.apiToken ?? "", creds.dataCenter ?? "", body.contentId)
+        break
+      case "marketo":
+        jsonContent = await Marketo.fetchContent(creds.munchkinId ?? "", creds.clientId ?? "", creds.clientSecret ?? "", body.contentId)
+        break
+      case "googledrive":
+        jsonContent = await GoogleDrive.fetchContent(creds.accessToken ?? "", body.contentId)
+        break
+      case "sharepoint":
+        jsonContent = await SharePoint.fetchContent(creds.accessToken ?? "", body.contentId)
+        break
+      default:
+        return NextResponse.json({ error: "Unknown connector" }, { status: 400 })
     }
   } catch (err) {
     return NextResponse.json({ error: `Failed to fetch content: ${(err as Error).message}` }, { status: 502 })
@@ -93,7 +131,8 @@ export async function POST(
   }
 
   const sourceLanguage = body.sourceLanguage ?? "en-US"
-  const safeName = `[${connector.charAt(0).toUpperCase() + connector.slice(1)}] ${body.contentName}`.slice(0, 200)
+  const label = connector.charAt(0).toUpperCase() + connector.slice(1)
+  const safeName = `[${label}] ${body.contentName}`.slice(0, 200)
 
   // ── Create TranslationJob + tasks ────────────────────────────────────────
   const job = await db.translationJob.create({
@@ -130,7 +169,6 @@ export async function POST(
     })),
   })
 
-  // Store the API key temporarily so the translate route can use it
   await db.systemSetting.upsert({
     where: { key: `ai_job_key_${job.id}` },
     create: { key: `ai_job_key_${job.id}`, value: apiKey },

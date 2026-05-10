@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 
-const VALID_CONNECTORS = new Set(["pendo", "webflow", "salesforce"])
+const VALID_CONNECTORS = new Set([
+  "pendo", "webflow", "salesforce",
+  "zendesk", "contentful", "wordpress", "hubspot",
+  "jira", "slack", "qualtrics", "marketo", "googledrive", "sharepoint",
+])
 
 // GET /api/integrations — list user's integrations
 export async function GET() {
@@ -55,7 +59,26 @@ export async function PUT(req: NextRequest) {
 
   // Sanitize: only allow known credential keys, trim values
   const cleanCreds: Record<string, string> = {}
-  const ALLOWED_KEYS = new Set(["apiKey", "instanceUrl", "accessToken", "siteId"])
+  const ALLOWED_KEYS = new Set([
+    // existing
+    "apiKey", "instanceUrl", "accessToken", "siteId",
+    // zendesk
+    "subdomain", "email", "apiToken",
+    // contentful
+    "spaceId", "environmentId",
+    // wordpress / sharepoint
+    "siteUrl", "username", "applicationPassword",
+    // jira
+    "cloudUrl", "projectKey",
+    // slack
+    "botToken", "channelId",
+    // qualtrics
+    "dataCenter",
+    // marketo
+    "clientId", "clientSecret", "munchkinId",
+    // google drive
+    "folderId",
+  ])
   Object.entries(body.credentials ?? {}).forEach(([k, v]) => {
     if (ALLOWED_KEYS.has(k) && typeof v === "string") cleanCreds[k] = v.trim()
   })

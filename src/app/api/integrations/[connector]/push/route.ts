@@ -4,10 +4,20 @@ import { db } from "@/lib/db"
 import * as Pendo from "@/lib/connectors/pendo"
 import * as Webflow from "@/lib/connectors/webflow"
 import * as Salesforce from "@/lib/connectors/salesforce"
+import * as Zendesk from "@/lib/connectors/zendesk"
+import * as Contentful from "@/lib/connectors/contentful"
+import * as WordPress from "@/lib/connectors/wordpress"
+import * as HubSpot from "@/lib/connectors/hubspot"
+import * as Jira from "@/lib/connectors/jira"
+import * as Slack from "@/lib/connectors/slack"
+import * as Qualtrics from "@/lib/connectors/qualtrics"
+import * as Marketo from "@/lib/connectors/marketo"
+import * as GoogleDrive from "@/lib/connectors/googledrive"
+import * as SharePoint from "@/lib/connectors/sharepoint"
 
 interface PushBody {
   jobId: string
-  targetLanguage: string // which translation task to push
+  targetLanguage: string
 }
 
 // POST /api/integrations/[connector]/push — push a completed translation back to CMS
@@ -27,9 +37,7 @@ export async function POST(
 
   const job = await db.translationJob.findUnique({
     where: { id: body.jobId },
-    include: {
-      tasks: { where: { targetLanguage: body.targetLanguage } },
-    },
+    include: { tasks: { where: { targetLanguage: body.targetLanguage } } },
   })
 
   if (!job || (session.user.role !== "admin" && job.createdById !== session.user.id)) {
@@ -41,7 +49,6 @@ export async function POST(
     return NextResponse.json({ error: "Translation not completed yet" }, { status: 400 })
   }
 
-  // Parse integration meta to find the content ID
   let meta: Record<string, unknown> = {}
   try { meta = JSON.parse(job.integrationMeta ?? "{}") } catch { /* */ }
 
@@ -50,7 +57,6 @@ export async function POST(
     return NextResponse.json({ error: "Job has no integration content ID" }, { status: 400 })
   }
 
-  // Fetch the integration credentials
   const integration = await db.integration.findUnique({
     where: { userId_connector: { userId: session.user.id, connector } },
   })
@@ -63,9 +69,7 @@ export async function POST(
   try { creds = JSON.parse(integration.credentials) } catch { /* */ }
   try { config = JSON.parse(integration.config) } catch { /* */ }
 
-  // Parse XLIFF data to extract translated strings
-  // The XLIFF contains <target> elements with the translated text.
-  // We rebuild the same key→text map as the original import.
+  // Extract translated strings from XLIFF
   const xliff = task.xliffData ?? ""
   const translations: Record<string, string> = {}
   const unitRe = /<trans-unit[^>]+id="([^"]+)"[^>]*>[\s\S]*?<target[^>]*>([\s\S]*?)<\/target>/g
@@ -80,37 +84,68 @@ export async function POST(
     return NextResponse.json({ error: "No translated strings found in job" }, { status: 400 })
   }
 
-  // ── Push to CMS ──────────────────────────────────────────────────────────
+  const targetLanguage = body.targetLanguage
+
   try {
-    if (connector === "pendo") {
-      const guide = await Pendo.fetchGuide(creds.apiKey ?? "", contentId)
-      const updated = Pendo.mergeTranslationsIntoGuide(guide, translations)
-      await Pendo.pushTranslation(creds.apiKey ?? "", updated)
-    } else if (connector === "webflow") {
-      const siteId = (meta.siteId as string | undefined) ?? config.siteId ?? ""
-      const collectionId = contentId
-      // Group translations by item
-      const byItem: Record<string, Record<string, string>> = {}
-      Object.entries(translations).forEach(([key, val]) => {
-        const parts = key.match(/^item_([^_]+)_(.+)$/)
-        if (parts) {
-          const [, itemId, field] = parts
-          byItem[itemId] = byItem[itemId] ?? {}
-          byItem[itemId][field] = val
-        }
-      })
-      for (const [itemId, fields] of Object.entries(byItem)) {
-        await Webflow.patchItem(creds.apiKey ?? "", collectionId, itemId, fields)
+    switch (connector) {
+      case "pendo": {
+        const guide = await Pendo.fetchGuide(creds.apiKey ?? "", contentId)
+        await Pendo.pushTranslation(creds.apiKey ?? "", Pendo.mergeTranslationsIntoGuide(guide, translations))
+        break
       }
-    } else if (connector === "salesforce") {
-      await Salesforce.pushTranslation(
-        creds.instanceUrl ?? config.instanceUrl ?? "",
-        creds.accessToken ?? "",
-        contentId,
-        translations
-      )
-    } else {
-      return NextResponse.json({ error: "Unknown connector" }, { status: 400 })
+      case "webflow": {
+        const siteId = (meta.siteId as string | undefined) ?? config.siteId ?? ""
+        const byItem: Record<string, Record<string, string>> = {}
+        Object.entries(translations).forEach(([key, val]) => {
+          const parts = key.match(/^item_([^_]+)_(.+)$/)
+          if (parts) {
+            const [, itemId, field] = parts
+            byItem[itemId] = byItem[itemId] ?? {}
+            byItem[itemId][field] = val
+          }
+        })
+        for (const [itemId, fields] of Object.entries(byItem)) {
+          await Webflow.patchItem(creds.apiKey ?? "", contentId, itemId, fields)
+        }
+        break
+      }
+      case "salesforce":
+        await Salesforce.pushTranslation(creds.instanceUrl ?? config.instanceUrl ?? "", creds.accessToken ?? "", contentId, translations)
+        break
+      case "zendesk":
+        await Zendesk.pushTranslation(creds.subdomain ?? "", creds.email ?? "", creds.apiToken ?? "", contentId, targetLanguage, translations)
+        break
+      case "contentful":
+        await Contentful.pushTranslation(creds.spaceId ?? "", creds.accessToken ?? "", config.environmentId || "master", contentId, targetLanguage, translations)
+        break
+      case "wordpress":
+        await WordPress.pushTranslation(creds.siteUrl ?? "", creds.username ?? "", creds.applicationPassword ?? "", contentId, targetLanguage, translations)
+        break
+      case "hubspot":
+        await HubSpot.pushTranslation(creds.apiToken ?? "", targetLanguage, translations)
+        break
+      case "jira":
+        await Jira.pushTranslation(creds.cloudUrl ?? "", creds.email ?? "", creds.apiToken ?? "", contentId, targetLanguage, translations)
+        break
+      case "slack": {
+        const targetChannelId = config.channelId ?? contentId.split("::")?.[0] ?? contentId
+        await Slack.pushTranslation(creds.botToken ?? "", targetChannelId, translations)
+        break
+      }
+      case "qualtrics":
+        await Qualtrics.pushTranslation(creds.apiToken ?? "", creds.dataCenter ?? "", contentId, targetLanguage, translations)
+        break
+      case "marketo":
+        await Marketo.pushTranslation(creds.munchkinId ?? "", creds.clientId ?? "", creds.clientSecret ?? "", contentId, targetLanguage, translations)
+        break
+      case "googledrive":
+        await GoogleDrive.pushTranslation(creds.accessToken ?? "", config.folderId || undefined, contentId, targetLanguage, translations)
+        break
+      case "sharepoint":
+        await SharePoint.pushTranslation(creds.accessToken ?? "", contentId, targetLanguage, translations)
+        break
+      default:
+        return NextResponse.json({ error: "Unknown connector" }, { status: 400 })
     }
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 502 })
