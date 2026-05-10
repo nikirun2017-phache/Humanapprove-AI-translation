@@ -452,6 +452,8 @@ function FindingsEditorModal({
 
 // ─── Run card ─────────────────────────────────────────────────────────────────
 
+interface IterationEntry { pass: number; before: number; after: number | null; band: string | null }
+
 function RunCard({ run, onRefresh }: { run: LqaRun; onRefresh: (id: string) => Promise<void> }) {
   const [expanded, setExpanded] = useState(false)
   const [showReviseForm, setShowReviseForm] = useState(false)
@@ -459,32 +461,102 @@ function RunCard({ run, onRefresh }: { run: LqaRun; onRefresh: (id: string) => P
   const [revising, setRevising] = useState(false)
   const [reviseError, setReviseError] = useState("")
   const [reviseWarning, setReviseWarning] = useState("")
+  const [autoImproving, setAutoImproving] = useState(false)
+  const [autoPhase, setAutoPhase] = useState<"revising" | "analyzing" | "">("")
+  const [autoPass, setAutoPass] = useState(0)
+  const [iterationLog, setIterationLog] = useState<IterationEntry[]>([])
+
+  // Poll GET /api/lqa/runs/[runId] every 3 s until status leaves "running"
+  const pollUntilDone = useCallback(async (runId: string): Promise<LqaRun | null> => {
+    for (let i = 0; i < 120; i++) {
+      await new Promise<void>((r) => setTimeout(r, 3_000))
+      try {
+        const res = await fetch(`/api/lqa/runs/${runId}`)
+        if (!res.ok) continue
+        const polled = await res.json() as LqaRun
+        if (polled.status === "completed" || polled.status === "failed") return polled
+      } catch { /* keep polling */ }
+    }
+    return null
+  }, [])
+
+  // Revise + re-analyze the run. Returns the updated run if both steps succeeded.
+  const reviseAndReanalyze = useCallback(async (runId: string): Promise<{ updated: LqaRun | null; warning?: string }> => {
+    const revRes = await fetch(`/api/lqa/runs/${runId}/revise`, { method: "POST" })
+    const revData = await revRes.json() as { error?: string; warning?: string }
+    if (!revRes.ok) return { updated: null, warning: revData.error }
+
+    // Trigger re-analysis of the revised file — returns 202 immediately
+    await fetch(`/api/lqa/runs/${runId}/re-analyze`, { method: "POST" })
+
+    const updated = await pollUntilDone(runId)
+    return { updated, warning: revData.warning }
+  }, [pollUntilDone])
 
   const handleRevise = async () => {
     setRevising(true)
     setReviseError("")
     setReviseWarning("")
     try {
-      const res = await fetch(`/api/lqa/runs/${run.id}/revise`, { method: "POST" })
-      const data = await res.json() as { error?: string; warning?: string; revisedUnits?: number }
-      if (!res.ok) {
-        setReviseError(data.error ?? "Revision failed")
+      const { updated, warning } = await reviseAndReanalyze(run.id)
+      if (!updated) {
+        setReviseError("Revision or re-analysis failed — please try again")
       } else {
         setShowReviseForm(false)
         await onRefresh(run.id)
-        if (data.warning) {
-          setReviseWarning(data.warning)
-        }
+        if (warning) setReviseWarning(warning)
       }
     } finally {
       setRevising(false)
     }
   }
 
+  const handleAutoImprove = async () => {
+    setAutoImproving(true)
+    setAutoPhase("revising")
+    setAutoPass(1)
+    setIterationLog([])
+    setReviseError("")
+    setReviseWarning("")
+    const MAX_PASSES = 3
+    let currentScore = run.qualityScore ?? 0
+    let currentErrors = run.accuracyErrors + run.languageErrors + run.styleErrors
+
+    for (let pass = 1; pass <= MAX_PASSES; pass++) {
+      if (currentErrors === 0 || currentScore >= 95) break
+      const before = currentScore
+      setAutoPass(pass)
+
+      setAutoPhase("revising")
+      const revRes = await fetch(`/api/lqa/runs/${run.id}/revise`, { method: "POST" })
+      if (!revRes.ok) {
+        const d = await revRes.json() as { error?: string }
+        setReviseError(d.error ?? "Revision failed")
+        break
+      }
+
+      setAutoPhase("analyzing")
+      await fetch(`/api/lqa/runs/${run.id}/re-analyze`, { method: "POST" })
+      const updated = await pollUntilDone(run.id)
+      if (!updated) { setReviseError("Re-analysis timed out"); break }
+
+      await onRefresh(run.id)
+      const after = updated.qualityScore
+      const band = updated.qualityBand
+      setIterationLog((prev) => [...prev, { pass, before, after, band }])
+
+      currentScore = after ?? currentScore
+      currentErrors = updated.accuracyErrors + updated.languageErrors + updated.styleErrors
+    }
+
+    setAutoPhase("")
+    setAutoImproving(false)
+  }
+
   const totalErrors = run.accuracyErrors + run.languageErrors + run.styleErrors
+  // Allow re-revision after a completed revision if errors remain
   const canRevise =
     run.status === "completed" &&
-    run.revisionStatus !== "completed" &&
     run.revisionStatus !== "running" &&
     totalErrors > 0
 
@@ -581,9 +653,21 @@ function RunCard({ run, onRefresh }: { run: LqaRun; onRefresh: (id: string) => P
                 Download Report (.xlsx)
               </a>
 
-              {/* Revise buttons — only when there are errors and not yet revised */}
-              {canRevise && !showReviseForm && (
+              {/* Revise buttons — when there are errors and not currently running anything */}
+              {canRevise && !showReviseForm && !autoImproving && !revising && (
                 <>
+                  {/* Auto-improve: loop revise→re-analyze up to 3 passes */}
+                  {run.qualityBand !== "High" && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); void handleAutoImprove() }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Auto-improve to High
+                    </button>
+                  )}
                   <button
                     onClick={(e) => { e.stopPropagation(); setShowFindingsEditor(true) }}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors"
@@ -591,7 +675,7 @@ function RunCard({ run, onRefresh }: { run: LqaRun; onRefresh: (id: string) => P
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                     </svg>
-                    Review &amp; Select ({totalErrors} issue{totalErrors !== 1 ? "s" : ""})
+                    Review &amp; Select ({totalErrors})
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); setShowReviseForm(true) }}
@@ -602,19 +686,30 @@ function RunCard({ run, onRefresh }: { run: LqaRun; onRefresh: (id: string) => P
                 </>
               )}
 
-              {/* Revision in-progress */}
-              {run.revisionStatus === "running" && (
+              {/* Auto-improve in-progress */}
+              {autoImproving && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-sm rounded-lg">
+                  <svg className="w-4 h-4 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Pass {autoPass}/3 — {autoPhase === "revising" ? "Applying fixes…" : "Re-scoring…"}
+                </span>
+              )}
+
+              {/* Revision in-progress (manual revise) */}
+              {revising && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-sm rounded-lg">
                   <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Revising…
+                  Revising &amp; re-scoring…
                 </span>
               )}
 
               {/* Revision failed */}
-              {run.revisionStatus === "failed" && (
+              {run.revisionStatus === "failed" && !autoImproving && !revising && (
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowReviseForm(true) }}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 border border-red-300 text-red-700 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors"
@@ -624,7 +719,7 @@ function RunCard({ run, onRefresh }: { run: LqaRun; onRefresh: (id: string) => P
               )}
 
               {/* Download revised file */}
-              {run.revisionStatus === "completed" && (
+              {run.revisionStatus === "completed" && !autoImproving && (
                 <a
                   href={`/api/lqa/runs/${run.id}/revised`}
                   download
@@ -638,17 +733,38 @@ function RunCard({ run, onRefresh }: { run: LqaRun; onRefresh: (id: string) => P
                 </a>
               )}
             </div>
+
+            {/* Auto-improve iteration log */}
+            {iterationLog.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5 items-center" onClick={(e) => e.stopPropagation()}>
+                <span className="text-xs text-gray-500 font-medium">Improvement:</span>
+                {iterationLog.map((entry) => (
+                  <span key={entry.pass} className={`text-xs px-2 py-0.5 rounded-full font-medium border ${
+                    entry.band === "High" ? "bg-green-50 border-green-200 text-green-800" :
+                    entry.band === "Medium" ? "bg-yellow-50 border-yellow-200 text-yellow-800" :
+                    "bg-red-50 border-red-200 text-red-800"
+                  }`}>
+                    Pass {entry.pass}: {entry.before} → {entry.after ?? "?"}/100 ({entry.band})
+                  </span>
+                ))}
+                {iterationLog[iterationLog.length - 1]?.band === "High" && (
+                  <span className="text-xs text-green-700 font-semibold">High quality reached ✓</span>
+                )}
+              </div>
+            )}
+
             {/* Warning: no changes, or quality regression detected */}
-            {reviseWarning && (
+            {(reviseWarning || reviseError) && (
               <p
                 className={`mt-2 text-xs rounded px-3 py-2 ${
+                  reviseError ? "text-red-800 bg-red-50 border border-red-200" :
                   reviseWarning.startsWith("Quality regression")
                     ? "text-red-800 bg-red-50 border border-red-200"
                     : "text-amber-800 bg-amber-50 border border-amber-200"
                 }`}
                 onClick={(e) => e.stopPropagation()}
               >
-                {reviseWarning}
+                {reviseError || reviseWarning}
               </p>
             )}
             </>
@@ -674,7 +790,7 @@ function RunCard({ run, onRefresh }: { run: LqaRun; onRefresh: (id: string) => P
                   disabled={revising}
                   className="flex-1 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 disabled:opacity-50 transition-colors"
                 >
-                  {revising ? "Revising…" : "Apply Fixes"}
+                  {revising ? "Revising & re-scoring…" : "Apply Fixes"}
                 </button>
                 <button
                   onClick={() => { setShowReviseForm(false); setReviseError("") }}
@@ -845,6 +961,10 @@ function UploadForm({ onRunCreated }: { onRunCreated: (run: LqaRun) => void }) {
         <p className="text-indigo-700">
           <strong>Processing time:</strong> roughly <strong>4 s per 25 units</strong> — a 100-unit file takes ~16 s,
           a 500-unit file ~80 s. You can leave this page; the run will appear in your history when done.
+        </p>
+        <p className="text-indigo-700">
+          <strong>Auto-improve to High:</strong> runs up to 3 rounds of fix + re-score automatically in one click — no re-uploads needed.
+          Each pass fixes the remaining issues and updates the score immediately.
         </p>
       </div>
 
