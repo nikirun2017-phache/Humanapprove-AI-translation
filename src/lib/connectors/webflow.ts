@@ -41,18 +41,34 @@ function headers(apiToken: string) {
 }
 
 export async function testConnection(apiToken: string): Promise<{ ok: boolean; error?: string; displayName?: string }> {
+  // Try /token/introspect first (OAuth tokens); fall back to /sites (site API tokens)
   try {
-    const res = await fetch(`${BASE}/token/introspect`, {
+    const introspect = await fetch(`${BASE}/token/introspect`, {
+      headers: headers(apiToken),
+      signal: AbortSignal.timeout(8_000),
+    })
+    if (introspect.ok) {
+      const data = await introspect.json() as { authorization?: { user?: { data?: { email?: string } } } }
+      return { ok: true, displayName: data?.authorization?.user?.data?.email }
+    }
+    // Fall through to /sites if introspect not supported for this token type
+    if (introspect.status !== 404 && introspect.status !== 405) {
+      if (introspect.status === 401 || introspect.status === 403)
+        return { ok: false, error: "Invalid or unauthorized API token" }
+      return { ok: false, error: `Webflow API responded with ${introspect.status}` }
+    }
+  } catch { /* fall through */ }
+
+  // Fallback: /sites works for both OAuth and site API tokens
+  try {
+    const sitesRes = await fetch(`${BASE}/sites`, {
       headers: headers(apiToken),
       signal: AbortSignal.timeout(10_000),
     })
-    if (res.ok) {
-      const data = await res.json() as { authorization?: { user?: { data?: { email?: string } } } }
-      const email = data?.authorization?.user?.data?.email
-      return { ok: true, displayName: email }
-    }
-    if (res.status === 401 || res.status === 403) return { ok: false, error: "Invalid or unauthorized API token" }
-    return { ok: false, error: `Webflow API responded with ${res.status}` }
+    if (sitesRes.ok) return { ok: true }
+    if (sitesRes.status === 401 || sitesRes.status === 403)
+      return { ok: false, error: "Invalid or unauthorized API token" }
+    return { ok: false, error: `Webflow API responded with ${sitesRes.status}` }
   } catch (err) {
     return { ok: false, error: `Connection failed: ${(err as Error).message}` }
   }
@@ -78,14 +94,87 @@ export async function listCollections(apiToken: string, siteId: string): Promise
   return data.collections ?? []
 }
 
+export async function listPages(apiToken: string, siteId: string): Promise<Array<{ id: string; title: string; slug: string }>> {
+  const res = await fetch(`${BASE}/sites/${siteId}/pages`, {
+    headers: headers(apiToken),
+    signal: AbortSignal.timeout(10_000),
+  })
+  if (!res.ok) return []
+  const data = await res.json() as { pages: Array<{ id: string; title: string; slug: string }> }
+  return data.pages ?? []
+}
+
+export async function listLocales(apiToken: string, siteId: string): Promise<Array<{ id: string; tag: string; displayName: string }>> {
+  const res = await fetch(`${BASE}/sites/${siteId}/locales`, {
+    headers: headers(apiToken),
+    signal: AbortSignal.timeout(10_000),
+  })
+  if (!res.ok) return []
+  const data = await res.json() as { locales: Array<{ id: string; tag: string; displayName: string }> }
+  return data.locales ?? []
+}
+
 export async function listContent(apiToken: string, siteId: string): Promise<ContentItem[]> {
-  const collections = await listCollections(apiToken, siteId)
-  return collections.map((c) => ({
-    id: c.id,
-    name: c.displayName,
-    state: "collection",
-    itemCount: 0, // item count would require an extra request per collection
-  }))
+  const [collections, pages] = await Promise.all([
+    listCollections(apiToken, siteId),
+    listPages(apiToken, siteId),
+  ])
+  return [
+    ...collections.map((c) => ({
+      id: c.id,
+      name: `📄 ${c.displayName}`,
+      state: "collection",
+      itemCount: 0,
+    })),
+    ...pages.map((p) => ({
+      id: `page:${p.id}:${siteId}`,
+      name: `🌐 ${p.title || p.slug}`,
+      state: "page",
+      itemCount: 1,
+    })),
+  ]
+}
+
+/** Fetch page content for translation using Webflow Pages Localization API */
+export async function fetchPageContent(apiToken: string, siteId: string, pageId: string): Promise<Record<string, string>> {
+  // GET /sites/{siteId}/pages/{pageId}/content — returns DOM nodes for the primary locale
+  const res = await fetch(`${BASE}/sites/${siteId}/pages/${pageId}/content`, {
+    headers: headers(apiToken),
+    signal: AbortSignal.timeout(15_000),
+  })
+  if (!res.ok) throw new Error(`Webflow pages content API error ${res.status}`)
+  const data = await res.json() as {
+    nodes?: Array<{ nodeId: string; type: string; text?: { text?: string } }>
+  }
+  const result: Record<string, string> = {}
+  ;(data.nodes ?? []).forEach((node) => {
+    if (node.text?.text?.trim()) {
+      result[`node_${node.nodeId}`] = node.text.text.trim()
+    }
+  })
+  return result
+}
+
+/** Push translated page content for a specific locale */
+export async function pushPageLocale(
+  apiToken: string, siteId: string, pageId: string,
+  localeId: string, translations: Record<string, string>
+): Promise<void> {
+  // Build nodes array from our translation map
+  const nodes = Object.entries(translations).map(([key, text]) => {
+    const nodeId = key.replace(/^node_/, "")
+    return { nodeId, text: { text } }
+  })
+  const res = await fetch(`${BASE}/sites/${siteId}/pages/${pageId}/content?localeId=${localeId}`, {
+    method: "POST",
+    headers: { ...headers(apiToken), "Content-Type": "application/json" },
+    body: JSON.stringify({ nodes }),
+    signal: AbortSignal.timeout(15_000),
+  })
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`Webflow page locale push failed ${res.status}: ${err.slice(0, 200)}`)
+  }
 }
 
 export async function fetchCollectionItems(apiToken: string, collectionId: string): Promise<WebflowItem[]> {

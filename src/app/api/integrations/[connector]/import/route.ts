@@ -64,7 +64,14 @@ export async function POST(
         break
       case "webflow": {
         const siteId = body.siteId ?? config.siteId ?? ""
-        jsonContent = Webflow.itemsToJson(await Webflow.fetchCollectionItems(creds.apiKey ?? "", body.contentId))
+        if (body.contentId.startsWith("page:")) {
+          // Page-based content via Localization API
+          const [, pageId, pageSiteId] = body.contentId.split(":")
+          jsonContent = await Webflow.fetchPageContent(creds.apiKey ?? "", pageSiteId || siteId, pageId)
+        } else {
+          // CMS collection items
+          jsonContent = Webflow.itemsToJson(await Webflow.fetchCollectionItems(creds.apiKey ?? "", body.contentId))
+        }
         break
       }
       case "salesforce":

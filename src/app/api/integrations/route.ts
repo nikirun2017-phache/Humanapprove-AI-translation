@@ -49,7 +49,7 @@ export async function PUT(req: NextRequest) {
 
   const body = await req.json() as {
     connector: string
-    credentials: Record<string, string>
+    credentials?: Record<string, string>  // optional — absent means "keep existing"
     config?: Record<string, string>
   }
 
@@ -57,8 +57,6 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Unknown connector" }, { status: 400 })
   }
 
-  // Sanitize: only allow known credential keys, trim values
-  const cleanCreds: Record<string, string> = {}
   const ALLOWED_KEYS = new Set([
     // existing
     "apiKey", "instanceUrl", "accessToken", "siteId",
@@ -79,27 +77,54 @@ export async function PUT(req: NextRequest) {
     // google drive
     "folderId",
   ])
-  Object.entries(body.credentials ?? {}).forEach(([k, v]) => {
-    if (ALLOWED_KEYS.has(k) && typeof v === "string") cleanCreds[k] = v.trim()
-  })
 
   const cleanConfig: Record<string, string> = {}
   Object.entries(body.config ?? {}).forEach(([k, v]) => {
     if (ALLOWED_KEYS.has(k) && typeof v === "string") cleanConfig[k] = v.trim()
   })
 
+  // If credentials were provided, sanitize and use them.
+  // If absent (config-only update), fetch and preserve existing credentials.
+  let credentialsJson: string
+  if (body.credentials !== undefined && Object.keys(body.credentials).length > 0) {
+    const cleanCreds: Record<string, string> = {}
+    Object.entries(body.credentials).forEach(([k, v]) => {
+      if (ALLOWED_KEYS.has(k) && typeof v === "string") cleanCreds[k] = v.trim()
+    })
+    credentialsJson = JSON.stringify(cleanCreds)
+  } else {
+    // Preserve existing credentials; create with empty if first-time save
+    const existing = await db.integration.findUnique({
+      where: { userId_connector: { userId: session.user.id, connector: body.connector } },
+      select: { credentials: true },
+    })
+    credentialsJson = existing?.credentials ?? "{}"
+  }
+
+  // Merge new config on top of existing config (so partial updates don't wipe other keys)
+  let mergedConfig = cleanConfig
+  if (Object.keys(cleanConfig).length > 0) {
+    const existing = await db.integration.findUnique({
+      where: { userId_connector: { userId: session.user.id, connector: body.connector } },
+      select: { config: true },
+    })
+    let existingConfig: Record<string, string> = {}
+    try { existingConfig = JSON.parse(existing?.config ?? "{}") } catch { /* */ }
+    mergedConfig = { ...existingConfig, ...cleanConfig }
+  }
+
   const integration = await db.integration.upsert({
     where: { userId_connector: { userId: session.user.id, connector: body.connector } },
     create: {
       userId: session.user.id,
       connector: body.connector,
-      credentials: JSON.stringify(cleanCreds),
-      config: JSON.stringify(cleanConfig),
+      credentials: credentialsJson,
+      config: JSON.stringify(mergedConfig),
       status: "disconnected",
     },
     update: {
-      credentials: JSON.stringify(cleanCreds),
-      config: JSON.stringify(cleanConfig),
+      credentials: credentialsJson,
+      config: JSON.stringify(mergedConfig),
       status: "disconnected",
       lastTestedAt: null,
     },

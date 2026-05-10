@@ -383,15 +383,21 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
   async function save(connector: string) {
     setSaving((s) => ({ ...s, [connector]: true }))
     setTestResult((r) => ({ ...r, [connector]: null }))
+    const credChanges = forms[connector] ?? {}
+    const configChanges = configs[connector] ?? {}
+    const body: Record<string, unknown> = { connector, config: configChanges }
+    // Only send credentials when the user has typed new values — avoids wiping saved secrets
+    if (Object.keys(credChanges).length > 0) body.credentials = credChanges
     const res = await fetch("/api/integrations", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ connector, credentials: forms[connector] ?? {}, config: configs[connector] ?? {} }),
+      body: JSON.stringify(body),
     })
     setSaving((s) => ({ ...s, [connector]: false }))
     if (res.ok) {
       await loadIntegrations()
       setForms((f) => ({ ...f, [connector]: {} }))
+      setConfigs((c) => ({ ...c, [connector]: {} }))
     }
   }
 
@@ -598,7 +604,7 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => save(def.id)}
-                    disabled={saving[def.id] || Object.keys(form).length === 0}
+                    disabled={saving[def.id] || (Object.keys(form).length === 0 && Object.keys(cfg).length === 0)}
                     className="px-4 py-2 text-sm bg-gray-900 text-white rounded-lg hover:bg-gray-700 disabled:opacity-40 transition-colors"
                   >
                     {saving[def.id] ? "Saving…" : "Save credentials"}

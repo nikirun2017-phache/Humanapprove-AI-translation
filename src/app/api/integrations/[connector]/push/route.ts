@@ -94,18 +94,31 @@ export async function POST(
         break
       }
       case "webflow": {
-        const siteId = (meta.siteId as string | undefined) ?? config.siteId ?? ""
-        const byItem: Record<string, Record<string, string>> = {}
-        Object.entries(translations).forEach(([key, val]) => {
-          const parts = key.match(/^item_([^_]+)_(.+)$/)
-          if (parts) {
-            const [, itemId, field] = parts
-            byItem[itemId] = byItem[itemId] ?? {}
-            byItem[itemId][field] = val
+        if (contentId.startsWith("page:")) {
+          // Pages Localization API — resolve locale ID from tag
+          const [, pageId, pageSiteId] = contentId.split(":")
+          const siteId = pageSiteId || (meta.siteId as string | undefined) || config.siteId || ""
+          const locales = await Webflow.listLocales(creds.apiKey ?? "", siteId)
+          // Match target language to Webflow locale tag (e.g. "fr-FR" → "fr-FR" or "fr")
+          const locale = locales.find(
+            (l) => l.tag === targetLanguage || l.tag === targetLanguage.split("-")[0]
+          )
+          if (!locale) throw new Error(`Locale "${targetLanguage}" not found in Webflow site. Add it in Webflow > Site settings > Localization.`)
+          await Webflow.pushPageLocale(creds.apiKey ?? "", siteId, pageId, locale.id, translations)
+        } else {
+          // CMS collection items
+          const byItem: Record<string, Record<string, string>> = {}
+          Object.entries(translations).forEach(([key, val]) => {
+            const parts = key.match(/^item_([^_]+)_(.+)$/)
+            if (parts) {
+              const [, itemId, field] = parts
+              byItem[itemId] = byItem[itemId] ?? {}
+              byItem[itemId][field] = val
+            }
+          })
+          for (const [itemId, fields] of Object.entries(byItem)) {
+            await Webflow.patchItem(creds.apiKey ?? "", contentId, itemId, fields)
           }
-        })
-        for (const [itemId, fields] of Object.entries(byItem)) {
-          await Webflow.patchItem(creds.apiKey ?? "", contentId, itemId, fields)
         }
         break
       }
