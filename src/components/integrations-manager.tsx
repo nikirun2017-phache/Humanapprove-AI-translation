@@ -29,6 +29,15 @@ interface WebflowSite {
   shortName: string
 }
 
+interface RecentJob {
+  id: string
+  name: string
+  status: string
+  integrationId?: string
+  integrationMeta?: string
+  tasks: { id: string; targetLanguage: string; status: string }[]
+}
+
 interface ConnectorDef {
   id: string
   name: string
@@ -84,7 +93,7 @@ const CONNECTORS: ConnectorDef[] = [
   },
 ]
 
-// ── Small helper components ────────────────────────────────────────────────────
+// ── Small helpers ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: string }) {
   if (status === "connected") return <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">● Connected</span>
@@ -101,7 +110,7 @@ function Spinner() {
   )
 }
 
-// ── Language picker (simplified multi-select) ─────────────────────────────────
+// ── Language picker ────────────────────────────────────────────────────────────
 
 function LanguagePicker({ selected, onChange }: { selected: Set<string>; onChange: (s: Set<string>) => void }) {
   const [search, setSearch] = useState("")
@@ -148,25 +157,44 @@ function LanguagePicker({ selected, onChange }: { selected: Set<string>; onChang
 
 export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }) {
   const router = useRouter()
+
+  // Per-connector form inputs
   const [saved, setSaved] = useState<Record<string, Integration>>({})
   const [forms, setForms] = useState<Record<string, Record<string, string>>>({})
   const [configs, setConfigs] = useState<Record<string, Record<string, string>>>({})
   const [expanded, setExpanded] = useState<string | null>(null)
+
+  // Action loading states
   const [saving, setSaving] = useState<Record<string, boolean>>({})
   const [testing, setTesting] = useState<Record<string, boolean>>({})
   const [testResult, setTestResult] = useState<Record<string, { ok: boolean; error?: string } | null>>({})
+
+  // Content browsing
   const [content, setContent] = useState<Record<string, ContentItem[]>>({})
   const [sites, setSites] = useState<Record<string, WebflowSite[]>>({})
   const [loadingContent, setLoadingContent] = useState<Record<string, boolean>>({})
+  const [contentSearch, setContentSearch] = useState<Record<string, string>>({})
+
+  // Import flow
   const [importing, setImporting] = useState<string | null>(null)
-  const [pushing, setPushing] = useState<string | null>(null)
   const [importForm, setImportForm] = useState<{
-    contentId: string; contentName: string; langs: Set<string>; provider: string; model: string
+    contentId: string
+    contentName: string
+    langs: Set<string>
+    provider: string
+    model: string
+    sourceLanguage: string
   } | null>(null)
   const [importError, setImportError] = useState("")
-  const [recentJobs, setRecentJobs] = useState<{ id: string; name: string; status: string; tasks: { targetLanguage: string; status: string }[] }[]>([])
 
-  // Default provider + model from first provider
+  // Push-back flow
+  const [pushing, setPushing] = useState<string | null>(null)
+  const [pushResults, setPushResults] = useState<Record<string, { ok: boolean; message: string }>>({})
+
+  // Recent jobs (all, filtered per-connector in the UI)
+  const [recentJobs, setRecentJobs] = useState<RecentJob[]>([])
+
+  // Default provider + model
   const defaultProvider = providers[0]?.name ?? "anthropic"
   const defaultModel = providers[0]?.models[0]?.id ?? ""
 
@@ -191,15 +219,16 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
   }, [expanded, saved]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load recent integration jobs
-  useEffect(() => {
-    fetch("/api/translation-studio/jobs")
-      .then((r) => r.json())
-      .then((jobs: { id: string; name: string; status: string; integrationId?: string; tasks: { targetLanguage: string; status: string }[] }[]) => {
-        if (!Array.isArray(jobs)) return
-        setRecentJobs(jobs.filter((j) => j.integrationId).slice(0, 10))
-      })
-      .catch(() => {})
+  const loadRecentJobs = useCallback(async () => {
+    try {
+      const res = await fetch("/api/translation-studio/jobs")
+      const jobs = await res.json() as RecentJob[]
+      if (!Array.isArray(jobs)) return
+      setRecentJobs(jobs.filter((j) => j.integrationId).slice(0, 20))
+    } catch { /* */ }
   }, [])
+
+  useEffect(() => { loadRecentJobs() }, [loadRecentJobs])
 
   function setForm(connector: string, key: string, val: string) {
     setForms((f) => ({ ...f, [connector]: { ...f[connector], [key]: val } }))
@@ -257,13 +286,14 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
     setTestResult((r) => ({ ...r, [connector]: null }))
   }
 
-  function openImport(item: ContentItem, connector: string) {
+  function openImport(item: ContentItem) {
     setImportForm({
       contentId: item.id,
       contentName: item.name,
       langs: new Set<string>(),
       provider: defaultProvider,
       model: defaultModel,
+      sourceLanguage: "en-US",
     })
     setImportError("")
   }
@@ -275,18 +305,18 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
     }
     setImporting(importForm.contentId)
     setImportError("")
-    const body = {
-      contentId: importForm.contentId,
-      contentName: importForm.contentName,
-      targetLanguages: Array.from(importForm.langs),
-      provider: importForm.provider,
-      model: importForm.model,
-      siteId: configs[connector]?.siteId ?? saved[connector]?.config?.siteId,
-    }
     const res = await fetch(`/api/integrations/${connector}/import`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        contentId: importForm.contentId,
+        contentName: importForm.contentName,
+        targetLanguages: Array.from(importForm.langs),
+        provider: importForm.provider,
+        model: importForm.model,
+        sourceLanguage: importForm.sourceLanguage,
+        siteId: configs[connector]?.siteId ?? saved[connector]?.config?.siteId,
+      }),
     })
     const data = await res.json() as { jobId?: string; error?: string }
     setImporting(null)
@@ -299,7 +329,8 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
   }
 
   async function pushBack(jobId: string, connector: string, targetLanguage: string) {
-    setPushing(`${jobId}-${targetLanguage}`)
+    const key = `${jobId}-${targetLanguage}`
+    setPushing(key)
     const res = await fetch(`/api/integrations/${connector}/push`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -308,10 +339,17 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
     setPushing(null)
     const data = await res.json() as { ok?: boolean; pushedStrings?: number; error?: string }
     if (data.ok) {
-      alert(`✓ Pushed ${data.pushedStrings} strings back to ${connector.charAt(0).toUpperCase() + connector.slice(1)}`)
+      setPushResults((r) => ({ ...r, [key]: { ok: true, message: `✓ Pushed ${data.pushedStrings} strings` } }))
+      loadRecentJobs()
     } else {
-      alert(`Push failed: ${data.error}`)
+      setPushResults((r) => ({ ...r, [key]: { ok: false, message: data.error ?? "Push failed" } }))
     }
+  }
+
+  // Get connector name from a job's integrationMeta JSON
+  function jobConnector(job: RecentJob): string {
+    try { return (JSON.parse(job.integrationMeta ?? "{}") as { connector?: string }).connector ?? "" }
+    catch { return "" }
   }
 
   return (
@@ -326,11 +364,21 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
         const cfg = configs[def.id] ?? {}
         const tr = testResult[def.id]
 
+        // Content items filtered by search
+        const rawItems = content[def.id] ?? []
+        const search = contentSearch[def.id] ?? ""
+        const filteredItems = search
+          ? rawItems.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()) || item.id.toLowerCase().includes(search.toLowerCase()))
+          : rawItems
+
+        // Recent jobs for this connector only
+        const connectorJobs = recentJobs.filter((j) => jobConnector(j) === def.id)
+
         return (
           <div key={def.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
             {/* Card header */}
             <div
-              className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors select-none"
               onClick={() => setExpanded(isOpen ? null : def.id)}
             >
               <div className={`w-10 h-10 rounded-xl ${def.iconBg} flex items-center justify-center text-xl shrink-0`}>
@@ -352,7 +400,6 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
             {/* Expanded body */}
             {isOpen && (
               <div className="border-t border-gray-100 px-5 py-5 space-y-5">
-                <p className="text-sm text-gray-600">{def.description}</p>
 
                 {/* Credentials form */}
                 <div className="space-y-3">
@@ -383,13 +430,17 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
                   ))}
                 </div>
 
-                {/* Webflow site picker */}
+                {/* Webflow site picker (appears after connecting if multiple sites) */}
                 {def.id === "webflow" && sites["webflow"]?.length > 0 && (
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Select site</label>
                     <select
                       value={cfg.siteId ?? ""}
-                      onChange={(e) => setConfig("webflow", "siteId", e.target.value)}
+                      onChange={(e) => {
+                        setConfig("webflow", "siteId", e.target.value)
+                        // Reload collections for the selected site
+                        setContent((c) => ({ ...c, webflow: [] }))
+                      }}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     >
                       <option value="">— choose a site —</option>
@@ -443,70 +494,121 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
                 {tr && (
                   <div className={`rounded-xl border px-4 py-3 text-sm flex items-start gap-2 ${tr.ok ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-700"}`}>
                     <span>{tr.ok ? "✓" : "✕"}</span>
-                    <span>{tr.ok ? "Connection successful" : (tr.error ?? "Connection failed")}</span>
+                    <span>{tr.ok ? "Connection successful — content loaded below" : (tr.error ?? "Connection failed")}</span>
                   </div>
                 )}
 
                 {/* Docs link */}
                 {def.docsUrl && (
                   <p className="text-xs text-gray-400">
-                    API docs:{" "}
+                    Need help?{" "}
                     <a href={def.docsUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:underline">
-                      {def.docsUrl}
+                      {def.name} API docs ↗
                     </a>
                   </p>
                 )}
 
-                {/* Content list */}
-                {isConnected && content[def.id]?.length > 0 && (
-                  <div className="space-y-3">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Available content</p>
-                    <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
-                      {content[def.id].map((item) => (
-                        <div key={item.id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50">
-                          <div className="min-w-0 flex-1">
+                {/* ── Content browser ── */}
+                {isConnected && loadingContent[def.id] && (
+                  <div className="flex items-center gap-2 text-sm text-gray-500 py-2">
+                    <Spinner /> Loading content from {def.name}…
+                  </div>
+                )}
+
+                {isConnected && !loadingContent[def.id] && rawItems.length === 0 && content[def.id] !== undefined && (
+                  <p className="text-sm text-gray-400 py-2">
+                    No content found. Make sure the credentials have read access, then click Refresh.
+                  </p>
+                )}
+
+                {isConnected && rawItems.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        Available content
+                        <span className="ml-2 font-normal normal-case text-gray-400">({rawItems.length} item{rawItems.length !== 1 ? "s" : ""})</span>
+                      </p>
+                    </div>
+
+                    {/* Search */}
+                    {rawItems.length > 6 && (
+                      <div className="relative">
+                        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <input
+                          value={search}
+                          onChange={(e) => setContentSearch((cs) => ({ ...cs, [def.id]: e.target.value }))}
+                          placeholder={`Search ${rawItems.length} items…`}
+                          className="w-full border border-gray-200 rounded-lg pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                    )}
+
+                    <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100 max-h-72 overflow-y-auto">
+                      {filteredItems.length === 0 && (
+                        <p className="px-4 py-3 text-sm text-gray-400">No items match "{search}"</p>
+                      )}
+                      {filteredItems.map((item) => (
+                        <div key={item.id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
+                          <div className="min-w-0 flex-1 mr-3">
                             <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
-                            <p className="text-xs text-gray-400 mt-0.5">
-                              {item.state}
-                              {item.itemCount > 0 && ` · ${item.itemCount} step${item.itemCount !== 1 ? "s" : ""}`}
+                            <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
+                              <span className="capitalize">{item.state}</span>
+                              {item.itemCount > 0 && (
+                                <>
+                                  <span>·</span>
+                                  <span>{item.itemCount} step{item.itemCount !== 1 ? "s" : ""}</span>
+                                </>
+                              )}
                             </p>
                           </div>
                           <button
-                            onClick={() => openImport(item, def.id)}
-                            className="ml-4 shrink-0 px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                            onClick={() => openImport(item)}
+                            className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                           >
-                            Import for translation
+                            Import
                           </button>
                         </div>
                       ))}
                     </div>
+                    {search && filteredItems.length < rawItems.length && (
+                      <p className="text-xs text-gray-400 text-right">
+                        Showing {filteredItems.length} of {rawItems.length} items
+                      </p>
+                    )}
                   </div>
                 )}
 
-                {isConnected && loadingContent[def.id] && (
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Spinner /> Loading content…
-                  </div>
-                )}
-
-                {isConnected && !loadingContent[def.id] && content[def.id]?.length === 0 && (
-                  <p className="text-sm text-gray-400">No content found. Make sure the credentials have read access.</p>
-                )}
-
-                {/* Import modal (inline) */}
+                {/* ── Import config panel ── */}
                 {importForm && (
                   <div className="border border-indigo-200 bg-indigo-50 rounded-2xl p-5 space-y-4">
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="font-semibold text-indigo-900 text-sm">Import: {importForm.contentName}</p>
-                        <p className="text-xs text-indigo-600 mt-0.5">Choose target languages and AI model, then import.</p>
+                        <p className="text-xs text-indigo-600 mt-0.5">Choose languages and AI model, then import and translate.</p>
                       </div>
-                      <button onClick={() => setImportForm(null)} className="text-indigo-400 hover:text-indigo-600 text-lg leading-none">×</button>
+                      <button onClick={() => setImportForm(null)} className="text-indigo-400 hover:text-indigo-600 text-xl leading-none ml-3">×</button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {/* Source language */}
                       <div>
-                        <label className="block text-xs font-medium text-indigo-800 mb-1">AI Model</label>
+                        <label className="block text-xs font-medium text-indigo-800 mb-1">Source language</label>
+                        <select
+                          value={importForm.sourceLanguage}
+                          onChange={(e) => setImportForm((f) => f ? { ...f, sourceLanguage: e.target.value } : f)}
+                          className="w-full border border-indigo-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                          {STUDIO_LANGUAGES.map((l) => (
+                            <option key={l.code} value={l.code}>{l.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* AI model */}
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-medium text-indigo-800 mb-1">AI model</label>
                         <select
                           value={importForm.model}
                           onChange={(e) => setImportForm((f) => f ? { ...f, model: e.target.value } : f)}
@@ -519,6 +621,7 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
                       </div>
                     </div>
 
+                    {/* Target languages */}
                     <div>
                       <label className="block text-xs font-medium text-indigo-800 mb-1">Target languages</label>
                       <LanguagePicker
@@ -546,52 +649,90 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
                     </div>
                   </div>
                 )}
+
+                {/* ── Recent jobs for this connector ── */}
+                {connectorJobs.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Recent translations</p>
+                    <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
+                      {connectorJobs.map((job) => {
+                        const completedTasks = job.tasks.filter((t) => t.status === "completed")
+                        const allTasksDone = job.status === "completed" && completedTasks.length > 0
+                        return (
+                          <div key={job.id} className="px-4 py-3">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0 flex-1">
+                                <a
+                                  href={`/translation-studio/${job.id}`}
+                                  className="text-sm font-medium text-gray-900 hover:text-indigo-600 truncate block"
+                                >
+                                  {job.name}
+                                </a>
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                  {job.status === "completed"
+                                    ? `${completedTasks.length} language${completedTasks.length !== 1 ? "s" : ""} ready`
+                                    : <span className="capitalize">{job.status}</span>
+                                  }
+                                </p>
+                              </div>
+                              {/* View job link */}
+                              <a
+                                href={`/translation-studio/${job.id}`}
+                                className="text-xs text-indigo-500 hover:text-indigo-700 font-medium shrink-0"
+                              >
+                                View →
+                              </a>
+                            </div>
+
+                            {/* Per-language push buttons */}
+                            {allTasksDone && (
+                              <div className="flex flex-wrap gap-1.5 mt-2">
+                                {completedTasks.map((t) => {
+                                  const key = `${job.id}-${t.targetLanguage}`
+                                  const result = pushResults[key]
+                                  return (
+                                    <div key={t.targetLanguage} className="flex items-center gap-1">
+                                      {result ? (
+                                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${result.ok ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-600 border border-red-200"}`}>
+                                          {result.message}
+                                        </span>
+                                      ) : (
+                                        <button
+                                          onClick={() => pushBack(job.id, def.id, t.targetLanguage)}
+                                          disabled={pushing === key}
+                                          className="text-xs px-2.5 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center gap-1"
+                                        >
+                                          {pushing === key ? (
+                                            <>
+                                              <svg className="w-3 h-3 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                              </svg>
+                                              Pushing…
+                                            </>
+                                          ) : (
+                                            `Push ${t.targetLanguage}`
+                                          )}
+                                        </button>
+                                      )}
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
               </div>
             )}
           </div>
         )
       })}
 
-      {/* Recent integration jobs */}
-      {recentJobs.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Recent integration jobs</p>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {recentJobs.map((job) => {
-              const completedTasks = job.tasks.filter((t) => t.status === "completed")
-              const connectorName = CONNECTORS.find((c) => job.name.toLowerCase().startsWith(`[${c.id}`))
-              return (
-                <div key={job.id} className="flex items-center gap-3 px-5 py-3">
-                  <div className="flex-1 min-w-0">
-                    <a href={`/translation-studio/${job.id}`} className="text-sm font-medium text-gray-900 hover:text-indigo-600 truncate block">
-                      {job.name}
-                    </a>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {job.status === "completed" ? `✓ ${completedTasks.length} language${completedTasks.length !== 1 ? "s" : ""} ready` : `${job.status}`}
-                    </p>
-                  </div>
-                  {job.status === "completed" && completedTasks.length > 0 && connectorName && (
-                    <div className="flex flex-wrap gap-1">
-                      {completedTasks.map((t) => (
-                        <button
-                          key={t.targetLanguage}
-                          onClick={() => pushBack(job.id, connectorName.id, t.targetLanguage)}
-                          disabled={pushing === `${job.id}-${t.targetLanguage}`}
-                          className="text-xs px-2.5 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
-                        >
-                          {pushing === `${job.id}-${t.targetLanguage}` ? "Pushing…" : `Push ${t.targetLanguage}`}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

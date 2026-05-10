@@ -23,6 +23,8 @@ interface Job {
   sourceFormat: string
   tasks: Task[]
   createdBy: { name: string }
+  integrationId?: string | null
+  integrationMeta?: string | null
 }
 
 interface Props {
@@ -43,6 +45,12 @@ const STATUS_LABELS: Record<string, string> = {
   failed: "Failed",
 }
 
+const CONNECTOR_ICONS: Record<string, string> = {
+  pendo: "🎯",
+  webflow: "🌐",
+  salesforce: "☁️",
+}
+
 // If a task stays "running" with no completedUnits progress for this long,
 // the current fetch is aborted and the task is auto-retried once.
 const STALL_TIMEOUT_MS = 8 * 60 * 1000 // 8 minutes
@@ -52,6 +60,7 @@ export function JobProgress({ initialJob }: Props) {
   const [paused, setPaused] = useState(false)
   const [retrying, setRetrying] = useState<Record<string, boolean>>({})
   const [autoDownloaded, setAutoDownloaded] = useState(false)
+  const [pushState, setPushState] = useState<Record<string, { status: "idle" | "pushing" | "done" | "error"; message?: string }>>({})
   const runningRef = useRef(false)
   const pausedRef = useRef(false)
   const autoDownloadedRef = useRef(false)
@@ -77,6 +86,15 @@ export function JobProgress({ initialJob }: Props) {
   // Formats that produce both a native-format file AND a separate bilingual XLIFF
   const hasNativeAndXliff = !isPdf && !isXliff
 
+  // Integration-job derived info
+  const isIntegrationJob = !!job.integrationId
+  const integrationMeta = (() => {
+    try { return JSON.parse(job.integrationMeta ?? "{}") as Record<string, string> } catch { return {} }
+  })()
+  const connectorId = integrationMeta.connector ?? ""
+  const connectorLabel = connectorId ? connectorId.charAt(0).toUpperCase() + connectorId.slice(1) : ""
+  const connectorIcon = CONNECTOR_ICONS[connectorId] ?? "🔗"
+
   function triggerDownload(url: string) {
     const a = document.createElement("a")
     a.href = url
@@ -86,9 +104,10 @@ export function JobProgress({ initialJob }: Props) {
     document.body.removeChild(a)
   }
 
-  // Auto-download all completed files as soon as translation finishes
+  // Auto-download all completed files as soon as translation finishes.
+  // Suppressed for integration jobs — those push back to the CMS instead.
   useEffect(() => {
-    if (allDone && completedCount > 0 && !autoDownloadedRef.current) {
+    if (allDone && completedCount > 0 && !autoDownloadedRef.current && !isIntegrationJob) {
       autoDownloadedRef.current = true
       setAutoDownloaded(true)
       ;(async () => {
@@ -109,7 +128,7 @@ export function JobProgress({ initialJob }: Props) {
         }
       })()
     }
-  }, [allDone, completedCount])
+  }, [allDone, completedCount]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function fetchJob() {
     const res = await fetch(`/api/translation-studio/jobs/${job.id}`)
@@ -197,8 +216,6 @@ export function JobProgress({ initialJob }: Props) {
         if (pausedRef.current) break
         const task = pending[i++]
         // Retry the same task if the server concurrency limit returns 429.
-        // This happens when all slots are occupied by other workers; we back off
-        // and wait for one to free up. Up to 5 attempts (up to ~45 s total wait).
         let status = await translateTask(task)
         for (let attempt = 1; status === 429 && attempt <= 5 && !pausedRef.current; attempt++) {
           console.warn(`[job-progress] Task ${task.id} got 429 — retrying in ${attempt * 5}s (attempt ${attempt})`)
@@ -212,10 +229,6 @@ export function JobProgress({ initialJob }: Props) {
 
     runningRef.current = false
 
-    // After all workers finish, check if any tasks are still pending. This can happen
-    // when a server-side 429 (concurrency exceeded) silently dropped a task — the task
-    // stays "pending" in the DB but the client already moved past it. Retry up to 3
-    // rounds with a short delay so the remaining tasks are not left stranded.
     if (!pausedRef.current && retryRound < 3) {
       const refreshed = await fetchJob()
       if (refreshed) {
@@ -230,13 +243,11 @@ export function JobProgress({ initialJob }: Props) {
   }
 
   useEffect(() => {
-    // Resume if there are pending tasks OR stale "running" tasks from a
-    // previous session that was closed mid-translation
     const hasActive = initialJob.tasks.some(
       (t: Task) => t.status === "pending" || t.status === "running"
     )
     if (hasActive) runTranslation()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleRetry(task: Task) {
     setRetrying((s) => ({ ...s, [task.id]: true }))
@@ -271,9 +282,39 @@ export function JobProgress({ initialJob }: Props) {
     }
   }
 
+  // Push a single task's translation back to the connected CMS
+  async function pushTask(task: Task) {
+    setPushState((s) => ({ ...s, [task.id]: { status: "pushing" } }))
+    try {
+      const res = await fetch(`/api/integrations/${connectorId}/push`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId: job.id, targetLanguage: task.targetLanguage }),
+      })
+      const data = await res.json() as { ok?: boolean; pushedStrings?: number; error?: string }
+      if (data.ok) {
+        setPushState((s) => ({ ...s, [task.id]: { status: "done", message: `${data.pushedStrings} strings pushed` } }))
+      } else {
+        setPushState((s) => ({ ...s, [task.id]: { status: "error", message: data.error ?? "Push failed" } }))
+      }
+    } catch (err) {
+      setPushState((s) => ({ ...s, [task.id]: { status: "error", message: (err as Error).message } }))
+    }
+  }
+
+  // Push all completed tasks back to the CMS
+  async function pushAll() {
+    const completedTasks = tasks.filter((t) => t.status === "completed")
+    for (const task of completedTasks) {
+      const current = pushState[task.id]
+      if (current?.status === "done") continue // already pushed
+      await pushTask(task)
+    }
+  }
+
   // Dynamic progress message shown to the user
   function getProgressMessage() {
-    if (allDone && autoDownloaded) {
+    if (allDone && (autoDownloaded || isIntegrationJob)) {
       return null // replaced by the completion banner below
     }
     if (paused) {
@@ -299,11 +340,21 @@ export function JobProgress({ initialJob }: Props) {
 
   const progressMsg = getProgressMessage()
 
+  // Count tasks already successfully pushed
+  const pushedCount = Object.values(pushState).filter((s) => s.status === "done").length
+  const allPushed = pushedCount === completedCount && completedCount > 0
+
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
+          {isIntegrationJob && (
+            <div className="flex items-center gap-1.5 text-xs text-gray-400 font-medium mb-1">
+              <span>{connectorIcon}</span>
+              <span>{connectorLabel} integration</span>
+            </div>
+          )}
           <h1 className="text-2xl font-bold text-gray-900">{job.name}</h1>
           <p className="text-sm text-gray-500 mt-0.5">
             {job.provider} · {job.model} · {totalTasks} language{totalTasks !== 1 ? "s" : ""}
@@ -336,10 +387,26 @@ export function JobProgress({ initialJob }: Props) {
               Retry failed ({failedCount})
             </button>
           )}
+          {/* Push-to-CMS: primary action for integration jobs */}
+          {isIntegrationJob && allDone && completedCount > 0 && !allPushed && (
+            <button
+              onClick={pushAll}
+              className="px-3 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors flex items-center gap-1.5"
+            >
+              <span>{connectorIcon}</span>
+              Push all to {connectorLabel}
+            </button>
+          )}
+          {/* Download: always available, secondary for integration jobs */}
           {readyCount > 0 && (
             <button
               onClick={downloadAll}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+              className={cn(
+                "px-3 py-2 text-sm border rounded-lg transition-colors",
+                isIntegrationJob
+                  ? "border-gray-200 text-gray-400 hover:bg-gray-50"
+                  : "border-gray-300 hover:bg-gray-50"
+              )}
             >
               {autoDownloaded ? `Re-download all (${readyCount})` : `Download all (${readyCount})`}
             </button>
@@ -347,7 +414,12 @@ export function JobProgress({ initialJob }: Props) {
           {allDone && (
             <a
               href="/translation-studio"
-              className="px-3 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
+              className={cn(
+                "px-3 py-2 text-sm font-semibold rounded-lg transition-colors",
+                isIntegrationJob
+                  ? "border border-gray-300 hover:bg-gray-50 text-gray-700"
+                  : "bg-indigo-600 hover:bg-indigo-700 text-white"
+              )}
             >
               + Translate another file
             </a>
@@ -413,16 +485,41 @@ export function JobProgress({ initialJob }: Props) {
 
       {/* Completion banner */}
       {allDone && completedCount > 0 && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-5">
+        <div className={cn("rounded-xl p-5 border", isIntegrationJob ? "bg-indigo-50 border-indigo-200" : "bg-green-50 border-green-200")}>
           <div className="flex items-start gap-3">
-            <span className="text-2xl">✅</span>
+            <span className="text-2xl">{allPushed ? "✅" : isIntegrationJob ? connectorIcon : "✅"}</span>
             <div>
-              <p className="text-sm font-semibold text-green-900">
-                {completedCount} {completedCount !== 1 ? "files" : "file"} ready — downloading to your Downloads folder
-              </p>
-              <p className="text-xs text-green-700 mt-1">
-                Use the buttons below to re-download any file.
-              </p>
+              {isIntegrationJob ? (
+                allPushed ? (
+                  <>
+                    <p className="text-sm font-semibold text-green-900">
+                      All translations pushed to {connectorLabel} successfully
+                    </p>
+                    <p className="text-xs text-green-700 mt-1">
+                      Your content is live. You can push again any time using the buttons in the table below.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-semibold text-indigo-900">
+                      {completedCount} {completedCount !== 1 ? "translations" : "translation"} ready — push to {connectorLabel}
+                    </p>
+                    <p className="text-xs text-indigo-700 mt-1">
+                      Click <strong>Push all to {connectorLabel}</strong> above, or push individual languages in the table below.
+                      You can also download the translated files if needed.
+                    </p>
+                  </>
+                )
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-green-900">
+                    {completedCount} {completedCount !== 1 ? "files" : "file"} ready — downloading to your Downloads folder
+                  </p>
+                  <p className="text-xs text-green-700 mt-1">
+                    Use the buttons below to re-download any file.
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -440,6 +537,7 @@ export function JobProgress({ initialJob }: Props) {
                 ? Math.round((task.completedUnits / task.totalUnits) * 100)
                 : 0
               const isRunning = task.status === "running"
+              const ps = pushState[task.id]
 
               return (
                 <tr key={task.id} className="hover:bg-gray-50">
@@ -477,12 +575,63 @@ export function JobProgress({ initialJob }: Props) {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-3">
+                    <div className="flex items-center justify-end gap-2 flex-wrap">
+                      {/* Push-to-CMS action (integration jobs only) */}
+                      {isIntegrationJob && task.status === "completed" && (
+                        <>
+                          {ps?.status === "done" ? (
+                            <span className="text-xs text-green-600 font-medium flex items-center gap-1">
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                              </svg>
+                              {ps.message}
+                            </span>
+                          ) : ps?.status === "error" ? (
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs text-red-500" title={ps.message}>Push failed</span>
+                              <button
+                                onClick={() => pushTask(task)}
+                                className="text-xs text-red-600 underline hover:text-red-800"
+                              >
+                                Retry
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => pushTask(task)}
+                              disabled={ps?.status === "pushing"}
+                              className="text-xs px-2.5 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 font-medium flex items-center gap-1 transition-colors"
+                            >
+                              {ps?.status === "pushing" ? (
+                                <>
+                                  <svg className="w-3 h-3 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                  </svg>
+                                  Pushing…
+                                </>
+                              ) : (
+                                <>
+                                  <span>{connectorIcon}</span>
+                                  Push to {connectorLabel}
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </>
+                      )}
+
+                      {/* Download links */}
                       {task.status === "completed" && !isPdf && (
                         <>
                           <button
                             onClick={() => downloadTask(task)}
-                            className="text-xs text-gray-500 hover:text-gray-700 underline"
+                            className={cn(
+                              "text-xs underline",
+                              isIntegrationJob
+                                ? "text-gray-400 hover:text-gray-600"
+                                : "text-gray-500 hover:text-gray-700"
+                            )}
                           >
                             {isXliff ? "XLIFF" : "Download"}
                           </button>
@@ -490,7 +639,12 @@ export function JobProgress({ initialJob }: Props) {
                             <a
                               href={`/api/translation-studio/jobs/${job.id}/tasks/${task.id}/download?format=xliff`}
                               download
-                              className="text-xs text-indigo-500 hover:text-indigo-700 underline"
+                              className={cn(
+                                "text-xs underline",
+                                isIntegrationJob
+                                  ? "text-gray-400 hover:text-gray-600"
+                                  : "text-indigo-500 hover:text-indigo-700"
+                              )}
                             >
                               XLIFF
                             </a>
