@@ -234,6 +234,39 @@ const CONNECTORS: ConnectorDef[] = [
     ],
     docsUrl: "https://learn.microsoft.com/en-us/graph/api/resources/sharepoint",
   },
+  {
+    id: "github",
+    name: "GitHub",
+    tagline: "Repository i18n & localization files",
+    description: "Connect to a GitHub repository to import JSON, YAML, .po, .strings, .arb, and other localization files. Translations are committed back to the repo as new locale files.",
+    icon: "🐙",
+    iconBg: "bg-gray-100",
+    fields: [
+      { key: "apiToken", label: "Personal access token", type: "password", placeholder: "ghp_… (repo scope required)" },
+    ],
+    configFields: [
+      { key: "owner", label: "Owner (user or org)", type: "text", placeholder: "e.g. mycompany" },
+      { key: "repoName", label: "Repository name", type: "text", placeholder: "e.g. my-app" },
+      { key: "branch", label: "Branch (default: main)", type: "text", placeholder: "main" },
+    ],
+    docsUrl: "https://docs.github.com/en/rest",
+  },
+  {
+    id: "gitlab",
+    name: "GitLab",
+    tagline: "Repository i18n & localization files",
+    description: "Connect to a GitLab project to import localization files (JSON, YAML, .po, .strings, .arb…). Translated files are committed back to the project on the configured branch.",
+    icon: "🦊",
+    iconBg: "bg-orange-50",
+    fields: [
+      { key: "apiToken", label: "Personal access token", type: "password", placeholder: "glpat-… (api or read_repository scope)" },
+    ],
+    configFields: [
+      { key: "projectPath", label: "Project path", type: "text", placeholder: "e.g. mygroup/my-app" },
+      { key: "branch", label: "Branch (default: main)", type: "text", placeholder: "main" },
+    ],
+    docsUrl: "https://docs.gitlab.com/ee/api/",
+  },
 ]
 
 // ── Small helpers ─────────────────────────────────────────────────────────────

@@ -59,6 +59,8 @@ const CONNECTOR_ICONS: Record<string, string> = {
   marketo: "📧",
   googledrive: "📁",
   sharepoint: "🏢",
+  github: "🐙",
+  gitlab: "🦊",
 }
 
 // If a task stays "running" with no completedUnits progress for this long,

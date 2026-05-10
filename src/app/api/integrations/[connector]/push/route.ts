@@ -14,6 +14,8 @@ import * as Qualtrics from "@/lib/connectors/qualtrics"
 import * as Marketo from "@/lib/connectors/marketo"
 import * as GoogleDrive from "@/lib/connectors/googledrive"
 import * as SharePoint from "@/lib/connectors/sharepoint"
+import * as GitHub from "@/lib/connectors/github"
+import * as GitLab from "@/lib/connectors/gitlab"
 
 interface PushBody {
   jobId: string
@@ -156,6 +158,12 @@ export async function POST(
         break
       case "sharepoint":
         await SharePoint.pushTranslation(creds.accessToken ?? "", contentId, targetLanguage, translations)
+        break
+      case "github":
+        await GitHub.pushTranslation(creds.apiToken ?? "", contentId, targetLanguage, translations)
+        break
+      case "gitlab":
+        await GitLab.pushTranslation(creds.apiToken ?? "", contentId, targetLanguage, translations)
         break
       default:
         return NextResponse.json({ error: "Unknown connector" }, { status: 400 })

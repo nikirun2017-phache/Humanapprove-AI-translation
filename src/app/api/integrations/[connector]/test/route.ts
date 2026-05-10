@@ -14,6 +14,8 @@ import * as Qualtrics from "@/lib/connectors/qualtrics"
 import * as Marketo from "@/lib/connectors/marketo"
 import * as GoogleDrive from "@/lib/connectors/googledrive"
 import * as SharePoint from "@/lib/connectors/sharepoint"
+import * as GitHub from "@/lib/connectors/github"
+import * as GitLab from "@/lib/connectors/gitlab"
 
 export async function POST(
   req: NextRequest,
@@ -78,6 +80,12 @@ export async function POST(
         break
       case "sharepoint":
         result = await SharePoint.testConnection(creds.siteUrl ?? "", creds.accessToken ?? "")
+        break
+      case "github":
+        result = await GitHub.testConnection(creds.apiToken ?? "")
+        break
+      case "gitlab":
+        result = await GitLab.testConnection(creds.apiToken ?? "")
         break
       default:
         return NextResponse.json({ error: "Unknown connector" }, { status: 400 })

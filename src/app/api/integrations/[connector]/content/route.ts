@@ -14,6 +14,8 @@ import * as Qualtrics from "@/lib/connectors/qualtrics"
 import * as Marketo from "@/lib/connectors/marketo"
 import * as GoogleDrive from "@/lib/connectors/googledrive"
 import * as SharePoint from "@/lib/connectors/sharepoint"
+import * as GitHub from "@/lib/connectors/github"
+import * as GitLab from "@/lib/connectors/gitlab"
 
 // GET /api/integrations/[connector]/content — list importable content items
 export async function GET(
@@ -83,6 +85,21 @@ export async function GET(
 
       case "sharepoint":
         return NextResponse.json(await SharePoint.listContent(creds.siteUrl ?? "", creds.accessToken ?? ""))
+
+      case "github":
+        return NextResponse.json(await GitHub.listContent(
+          creds.apiToken ?? "",
+          config.owner || undefined,
+          config.repoName || undefined,
+          config.branch || "main",
+        ))
+
+      case "gitlab":
+        return NextResponse.json(await GitLab.listContent(
+          creds.apiToken ?? "",
+          config.projectPath || undefined,
+          config.branch || "main",
+        ))
 
       default:
         return NextResponse.json({ error: "Unknown connector" }, { status: 400 })
