@@ -125,12 +125,27 @@ export function mergeTranslationsIntoGuide(
       attributes = { ...attributes, title: translations[`${prefix}_title`] }
     }
     if (content && translations[`${prefix}_content`]) {
-      // Replace the innerText of the first <p> (or full content if no tags)
       const translated = translations[`${prefix}_content`]
-      content = content.replace(/(<[^>]+>)([^<]*)(<\/[^>]+>)/g, (match, open, _inner, close) => {
-        return `${open}${translated}${close}`
-      })
-      if (!content.includes("<")) content = translated
+      if (!content.includes("<")) {
+        // Plain text — replace directly
+        content = translated
+      } else {
+        // HTML content: preserve the outermost wrapper tag and replace its entire
+        // inner content with the translation.  The previous regex used a global
+        // replace which injected the full translated string into EVERY matched
+        // tag — duplicating the text N times for N elements in the step.
+        const outerMatch = content.match(/^(\s*<([a-zA-Z][a-zA-Z0-9]*)[^>]*>)([\s\S]*?)(<\/\2>\s*)$/)
+        if (outerMatch) {
+          // Single outer wrapper (e.g. <div …>…</div>) — keep it, replace body
+          content = `${outerMatch[1]}${translated}${outerMatch[4]}`
+        } else {
+          // No clear single wrapper — wrap translated paragraphs in <p> tags
+          const paras = translated.split(/\n{2,}/).filter(Boolean)
+          content = paras.length > 1
+            ? paras.map((p) => `<p>${p.trim()}</p>`).join("")
+            : `<p>${translated}</p>`
+        }
+      }
     }
     return { ...step, content, attributes }
   })

@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { STUDIO_LANGUAGES } from "@/lib/languages"
@@ -445,9 +446,9 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
     if (data.ok) fetchContent(connector)
   }
 
-  async function fetchContent(connector: string) {
+  async function fetchContent(connector: string, overrideSiteId?: string) {
     setLoadingContent((l) => ({ ...l, [connector]: true }))
-    const siteId = configs[connector]?.siteId ?? saved[connector]?.config?.siteId ?? ""
+    const siteId = overrideSiteId ?? configs[connector]?.siteId ?? saved[connector]?.config?.siteId ?? ""
     const url = `/api/integrations/${connector}/content${siteId ? `?siteId=${siteId}` : ""}`
     const res = await fetch(url)
     setLoadingContent((l) => ({ ...l, [connector]: false }))
@@ -617,11 +618,15 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Select site</label>
                     <select
-                      value={cfg.siteId ?? ""}
+                      value={cfg.siteId ?? saved["webflow"]?.config?.siteId ?? ""}
                       onChange={(e) => {
-                        setConfig("webflow", "siteId", e.target.value)
-                        // Reload collections for the selected site
+                        const newSiteId = e.target.value
+                        setConfig("webflow", "siteId", newSiteId)
+                        // Bug fix: immediately fetch content for the newly selected site.
+                        // Previously the content was cleared but never reloaded, leaving the
+                        // user with a blank list and no indication that Refresh was needed.
                         setContent((c) => ({ ...c, webflow: [] }))
+                        if (newSiteId) fetchContent("webflow", newSiteId)
                       }}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     >
@@ -631,6 +636,13 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
                       ))}
                     </select>
                   </div>
+                )}
+
+                {/* Hint when GitHub/GitLab config fields were just pre-filled via "Use this repo/project" */}
+                {(def.id === "github" || def.id === "gitlab") && (cfg.owner || cfg.repoName || cfg.projectPath) && (
+                  <p className="text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-2">
+                    Repository pre-filled from selection — click <strong>Save credentials</strong> then <strong>Test connection</strong> to load i18n files.
+                  </p>
                 )}
 
                 {/* Action buttons */}
@@ -731,28 +743,76 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
                       {filteredItems.length === 0 && (
                         <p className="px-4 py-3 text-sm text-gray-400">No items match "{search}"</p>
                       )}
-                      {filteredItems.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
-                          <div className="min-w-0 flex-1 mr-3">
-                            <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
-                            <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
-                              <span className="capitalize">{item.state}</span>
-                              {item.itemCount > 0 && (
-                                <>
-                                  <span>·</span>
-                                  <span>{item.itemCount} step{item.itemCount !== 1 ? "s" : ""}</span>
-                                </>
-                              )}
-                            </p>
+                      {filteredItems.map((item) => {
+                        // Derive action button based on item state.
+                        // Bug fix: GitHub/GitLab return "repository"/"project" items when
+                        // no owner/repo is configured. Previously these showed an Import
+                        // button that always failed server-side. Now they show a "Use this
+                        // repo/project" button that pre-fills the config fields so the user
+                        // can save and then see the actual i18n files.
+                        let actionButton: React.ReactNode = null
+                        if (item.state === "file") {
+                          actionButton = (
+                            <button
+                              onClick={() => openImport(item)}
+                              className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                            >
+                              Import
+                            </button>
+                          )
+                        } else if (item.state === "repository") {
+                          // GitHub repo item: id = "repo::owner/repoName::branch"
+                          actionButton = (
+                            <button
+                              onClick={() => {
+                                const [, fullName, branch] = item.id.split("::")
+                                const slashIdx = fullName.indexOf("/")
+                                if (slashIdx !== -1) {
+                                  setConfig(def.id, "owner", fullName.slice(0, slashIdx))
+                                  setConfig(def.id, "repoName", fullName.slice(slashIdx + 1))
+                                }
+                                if (branch) setConfig(def.id, "branch", branch)
+                              }}
+                              className="shrink-0 px-3 py-1.5 text-xs font-semibold border border-indigo-300 text-indigo-700 rounded-lg hover:bg-indigo-50 transition-colors"
+                            >
+                              Use this repo
+                            </button>
+                          )
+                        } else if (item.state === "project") {
+                          // GitLab project item: id = "project::path/with/namespace::branch"
+                          actionButton = (
+                            <button
+                              onClick={() => {
+                                const [, projectPath, branch] = item.id.split("::")
+                                if (projectPath) setConfig(def.id, "projectPath", projectPath)
+                                if (branch) setConfig(def.id, "branch", branch)
+                              }}
+                              className="shrink-0 px-3 py-1.5 text-xs font-semibold border border-indigo-300 text-indigo-700 rounded-lg hover:bg-indigo-50 transition-colors"
+                            >
+                              Use this project
+                            </button>
+                          )
+                        }
+                        // "empty" state: no button — just an informational row
+
+                        return (
+                          <div key={item.id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
+                            <div className="min-w-0 flex-1 mr-3">
+                              <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
+                              <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
+                                <span className="capitalize">{item.state}</span>
+                                {item.itemCount > 0 && (
+                                  <>
+                                    <span>·</span>
+                                    <span>{item.itemCount} step{item.itemCount !== 1 ? "s" : ""}</span>
+                                  </>
+                                )}
+                              </p>
+                            </div>
+                            {actionButton}
                           </div>
-                          <button
-                            onClick={() => openImport(item)}
-                            className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                          >
-                            Import
-                          </button>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                     {search && filteredItems.length < rawItems.length && (
                       <p className="text-xs text-gray-400 text-right">
