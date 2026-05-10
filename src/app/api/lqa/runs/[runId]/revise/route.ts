@@ -2,11 +2,9 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { reviseBilingualFile } from "@/lib/lqa-reviser"
-import { analyzeLqa } from "@/lib/lqa-analyzer"
 import type { LqaFinding } from "@/lib/lqa-analyzer"
-import { parseBilingualFile } from "@/lib/lqa-bilingual-parser"
 
-export const maxDuration = 120 // seconds — revision + quality validation
+export const maxDuration = 120 // seconds
 
 // POST /api/lqa/runs/[runId]/revise — trigger AI auto-fix of findings
 // Optional body: { unitIds: string[] } — if provided, only those units are revised.
@@ -75,9 +73,15 @@ export async function POST(
 
   const ROUTE_TIMEOUT_MS = 55_000
 
+  // Bug fix: always revise the most recent version of the file.
+  // On pass 2+ of auto-improve, findings describe errors in the already-revised
+  // file — applying them to originalFile would mismatch the AI's fix instructions
+  // against the wrong target text and corrupt the output.
+  const baseContent = run.revisedFile ?? run.originalFile
+
   try {
     const revisedContent = await Promise.race([
-      reviseBilingualFile(run.originalFile, run.fileFormat, run.targetLanguage, selectedFindings, apiKey, provider, model),
+      reviseBilingualFile(baseContent, run.fileFormat, run.targetLanguage, selectedFindings, apiKey, provider, model),
       new Promise<never>((_, reject) =>
         setTimeout(
           () => reject(new Error("Revision timed out. Please try again.")),
@@ -86,55 +90,9 @@ export async function POST(
       ),
     ])
 
-    const unchanged = revisedContent === run.originalFile
+    const unchanged = revisedContent === baseContent
     if (unchanged) {
-      console.warn(`[lqa/revise] run ${runId}: AI returned no changes — revised content is identical to original. Findings count: ${selectedFindings.length}`)
-    }
-
-    // ── Quality validation: re-analyse the revised units to check for regressions ──
-    let regressionWarning: string | undefined
-    if (!unchanged) {
-      try {
-        // Compute original weighted-error cost for the selected units only
-        const originalWeighted = selectedFindings.reduce((sum, f) => {
-          for (const e of f.errors) {
-            sum += e.type === "acc" ? 3 : e.type === "lang" ? 2 : 1
-          }
-          return sum
-        }, 0)
-
-        // Extract the revised versions of only the selected units
-        const { units: revisedUnits } = parseBilingualFile(revisedContent, run.fileFormat)
-        const findingIds = new Set(selectedFindings.map((f) => f.unitId))
-        const revisedFindingUnits = revisedUnits.filter((u) => findingIds.has(u.id))
-
-        if (revisedFindingUnits.length > 0) {
-          const reanalysis = await analyzeLqa(
-            revisedFindingUnits,
-            run.sourceLanguage,
-            run.targetLanguage,
-            apiKey,
-            provider,
-            model
-          )
-          const revisedWeighted =
-            reanalysis.accuracyErrors * 3 +
-            reanalysis.languageErrors * 2 +
-            reanalysis.styleErrors
-
-          if (revisedWeighted > originalWeighted) {
-            const delta = revisedWeighted - originalWeighted
-            regressionWarning =
-              `Quality regression detected: the revised translation introduced ${delta} additional weighted error point${delta !== 1 ? "s" : ""} ` +
-              `(original: ${originalWeighted}, after revision: ${revisedWeighted}). ` +
-              `Review the revised file carefully before using it.`
-            console.warn(`[lqa/revise] run ${runId}: regression — original weighted ${originalWeighted}, revised ${revisedWeighted}`)
-          }
-        }
-      } catch (validationErr) {
-        // Non-fatal: log and continue — we still save the revision
-        console.warn(`[lqa/revise] run ${runId}: quality validation failed (non-fatal):`, (validationErr as Error).message)
-      }
+      console.warn(`[lqa/revise] run ${runId}: AI returned no changes. Findings count: ${selectedFindings.length}`)
     }
 
     await db.lqaRun.update({
@@ -146,8 +104,8 @@ export async function POST(
       success: true,
       revisedUnits: unchanged ? 0 : selectedFindings.length,
       warning: unchanged
-        ? "AI returned no revisions — the translated content may already be correct, or the fix suggestions were unclear."
-        : regressionWarning,
+        ? "AI returned no revisions — the translation may already be correct, or the fix suggestions were unclear."
+        : undefined,
     })
   } catch (err) {
     const message = (err as Error).message

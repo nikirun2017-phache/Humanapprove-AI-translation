@@ -227,6 +227,7 @@ function FindingsEditorModal({
     () => new Set((run.findings ?? []).map((f) => f.unitId))
   )
   const [revising, setRevising] = useState(false)
+  const [revisingPhase, setRevisingPhase] = useState<"revising" | "rescoring" | "">("")
   const [error, setError] = useState("")
 
   // Load findings on mount if not yet available
@@ -272,6 +273,7 @@ function FindingsEditorModal({
   const handleRevise = async () => {
     if (selectedIds.size === 0 || revising) return
     setRevising(true)
+    setRevisingPhase("revising")
     setError("")
     try {
       const res = await fetch(`/api/lqa/runs/${run.id}/revise`, {
@@ -282,12 +284,27 @@ function FindingsEditorModal({
       const data = await res.json() as { error?: string; warning?: string }
       if (!res.ok) {
         setError(data.error ?? "Revision failed")
-      } else {
-        await onRevised(run.id)
-        onClose()
+        return
       }
+      // Bug fix: trigger re-analysis so the quality score updates immediately
+      // instead of staying frozen at the pre-revision value.
+      setRevisingPhase("rescoring")
+      await fetch(`/api/lqa/runs/${run.id}/re-analyze`, { method: "POST" })
+      // Poll until re-analysis completes (max 6 min)
+      for (let i = 0; i < 120; i++) {
+        await new Promise<void>((r) => setTimeout(r, 3_000))
+        try {
+          const pollRes = await fetch(`/api/lqa/runs/${run.id}`)
+          if (!pollRes.ok) continue
+          const polled = await pollRes.json() as LqaRun
+          if (polled.status === "completed" || polled.status === "failed") break
+        } catch { /* keep polling */ }
+      }
+      await onRevised(run.id)
+      onClose()
     } finally {
       setRevising(false)
+      setRevisingPhase("")
     }
   }
 
@@ -435,7 +452,7 @@ function FindingsEditorModal({
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
-                      Revising…
+                      {revisingPhase === "rescoring" ? "Re-scoring…" : "Revising…"}
                     </>
                   ) : (
                     `Revise ${selectedIds.size} finding${selectedIds.size !== 1 ? "s" : ""}`
