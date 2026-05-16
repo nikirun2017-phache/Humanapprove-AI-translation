@@ -23,5 +23,5 @@ export async function GET(req: NextRequest) {
   // Delete the token — user is now verified
   await db.verificationToken.delete({ where: { token } })
 
-  return NextResponse.redirect(`${appUrl}/login?verified=ok`)
+  return NextResponse.redirect(`${appUrl}/login?verified=ok&email=${encodeURIComponent(record.identifier)}`)
 }

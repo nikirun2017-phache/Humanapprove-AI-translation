@@ -352,7 +352,7 @@ function BillingPageInner() {
 
   return (
     <AppShell>
-      <main className="max-w-5xl mx-auto px-6 py-10">
+      <main className="max-w-7xl mx-auto px-6 py-8">
 
         {/* Header */}
         <div className="mb-8 flex items-start justify-between">

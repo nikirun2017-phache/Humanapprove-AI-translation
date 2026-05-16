@@ -33,6 +33,7 @@ export async function GET() {
       revisionStatus: true,
       errorMessage: true,
       createdAt: true,
+      user: { select: { name: true } },
     },
   })
 

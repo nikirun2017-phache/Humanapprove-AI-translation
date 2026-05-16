@@ -38,7 +38,7 @@ export default async function LqaStudioPage() {
 
   return (
     <AppShell>
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">LQA Studio</h1>
           <p className="text-sm text-gray-500 mt-0.5">

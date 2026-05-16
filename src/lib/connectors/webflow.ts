@@ -51,8 +51,9 @@ export async function testConnection(apiToken: string): Promise<{ ok: boolean; e
       const data = await introspect.json() as { authorization?: { user?: { data?: { email?: string } } } }
       return { ok: true, displayName: data?.authorization?.user?.data?.email }
     }
-    // Fall through to /sites if introspect not supported for this token type
-    if (introspect.status !== 404 && introspect.status !== 405) {
+    // Fall through to /sites if introspect not supported for this token type.
+    // 5xx means the endpoint errored (site tokens return 500 here) — not an auth failure.
+    if (introspect.status < 500 && introspect.status !== 404 && introspect.status !== 405) {
       if (introspect.status === 401 || introspect.status === 403)
         return { ok: false, error: "Invalid or unauthorized API token" }
       return { ok: false, error: `Webflow API responded with ${introspect.status}` }
@@ -104,14 +105,61 @@ export async function listPages(apiToken: string, siteId: string): Promise<Array
   return data.pages ?? []
 }
 
-export async function listLocales(apiToken: string, siteId: string): Promise<Array<{ id: string; tag: string; displayName: string }>> {
+export async function listLocales(apiToken: string, siteId: string): Promise<Array<{ id: string; tag: string; displayName: string; isPrimary?: boolean }>> {
+  // Try the dedicated locales endpoint first (requires Localization add-on; 404s on Starter plan).
   const res = await fetch(`${BASE}/sites/${siteId}/locales`, {
     headers: headers(apiToken),
     signal: AbortSignal.timeout(10_000),
   })
-  if (!res.ok) return []
-  const data = await res.json() as { locales: Array<{ id: string; tag: string; displayName: string }> }
-  return data.locales ?? []
+  if (res.ok) {
+    const data = await res.json() as {
+      locales?: Array<{ id: string; tag: string; displayName: string }>
+      primary?: { id: string; tag: string; displayName: string }
+    }
+    const secondary = (data.locales ?? []).map(l => ({ ...l, isPrimary: false }))
+    const primary = data.primary ? [{ ...data.primary, isPrimary: true }] : []
+    return [...secondary, ...primary]
+  }
+
+  // Fallback: GET /sites/{siteId} always works on all plans including Starter.
+  // The site object includes locales.primary which contains the primary locale ID
+  // needed to push translated content via POST /pages/{pageId}/dom?localeId=...
+  try {
+    const siteRes = await fetch(`${BASE}/sites/${siteId}`, {
+      headers: headers(apiToken),
+      signal: AbortSignal.timeout(10_000),
+    })
+    if (siteRes.ok) {
+      const site = await siteRes.json() as {
+        locales?: {
+          primary?: { id: string; cmsLocaleId?: string; tag: string; displayName?: string }
+          secondary?: Array<{ id: string; cmsLocaleId?: string; tag: string; displayName?: string }>
+        }
+      }
+      const primary = site.locales?.primary
+      const secondary = site.locales?.secondary ?? []
+      const result: Array<{ id: string; cmsLocaleId?: string; tag: string; displayName: string; isPrimary?: boolean }> = []
+      if (primary) {
+        result.push({
+          id: primary.id,
+          cmsLocaleId: primary.cmsLocaleId,
+          tag: primary.tag,
+          displayName: primary.displayName ?? primary.tag,
+          isPrimary: true,
+        })
+      }
+      result.push(...secondary.map(l => ({
+        id: l.id,
+        cmsLocaleId: l.cmsLocaleId,
+        tag: l.tag,
+        displayName: l.displayName ?? l.tag,
+        isPrimary: false as const,
+      })))
+      return result
+    }
+  } catch { /* fall through */ }
+
+  return []
 }
 
 export async function listContent(apiToken: string, siteId: string): Promise<ContentItem[]> {
@@ -135,37 +183,49 @@ export async function listContent(apiToken: string, siteId: string): Promise<Con
   ]
 }
 
-/** Fetch page content for translation using Webflow Pages Localization API */
-export async function fetchPageContent(apiToken: string, siteId: string, pageId: string): Promise<Record<string, string>> {
-  // GET /sites/{siteId}/pages/{pageId}/content — returns DOM nodes for the primary locale
-  const res = await fetch(`${BASE}/sites/${siteId}/pages/${pageId}/content`, {
+/** Fetch page content for translation using Webflow Pages DOM API */
+export async function fetchPageContent(apiToken: string, _siteId: string, pageId: string): Promise<Record<string, string>> {
+  // GET /pages/{pageId}/dom — returns DOM nodes; text.text has the plain-text value
+  const res = await fetch(`${BASE}/pages/${pageId}/dom`, {
     headers: headers(apiToken),
     signal: AbortSignal.timeout(15_000),
   })
-  if (!res.ok) throw new Error(`Webflow pages content API error ${res.status}`)
+  if (!res.ok) throw new Error(`Webflow DOM API error ${res.status}`)
   const data = await res.json() as {
-    nodes?: Array<{ nodeId: string; type: string; text?: { text?: string } }>
+    nodes?: Array<{ id: string; type: string; text?: { text?: string | null } }>
   }
   const result: Record<string, string> = {}
   ;(data.nodes ?? []).forEach((node) => {
-    if (node.text?.text?.trim()) {
-      result[`node_${node.nodeId}`] = node.text.text.trim()
+    const txt = node.text?.text
+    if (txt && txt.trim()) {
+      result[`node_${node.id}`] = txt.trim()
     }
   })
   return result
 }
 
-/** Push translated page content for a specific locale */
+/**
+ * Push translated page content back to Webflow.
+ * - localeId = null  → POST /pages/{pageId}/dom (updates static/primary content, no Localization add-on needed)
+ * - localeId = "id"  → POST /pages/{pageId}/dom?localeId={id} (updates a secondary locale; requires Localization add-on)
+ *
+ * Per Webflow API spec, each node in the request body must have:
+ *   { nodeId: string, text: string }   ← text is a plain string, NOT { text: string }
+ */
 export async function pushPageLocale(
-  apiToken: string, siteId: string, pageId: string,
-  localeId: string, translations: Record<string, string>
+  apiToken: string, _siteId: string, pageId: string,
+  localeId: string | null, translations: Record<string, string>
 ): Promise<void> {
-  // Build nodes array from our translation map
-  const nodes = Object.entries(translations).map(([key, text]) => {
-    const nodeId = key.replace(/^node_/, "")
-    return { nodeId, text: { text } }
-  })
-  const res = await fetch(`${BASE}/sites/${siteId}/pages/${pageId}/content?localeId=${localeId}`, {
+  const nodes = Object.entries(translations).map(([key, text]) => ({
+    nodeId: key.replace(/^node_/, ""),
+    text,
+  }))
+
+  const url = localeId
+    ? `${BASE}/pages/${pageId}/dom?localeId=${localeId}`
+    : `${BASE}/pages/${pageId}/dom`
+
+  const res = await fetch(url, {
     method: "POST",
     headers: { ...headers(apiToken), "Content-Type": "application/json" },
     body: JSON.stringify({ nodes }),
@@ -173,7 +233,13 @@ export async function pushPageLocale(
   })
   if (!res.ok) {
     const err = await res.text()
-    throw new Error(`Webflow page locale push failed ${res.status}: ${err.slice(0, 200)}`)
+    let detail = err.slice(0, 300)
+    try {
+      const parsed = JSON.parse(err) as { message?: string; code?: string; errors?: string[] }
+      if (parsed.message) detail = parsed.message
+      else if (parsed.errors?.length) detail = parsed.errors.join("; ")
+    } catch { /* keep raw text */ }
+    throw new Error(`Webflow push failed (HTTP ${res.status}): ${detail}`)
   }
 }
 

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
 import { AppShell } from "@/components/app-shell"
 import Link from "next/link"
 
@@ -22,6 +23,9 @@ interface Job {
   completedTasks: number
   failedTasks: number
   tasks: Task[]
+  createdBy?: { name: string | null } | null
+  estimatedApiCostUsd?: number
+  model?: string
 }
 
 function formatDate(iso: string) {
@@ -112,9 +116,10 @@ function ZipButton({ job }: { job: Job }) {
   )
 }
 
-function JobRow({ job }: { job: Job }) {
+function JobRow({ job, isAdmin }: { job: Job; isAdmin: boolean }) {
   const [expanded, setExpanded] = useState(false)
   const total = job.tasks.length
+  const colSpan = isAdmin ? 6 : 5
   return (
     <>
       <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => setExpanded(e => !e)}>
@@ -124,6 +129,16 @@ function JobRow({ job }: { job: Job }) {
           </div>
           <div className="text-xs text-gray-400 mt-0.5">{formatDate(job.createdAt)}</div>
         </td>
+        {isAdmin && (
+          <td className="px-4 py-3 text-xs text-gray-500">{job.createdBy?.name ?? "—"}</td>
+        )}
+        {isAdmin && (
+          <td className="px-4 py-3 text-xs text-gray-500 font-mono">
+            {job.estimatedApiCostUsd != null && job.estimatedApiCostUsd > 0
+              ? `$${job.estimatedApiCostUsd.toFixed(4)}`
+              : "—"}
+          </td>
+        )}
         <td className="px-4 py-3">
           <span className="text-xs bg-gray-100 text-gray-600 rounded px-1.5 py-0.5">{formatExt(job.sourceFormat)}</span>
         </td>
@@ -151,7 +166,7 @@ function JobRow({ job }: { job: Job }) {
       </tr>
       {expanded && job.tasks.length > 0 && (
         <tr>
-          <td colSpan={5} className="px-4 pb-3 pt-0">
+          <td colSpan={colSpan} className="px-4 pb-3 pt-0">
             <div className="bg-gray-50 rounded-lg border border-gray-100 divide-y divide-gray-100">
               {job.tasks.map(task => (
                 <div key={task.id} className="flex items-center justify-between px-3 py-2">
@@ -192,6 +207,7 @@ interface LqaRun {
   revisionStatus: string | null
   errorMessage: string | null
   createdAt: string
+  user?: { name: string | null } | null
 }
 
 function LqaScoreBadge({ score, band }: { score: number | null; band: string | null }) {
@@ -217,7 +233,7 @@ function LqaStatusBadge({ status }: { status: string }) {
   return <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${map[status] ?? "bg-gray-100 text-gray-600"}`}>{labels[status] ?? status}</span>
 }
 
-function LqaRunRow({ run, onDelete }: { run: LqaRun; onDelete: (id: string) => void }) {
+function LqaRunRow({ run, isAdmin, onDelete }: { run: LqaRun; isAdmin: boolean; onDelete: (id: string) => void }) {
   const [deleting, setDeleting] = useState(false)
 
   async function handleDelete(e: React.MouseEvent) {
@@ -239,6 +255,9 @@ function LqaRunRow({ run, onDelete }: { run: LqaRun; onDelete: (id: string) => v
         <p className="text-sm font-medium text-gray-900 truncate max-w-[220px]">{run.fileName}</p>
         <p className="text-xs text-gray-400 mt-0.5">{formatDate(run.createdAt)}</p>
       </td>
+      {isAdmin && (
+        <td className="px-4 py-3 text-xs text-gray-500">{run.user?.name ?? "—"}</td>
+      )}
       <td className="px-4 py-3">
         <span className="text-xs bg-gray-100 text-gray-600 rounded px-1.5 py-0.5">{run.fileFormat.toUpperCase()}</span>
       </td>
@@ -279,6 +298,9 @@ function LqaRunRow({ run, onDelete }: { run: LqaRun; onDelete: (id: string) => v
 const PAGE_SIZE = 20
 
 export default function JobsPage() {
+  const { data: session } = useSession()
+  const isAdmin = session?.user?.role === "admin"
+
   const [tab, setTab] = useState<"translation" | "lqa">("translation")
 
   // Translation jobs state
@@ -334,12 +356,14 @@ export default function JobsPage() {
 
   return (
     <AppShell>
-      <main className="max-w-5xl mx-auto px-6 py-8">
+      <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">My Jobs</h1>
-            <p className="text-sm text-gray-500 mt-0.5">All your translation jobs and LQA history.</p>
+            <h1 className="text-2xl font-bold text-gray-900">{isAdmin ? "All Jobs" : "My Jobs"}</h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {isAdmin ? "All translation jobs and LQA runs across all users." : "All your translation jobs and LQA history."}
+            </p>
           </div>
           <div className="flex gap-2">
             {tab === "lqa" && (
@@ -392,6 +416,8 @@ export default function JobsPage() {
                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50">
                     <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Job</th>
+                    {isAdmin && <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Created by</th>}
+                    {isAdmin && <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">API Cost</th>}
                     <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Format</th>
                     <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Languages</th>
                     <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
@@ -399,7 +425,7 @@ export default function JobsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {jobs.slice(jobsPage * PAGE_SIZE, (jobsPage + 1) * PAGE_SIZE).map(job => <JobRow key={job.id} job={job} />)}
+                  {jobs.slice(jobsPage * PAGE_SIZE, (jobsPage + 1) * PAGE_SIZE).map(job => <JobRow key={job.id} job={job} isAdmin={isAdmin} />)}
                 </tbody>
               </table>
               {jobs.length > PAGE_SIZE && (
@@ -438,6 +464,7 @@ export default function JobsPage() {
                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50">
                     <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">File</th>
+                    {isAdmin && <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Created by</th>}
                     <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Format</th>
                     <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Languages</th>
                     <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Units</th>
@@ -450,6 +477,7 @@ export default function JobsPage() {
                     <LqaRunRow
                       key={run.id}
                       run={run}
+                      isAdmin={isAdmin}
                       onDelete={id => setLqaRuns(prev => prev.filter(r => r.id !== id))}
                     />
                   ))}

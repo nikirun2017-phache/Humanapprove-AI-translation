@@ -10,13 +10,13 @@ export const dynamic = "force-dynamic"
 export default async function TranslationStudioPage({
   searchParams,
 }: {
-  searchParams: Promise<{ card_added?: string; card_canceled?: string }>
+  searchParams: Promise<{ card_added?: string; card_canceled?: string; welcome?: string }>
 }) {
   const session = await auth()
   if (!session?.user) redirect("/login")
   if (session.user.role === "reviewer") redirect("/dashboard")
 
-  const { card_added, card_canceled } = await searchParams
+  const { card_added, card_canceled, welcome } = await searchParams
 
   // Admins can always run translations; requesters need a card on file
   const role = session.user.role
@@ -47,7 +47,7 @@ export default async function TranslationStudioPage({
 
   return (
     <AppShell>
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Translation Studio</h1>
           <p className="text-sm text-gray-500 mt-0.5">
@@ -55,7 +55,19 @@ export default async function TranslationStudioPage({
           </p>
         </div>
 
-{card_added === "true" && (
+{welcome === "1" && (
+          <div className="mb-4 bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-4 text-sm">
+            <p className="font-semibold text-indigo-900 mb-1">Welcome to Summon Translator!</p>
+            <p className="text-indigo-700">
+              Your account is ready. Upload a file below, pick your target languages, and get AI-translated files in seconds.
+              Need a hand? Check out the{" "}
+              <a href="/support#tutorials" className="underline font-medium hover:text-indigo-900">step-by-step tutorials</a>
+              {" "}or{" "}
+              <a href="/support" className="underline font-medium hover:text-indigo-900">Support &amp; FAQ</a>.
+            </p>
+          </div>
+        )}
+        {card_added === "true" && (
           <div className="mb-4 flex gap-2 bg-green-50 border border-green-200 text-green-800 rounded-xl px-4 py-3 text-sm">
             <span>✓</span>
             <span>Payment method saved. You can now start translations.</span>

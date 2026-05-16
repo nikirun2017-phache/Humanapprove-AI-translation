@@ -86,8 +86,14 @@ export async function PUT(req: NextRequest) {
     if (ALLOWED_KEYS.has(k) && typeof v === "string") cleanConfig[k] = v.trim()
   })
 
+  // Fetch existing record once — used to preserve both credentials and config
+  const existing = await db.integration.findUnique({
+    where: { userId_connector: { userId: session.user.id, connector: body.connector } },
+    select: { credentials: true, config: true },
+  })
+
   // If credentials were provided, sanitize and use them.
-  // If absent (config-only update), fetch and preserve existing credentials.
+  // If absent (config-only update), preserve existing credentials.
   let credentialsJson: string
   if (body.credentials !== undefined && Object.keys(body.credentials).length > 0) {
     const cleanCreds: Record<string, string> = {}
@@ -96,25 +102,14 @@ export async function PUT(req: NextRequest) {
     })
     credentialsJson = JSON.stringify(cleanCreds)
   } else {
-    // Preserve existing credentials; create with empty if first-time save
-    const existing = await db.integration.findUnique({
-      where: { userId_connector: { userId: session.user.id, connector: body.connector } },
-      select: { credentials: true },
-    })
     credentialsJson = existing?.credentials ?? "{}"
   }
 
-  // Merge new config on top of existing config (so partial updates don't wipe other keys)
-  let mergedConfig = cleanConfig
-  if (Object.keys(cleanConfig).length > 0) {
-    const existing = await db.integration.findUnique({
-      where: { userId_connector: { userId: session.user.id, connector: body.connector } },
-      select: { config: true },
-    })
-    let existingConfig: Record<string, string> = {}
-    try { existingConfig = JSON.parse(existing?.config ?? "{}") } catch { /* */ }
-    mergedConfig = { ...existingConfig, ...cleanConfig }
-  }
+  // Always merge new config on top of existing config so partial updates
+  // (e.g. saving only credentials) never wipe previously saved keys like siteId.
+  let existingConfig: Record<string, string> = {}
+  try { existingConfig = JSON.parse(existing?.config ?? "{}") } catch { /* */ }
+  const mergedConfig = { ...existingConfig, ...cleanConfig }
 
   const integration = await db.integration.upsert({
     where: { userId_connector: { userId: session.user.id, connector: body.connector } },

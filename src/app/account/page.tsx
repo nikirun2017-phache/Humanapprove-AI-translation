@@ -115,7 +115,7 @@ export default function AccountPage() {
 
   return (
     <AppShell>
-      <main className="max-w-xl mx-auto px-6 py-8">
+      <main className="max-w-2xl mx-auto px-6 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
           <p className="text-sm text-gray-500 mt-0.5">Manage your profile and security settings.</p>

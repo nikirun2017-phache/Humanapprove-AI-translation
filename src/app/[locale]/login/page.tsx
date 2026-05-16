@@ -13,13 +13,15 @@ function LoginForm() {
   const searchParams = useSearchParams()
 
   const verifiedParam = searchParams.get("verified") // "ok" | "expired" | "invalid"
-  const expiredEmail = searchParams.get("email") ?? ""
+  const verifiedEmail = searchParams.get("email") ?? ""
+  const expiredEmail = verifiedParam === "expired" ? verifiedEmail : ""
 
   const [mode, setMode] = useState<"signin" | "signup">(
     searchParams.get("mode") === "signup" ? "signup" : "signin"
   )
   const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
+  // Pre-fill email when arriving from a verified link so user doesn't have to retype
+  const [email, setEmail] = useState(verifiedParam === "ok" && verifiedEmail ? verifiedEmail : "")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
@@ -89,7 +91,8 @@ function LoginForm() {
         setError(t("error"))
       }
     } else {
-      router.push("/translation-studio")
+      // If user just verified their email, show a welcome banner on first arrival
+      router.push(verifiedParam === "ok" ? "/translation-studio?welcome=1" : "/translation-studio")
     }
   }
 
@@ -307,6 +310,14 @@ function LoginForm() {
                     {mode === "signup" && <p className="text-xs text-gray-400 mt-1">{t("passwordHint")}</p>}
                   </div>
 
+                  {mode === "signup" && (
+                    <p className="text-xs text-gray-500 flex items-start gap-1.5">
+                      <svg className="w-3.5 h-3.5 mt-0.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      We'll send a verification link to your email — you must click it before you can sign in.
+                    </p>
+                  )}
                   <button type="submit" disabled={loading || !!socialLoading}
                     className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-medium py-2 rounded-lg text-sm transition-colors">
                     {loading

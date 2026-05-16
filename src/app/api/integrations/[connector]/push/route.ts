@@ -97,16 +97,44 @@ export async function POST(
       }
       case "webflow": {
         if (contentId.startsWith("page:")) {
-          // Pages Localization API — resolve locale ID from tag
+          // Pages DOM API — push translated content back to a locale
           const [, pageId, pageSiteId] = contentId.split(":")
           const siteId = pageSiteId || (meta.siteId as string | undefined) || config.siteId || ""
+
           const locales = await Webflow.listLocales(creds.apiKey ?? "", siteId)
-          // Match target language to Webflow locale tag (e.g. "fr-FR" → "fr-FR" or "fr")
+
+          // Match target language to a Webflow locale tag.
+          // e.g. "zh-CN" matches "zh-CN" or fallback to "zh"
           const locale = locales.find(
-            (l) => l.tag === targetLanguage || l.tag === targetLanguage.split("-")[0]
+            (l) => l.tag === targetLanguage
+              || l.tag === targetLanguage.split("-")[0]
+              || targetLanguage.startsWith(l.tag)
           )
-          if (!locale) throw new Error(`Locale "${targetLanguage}" not found in Webflow site. Add it in Webflow > Site settings > Localization.`)
-          await Webflow.pushPageLocale(creds.apiKey ?? "", siteId, pageId, locale.id, translations)
+
+          // Webflow Pages DOM API rules:
+          //   • Secondary locale → POST /pages/{pageId}/dom?localeId={secondaryLocaleId}
+          //   • Primary locale or no Localization add-on → POST /pages/{pageId}/dom  (no localeId)
+          //     This is the "update static content" variant and works on all plans.
+          let localeId: string | null = null
+          if (locale && !locale.isPrimary) {
+            // Only pass localeId for genuine secondary locales.
+            localeId = locale.id
+          } else if (!locale) {
+            // No locale matched — check if the site has secondary locales configured at all.
+            const hasSecondary = locales.some(l => !l.isPrimary)
+            if (hasSecondary) {
+              const available = locales.map(l => `${l.displayName} (${l.tag})`).join(", ")
+              throw new Error(
+                `Locale "${targetLanguage}" is not configured in your Webflow site. ` +
+                `Available locales: ${available || "none"}. ` +
+                `Add it in Webflow → Site Settings → Localization, then re-run the push.`
+              )
+            }
+            // No secondary locales — site has no Localization add-on; push to static content.
+          }
+          // locale.isPrimary → localeId stays null (push to static/primary content)
+
+          await Webflow.pushPageLocale(creds.apiKey ?? "", siteId, pageId, localeId, translations)
         } else {
           // CMS collection items
           const byItem: Record<string, Record<string, string>> = {}

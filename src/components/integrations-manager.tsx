@@ -343,6 +343,7 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
 
   // Action loading states
   const [saving, setSaving] = useState<Record<string, boolean>>({})
+  const [saveResult, setSaveResult] = useState<Record<string, { ok: boolean; error?: string } | null>>({})
   const [testing, setTesting] = useState<Record<string, boolean>>({})
   const [testResult, setTestResult] = useState<Record<string, { ok: boolean; error?: string } | null>>({})
 
@@ -416,6 +417,7 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
 
   async function save(connector: string) {
     setSaving((s) => ({ ...s, [connector]: true }))
+    setSaveResult((r) => ({ ...r, [connector]: null }))
     setTestResult((r) => ({ ...r, [connector]: null }))
     const credChanges = forms[connector] ?? {}
     const configChanges = configs[connector] ?? {}
@@ -432,6 +434,11 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
       await loadIntegrations()
       setForms((f) => ({ ...f, [connector]: {} }))
       setConfigs((c) => ({ ...c, [connector]: {} }))
+      setSaveResult((r) => ({ ...r, [connector]: { ok: true } }))
+    } else {
+      let errMsg = "Failed to save credentials"
+      try { const data = await res.json() as { error?: string }; errMsg = data.error ?? errMsg } catch { /* */ }
+      setSaveResult((r) => ({ ...r, [connector]: { ok: false, error: errMsg } }))
     }
   }
 
@@ -546,6 +553,7 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
         const form = forms[def.id] ?? {}
         const cfg = configs[def.id] ?? {}
         const tr = testResult[def.id]
+        const sr = saveResult[def.id]
 
         // Content items filtered by search
         const rawItems = content[def.id] ?? []
@@ -684,6 +692,14 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
                   )}
                 </div>
 
+                {/* Save result */}
+                {sr && (
+                  <div className={`rounded-xl border px-4 py-3 text-sm flex items-start gap-2 ${sr.ok ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-700"}`}>
+                    <span>{sr.ok ? "✓" : "✕"}</span>
+                    <span>{sr.ok ? "Credentials saved — click Test connection to verify" : (sr.error ?? "Save failed")}</span>
+                  </div>
+                )}
+
                 {/* Test result */}
                 {tr && (
                   <div className={`rounded-xl border px-4 py-3 text-sm flex items-start gap-2 ${tr.ok ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-700"}`}>
@@ -751,16 +767,7 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
                         // repo/project" button that pre-fills the config fields so the user
                         // can save and then see the actual i18n files.
                         let actionButton: React.ReactNode = null
-                        if (item.state === "file") {
-                          actionButton = (
-                            <button
-                              onClick={() => openImport(item)}
-                              className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                            >
-                              Import
-                            </button>
-                          )
-                        } else if (item.state === "repository") {
+                        if (item.state === "repository") {
                           // GitHub repo item: id = "repo::owner/repoName::branch"
                           actionButton = (
                             <button
@@ -792,8 +799,18 @@ export function IntegrationsManager({ providers }: { providers: ProviderInfo[] }
                               Use this project
                             </button>
                           )
+                        } else {
+                          // All other states (file, page, collection, public, draft, disabled, article…)
+                          // are importable content — show the Import button.
+                          actionButton = (
+                            <button
+                              onClick={() => openImport(item)}
+                              className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                            >
+                              Import
+                            </button>
+                          )
                         }
-                        // "empty" state: no button — just an informational row
 
                         return (
                           <div key={item.id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
