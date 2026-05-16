@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { stripe } from "@/lib/stripe"
 import { db } from "@/lib/db"
+import { PLANS } from "@/lib/plans"
 import type Stripe from "stripe"
 
 export const runtime = "nodejs"
@@ -49,12 +50,71 @@ export async function POST(req: NextRequest) {
         break
       }
 
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
+        const subscription = event.data.object as Stripe.Subscription
+        const customerId = subscription.customer as string
+
+        // Determine planId from subscription metadata or fall back to price ID lookup
+        const metaPlanId = subscription.metadata?.planId as string | undefined
+        let resolvedPlanId: string
+        if (metaPlanId && metaPlanId in PLANS) {
+          resolvedPlanId = metaPlanId
+        } else {
+          const priceId = subscription.items.data[0]?.price?.id
+          const planEntry = priceId
+            ? Object.values(PLANS).find((p) => p.stripePriceId && p.stripePriceId === priceId)
+            : undefined
+          resolvedPlanId = planEntry?.id ?? "payg"
+        }
+
+        const quotaPlan = PLANS[resolvedPlanId as keyof typeof PLANS]
+        const wordsQuota =
+          quotaPlan && isFinite(quotaPlan.wordsPerMonth) ? quotaPlan.wordsPerMonth : 0
+
+        await db.user.updateMany({
+          where: { stripeCustomerId: customerId },
+          data: {
+            stripeSubscriptionId: subscription.id,
+            plan: resolvedPlanId,
+            subscriptionStatus: subscription.status,
+            wordsQuota,
+            wordsUsed: 0,
+            billingPeriodStart: new Date(),
+          },
+        })
+        break
+      }
+
+      case "customer.subscription.deleted": {
+        const subscription = event.data.object as Stripe.Subscription
+        const customerId = subscription.customer as string
+        await db.user.updateMany({
+          where: { stripeCustomerId: customerId },
+          data: {
+            subscriptionStatus: "canceled",
+            plan: "free",
+            wordsQuota: 0,
+          },
+        })
+        break
+      }
+
       case "invoice.paid": {
         const invoice = event.data.object as Stripe.Invoice
         if (invoice.customer) {
+          // Base status update for all paid invoices
+          const updateData: Record<string, unknown> = { subscriptionStatus: "active" }
+
+          // If this invoice is tied to a subscription, also reset the usage window
+          if (invoice.subscription) {
+            updateData.wordsUsed = 0
+            updateData.billingPeriodStart = new Date()
+          }
+
           await db.user.updateMany({
             where: { stripeCustomerId: invoice.customer as string },
-            data: { subscriptionStatus: "active" },
+            data: updateData,
           })
         }
         break

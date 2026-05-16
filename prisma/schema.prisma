@@ -18,10 +18,15 @@ model User {
   updatedAt      DateTime  @updatedAt
 
   // Billing
-  stripeCustomerId   String?
-  plan               String  @default("free") // free | pro | enterprise
-  subscriptionStatus String  @default("none") // none | active | canceled | past_due | trialing
-  subscriptionId     String? // stores Stripe PaymentMethod ID (field name is legacy)
+  stripeCustomerId     String?
+  plan                 String    @default("free") // free | starter | growth | business | payg
+  subscriptionStatus   String    @default("none")  // none | active | canceled | past_due | trialing
+  subscriptionId       String?   // Stripe PaymentMethod ID (legacy payg) or Stripe Subscription ID (plans)
+  stripeSubscriptionId String?   // Stripe Subscription ID for paid plans
+  // Word quota (resets each billing period)
+  wordsQuota           Int       @default(10000)   // words available in current period
+  wordsUsed            Int       @default(0)       // words consumed in current period
+  billingPeriodStart   DateTime  @default(now())   // start of current billing period
 
   projectsCreated        Project[]              @relation("ProjectCreator")
   projectsAssigned       Project[]              @relation("ProjectReviewer")
@@ -37,6 +42,8 @@ model User {
   reviewerApplications   ReviewerApplication[]
   lqaRuns                LqaRun[]
   mediaRuns              MediaRun[]
+  translationMemories    TranslationMemory[]
+  glossaryEntries        GlossaryEntry[]
 }
 
 model Account {
@@ -398,4 +405,41 @@ model MonthlyCharge {
 
   @@unique([userId, billingMonth])
   @@index([billingMonth, status])
+}
+
+// Translation Memory — stores completed source→target pairs for reuse
+model TranslationMemory {
+  id          String   @id @default(cuid())
+  userId      String
+  sourceText  String   // original source segment (trimmed)
+  targetText  String   // accepted translation
+  sourceLang  String   // BCP-47, e.g. "en-US"
+  targetLang  String   // BCP-47, e.g. "fr-FR"
+  domain      String?  // optional: "marketing" | "technical" | "legal"
+  usageCount  Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sourceText, sourceLang, targetLang])
+  @@index([userId, sourceLang, targetLang])
+}
+
+// Glossary — brand terms that must always be translated a specific way
+model GlossaryEntry {
+  id          String   @id @default(cuid())
+  userId      String
+  sourceTerm  String   // e.g. "Enterprise"
+  targetTerm  String   // e.g. "企业版"
+  sourceLang  String
+  targetLang  String
+  notes       String?  // e.g. "Product tier name — do not localise further"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sourceTerm, sourceLang, targetLang])
+  @@index([userId, sourceLang, targetLang])
 }

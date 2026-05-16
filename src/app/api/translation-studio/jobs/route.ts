@@ -266,6 +266,27 @@ export async function POST(req: NextRequest) {
     (sum, u) => sum + (u.sourceText?.split(/\s+/).filter(Boolean).length ?? 0), 0
   )
 
+  // Check word quota for plans with quotas (free, starter, growth, business)
+  // payg and admin users are exempt
+  if (session.user.role !== "admin") {
+    const dbUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { plan: true, wordsQuota: true, wordsUsed: true }
+    })
+    if (dbUser && ["free","starter","growth","business"].includes(dbUser.plan ?? "")) {
+      const remaining = Math.max(0, dbUser.wordsQuota - dbUser.wordsUsed)
+      if (remaining < totalSourceWords) {
+        return NextResponse.json({
+          error: "word_quota_exceeded",
+          message: `You have ${remaining.toLocaleString()} words remaining on your ${dbUser.plan} plan. This job needs ${totalSourceWords.toLocaleString()} words. Upgrade your plan to continue.`,
+          remaining,
+          needed: totalSourceWords,
+          plan: dbUser.plan,
+        }, { status: 402 })
+      }
+    }
+  }
+
   if (promoCodeInput) {
     const promo = await db.promoCode.findUnique({ where: { code: promoCodeInput } })
     if (promo && promo.active &&
@@ -358,6 +379,17 @@ export async function POST(req: NextRequest) {
 
     return j
   })
+
+  // Deduct words from quota
+  if (session.user.role !== "admin") {
+    await db.user.updateMany({
+      where: {
+        id: session.user.id,
+        plan: { in: ["free","starter","growth","business"] }
+      },
+      data: { wordsUsed: { increment: totalSourceWords } }
+    })
+  }
 
   // Store user-provided API key scoped to this job (never returned to client)
   if (apiKey?.trim()) {

@@ -98,6 +98,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               email: user.email,
               name: user.name ?? user.email.split("@")[0],
               role: "requester",
+              plan: "free",
+              wordsQuota: 10000,
+              wordsUsed: 0,
+              billingPeriodStart: new Date(),
             },
           })
         }

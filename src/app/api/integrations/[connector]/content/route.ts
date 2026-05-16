@@ -16,6 +16,8 @@ import * as GoogleDrive from "@/lib/connectors/googledrive"
 import * as SharePoint from "@/lib/connectors/sharepoint"
 import * as GitHub from "@/lib/connectors/github"
 import * as GitLab from "@/lib/connectors/gitlab"
+import * as Shopify from "@/lib/connectors/shopify"
+import * as Notion from "@/lib/connectors/notion"
 
 // GET /api/integrations/[connector]/content — list importable content items
 export async function GET(
@@ -100,6 +102,12 @@ export async function GET(
           config.projectPath || undefined,
           config.branch || "main",
         ))
+
+      case "shopify":
+        return NextResponse.json(await Shopify.listContent(creds.shop ?? "", creds.accessToken ?? ""))
+
+      case "notion":
+        return NextResponse.json(await Notion.listContent(creds.token ?? ""))
 
       default:
         return NextResponse.json({ error: "Unknown connector" }, { status: 400 })

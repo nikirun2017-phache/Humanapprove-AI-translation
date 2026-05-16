@@ -449,6 +449,41 @@ export async function POST(
       },
     })
 
+    // Save to Translation Memory (fire-and-forget)
+    if (xliff && job.sourceLanguage && task.targetLanguage) {
+      const pairs = extractXliffPairs(xliff)
+      if (pairs.length > 0) {
+        const tmUserId = job.createdById
+        const now = new Date()
+        for (const { source, target } of pairs.slice(0, 500)) {
+          await db.translationMemory.upsert({
+            where: {
+              userId_sourceText_sourceLang_targetLang: {
+                userId: tmUserId,
+                sourceText: source,
+                sourceLang: job.sourceLanguage,
+                targetLang: task.targetLanguage,
+              },
+            },
+            create: {
+              id: crypto.randomUUID(),
+              userId: tmUserId,
+              sourceText: source,
+              targetText: target,
+              sourceLang: job.sourceLanguage,
+              targetLang: task.targetLanguage,
+              updatedAt: now,
+            },
+            update: {
+              targetText: target,
+              usageCount: { increment: 1 },
+              updatedAt: now,
+            },
+          }).catch(() => {}) // ignore individual failures
+        }
+      }
+    }
+
     // Update job status
     const remaining = await db.translationTask.count({
       where: { jobId, status: { in: ["pending", "running"] } },
@@ -511,4 +546,30 @@ export async function POST(
     })
     return NextResponse.json({ error: message }, { status: 500 })
   }
+}
+
+// Extract source/target text pairs from an XLIFF document.
+// Strips inline XML tags and decodes basic HTML entities.
+function extractXliffPairs(xliff: string): { source: string; target: string }[] {
+  const pairs: { source: string; target: string }[] = []
+  const re = /<trans-unit[^>]*>[\s\S]*?<source[^>]*>([\s\S]*?)<\/source>[\s\S]*?<target[^>]*>([\s\S]*?)<\/target>/g
+  let m
+  while ((m = re.exec(xliff)) !== null) {
+    const src = m[1]
+      .replace(/<[^>]+>/g, "")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .trim()
+    const tgt = m[2]
+      .replace(/<[^>]+>/g, "")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .trim()
+    if (src && tgt && src !== tgt) {
+      pairs.push({ source: src, target: tgt })
+    }
+  }
+  return pairs
 }

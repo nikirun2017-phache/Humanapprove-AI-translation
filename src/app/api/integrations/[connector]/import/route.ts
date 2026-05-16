@@ -18,6 +18,8 @@ import * as GoogleDrive from "@/lib/connectors/googledrive"
 import * as SharePoint from "@/lib/connectors/sharepoint"
 import * as GitHub from "@/lib/connectors/github"
 import * as GitLab from "@/lib/connectors/gitlab"
+import * as Shopify from "@/lib/connectors/shopify"
+import * as Notion from "@/lib/connectors/notion"
 
 interface ImportBody {
   contentId: string
@@ -114,6 +116,12 @@ export async function POST(
         break
       case "gitlab":
         jsonContent = await GitLab.fetchContent(creds.apiToken ?? "", body.contentId)
+        break
+      case "shopify":
+        jsonContent = await Shopify.fetchContent(creds.shop ?? "", creds.accessToken ?? "", body.contentId)
+        break
+      case "notion":
+        jsonContent = await Notion.fetchContent(creds.token ?? "", body.contentId)
         break
       default:
         return NextResponse.json({ error: "Unknown connector" }, { status: 400 })

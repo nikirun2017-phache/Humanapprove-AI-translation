@@ -34,6 +34,10 @@ export async function POST(req: NextRequest) {
       email: cleanEmail,
       hashedPassword,
       role: "requester",
+      plan: "free",
+      wordsQuota: 10000,
+      wordsUsed: 0,
+      billingPeriodStart: new Date(),
     },
   })
 

@@ -16,6 +16,8 @@ import * as GoogleDrive from "@/lib/connectors/googledrive"
 import * as SharePoint from "@/lib/connectors/sharepoint"
 import * as GitHub from "@/lib/connectors/github"
 import * as GitLab from "@/lib/connectors/gitlab"
+import * as Shopify from "@/lib/connectors/shopify"
+import * as Notion from "@/lib/connectors/notion"
 
 export async function POST(
   req: NextRequest,
@@ -86,6 +88,12 @@ export async function POST(
         break
       case "gitlab":
         result = await GitLab.testConnection(creds.apiToken ?? "")
+        break
+      case "shopify":
+        result = await Shopify.testConnection(creds.shop ?? "", creds.accessToken ?? "")
+        break
+      case "notion":
+        result = await Notion.testConnection(creds.token ?? "")
         break
       default:
         return NextResponse.json({ error: "Unknown connector" }, { status: 400 })

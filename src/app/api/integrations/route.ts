@@ -6,7 +6,7 @@ const VALID_CONNECTORS = new Set([
   "pendo", "webflow", "salesforce",
   "zendesk", "contentful", "wordpress", "hubspot",
   "jira", "slack", "qualtrics", "marketo", "googledrive", "sharepoint",
-  "github", "gitlab",
+  "github", "gitlab", "shopify", "notion",
 ])
 
 // GET /api/integrations — list user's integrations
@@ -79,6 +79,10 @@ export async function PUT(req: NextRequest) {
     "folderId",
     // github / gitlab
     "owner", "repoName", "projectPath", "branch",
+    // shopify
+    "shop",
+    // notion
+    "token",
   ])
 
   const cleanConfig: Record<string, string> = {}

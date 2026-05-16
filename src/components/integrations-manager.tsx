@@ -268,6 +268,31 @@ const CONNECTORS: ConnectorDef[] = [
     ],
     docsUrl: "https://docs.gitlab.com/ee/api/",
   },
+  {
+    id: "shopify",
+    name: "Shopify",
+    tagline: "Products & store content",
+    description: "Translate Shopify product titles, descriptions, variants, and store content. Push translations back using Shopify's native translation layer.",
+    icon: "🛍️",
+    iconBg: "bg-green-100",
+    fields: [
+      { key: "shop", label: "Store name", type: "text", placeholder: "my-store (without .myshopify.com)" },
+      { key: "accessToken", label: "Admin API access token", type: "password", placeholder: "shpat_..." },
+    ],
+    docsUrl: "https://shopify.dev/docs/api/admin-rest",
+  },
+  {
+    id: "notion",
+    name: "Notion",
+    tagline: "Pages & knowledge bases",
+    description: "Import pages from your Notion workspace, translate them with AI, and push translations back as updated page content — no copy-pasting needed.",
+    icon: "📝",
+    iconBg: "bg-gray-100",
+    fields: [
+      { key: "token", label: "Integration token", type: "password", placeholder: "secret_..." },
+    ],
+    docsUrl: "https://developers.notion.com/docs/getting-started",
+  },
 ]
 
 // ── Small helpers ─────────────────────────────────────────────────────────────
