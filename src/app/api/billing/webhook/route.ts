@@ -103,18 +103,14 @@ export async function POST(req: NextRequest) {
       case "invoice.paid": {
         const invoice = event.data.object as Stripe.Invoice
         if (invoice.customer) {
-          // Base status update for all paid invoices
-          const updateData: Record<string, unknown> = { subscriptionStatus: "active" }
-
-          // If this invoice is tied to a subscription, also reset the usage window
-          if (invoice.subscription) {
-            updateData.wordsUsed = 0
-            updateData.billingPeriodStart = new Date()
-          }
-
+          // Reset usage window on subscription invoices (new billing period)
+          const hasSubscription = !!(invoice as unknown as Record<string, unknown>).subscription
           await db.user.updateMany({
             where: { stripeCustomerId: invoice.customer as string },
-            data: updateData,
+            data: {
+              subscriptionStatus: "active",
+              ...(hasSubscription ? { wordsUsed: 0, billingPeriodStart: new Date() } : {}),
+            },
           })
         }
         break
