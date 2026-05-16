@@ -54,6 +54,10 @@ export default function ForgotPasswordPage() {
                   It expires in 1 hour.
                 </p>
               </div>
+              <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-lg px-3 py-3 text-left space-y-1">
+                <p className="font-medium">Signed up with Google or Apple?</p>
+                <p>If you created your account using social sign-in, no password reset is needed — just use the <strong>Continue with Google</strong> button on the sign-in page.</p>
+              </div>
               <Link href="/login" className="block text-sm text-indigo-600 hover:text-indigo-700 font-medium">
                 Back to sign in
               </Link>

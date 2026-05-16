@@ -36,6 +36,7 @@ function LoginForm() {
   // Unverified sign-in attempt
   const [showVerifyHint, setShowVerifyHint] = useState(false)
   const [hintEmail, setHintEmail] = useState("")
+  const [showOAuthHint, setShowOAuthHint] = useState(false)
 
   async function handleSocialSignIn(provider: "google") {
     setSocialLoading(provider)
@@ -48,6 +49,7 @@ function LoginForm() {
     setLoading(true)
     setError("")
     setShowVerifyHint(false)
+    setShowOAuthHint(false)
 
     if (mode === "signup") {
       const res = await fetch("/api/auth/register", {
@@ -78,17 +80,28 @@ function LoginForm() {
 
     if (result?.error) {
       // Check if it's an unverified account
-      const res = await fetch("/api/auth/resend-verification", {
+      const verifyRes = await fetch("/api/auth/resend-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, checkOnly: true }),
       })
-      const data = await res.json() as { pending?: boolean }
-      if (data.pending) {
+      const verifyData = await verifyRes.json() as { pending?: boolean }
+      if (verifyData.pending) {
         setHintEmail(email)
         setShowVerifyHint(true)
       } else {
-        setError(t("error"))
+        // Check if the account uses Apple / Google sign-in (no password)
+        const providerRes = await fetch("/api/auth/check-provider", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        })
+        const providerData = await providerRes.json() as { isOAuth?: boolean }
+        if (providerData.isOAuth) {
+          setShowOAuthHint(true)
+        } else {
+          setError(t("error"))
+        }
       }
     } else {
       // If user just verified their email, show a welcome banner on first arrival
@@ -111,6 +124,7 @@ function LoginForm() {
     setMode(next)
     setError("")
     setShowVerifyHint(false)
+    setShowOAuthHint(false)
     setAwaitingVerification(false)
   }
 
@@ -242,6 +256,13 @@ function LoginForm() {
                         {resendLoading ? "Sending…" : "Resend verification email"}
                       </button>
                     )}
+                  </div>
+                )}
+
+                {showOAuthHint && (
+                  <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-lg px-3 py-3 space-y-1">
+                    <p className="font-medium">This account uses Google or Apple Sign-in.</p>
+                    <p>Your account was created with a social login — no password needed. Use the <strong>Continue with Google</strong> button above to sign in.</p>
                   </div>
                 )}
 
