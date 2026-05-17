@@ -1,10 +1,56 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
 import { Link } from "@/i18n/navigation"
-import { CostEstimator } from "@/components/cost-estimator"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 import { getTranslations } from "next-intl/server"
 import Image from "next/image"
+import { PLANS, formatWords } from "@/lib/plans"
+
+const PAID_PLANS = [PLANS.starter, PLANS.growth, PLANS.business, PLANS.payg]
+
+const COMPARISON_ROWS: { label: string; starter: string; growth: string; business: string; payg: string }[] = [
+  { label: "Words / month",          starter: "50,000",   growth: "250,000",  business: "1,000,000", payg: "Unlimited" },
+  { label: "File formats",           starter: "All 20+",  growth: "All 20+",  business: "All 20+",   payg: "All 20+"   },
+  { label: "CMS integrations",       starter: "15+",      growth: "15+",      business: "15+",       payg: "15+"       },
+  { label: "Translation Memory",     starter: "Yes",      growth: "Yes",      business: "Yes",       payg: "Yes"       },
+  { label: "Glossary management",    starter: "Yes",      growth: "Yes",      business: "Yes",       payg: "Yes"       },
+  { label: "LQA Studio",             starter: "Yes",      growth: "Yes",      business: "Yes",       payg: "Yes"       },
+  { label: "Priority AI model access", starter: "—",      growth: "Yes",      business: "Yes",       payg: "—"         },
+  { label: "Usage analytics",        starter: "—",        growth: "Yes",      business: "Yes",       payg: "—"         },
+  { label: "REST API access",        starter: "—",        growth: "—",        business: "Yes",       payg: "—"         },
+  { label: "Custom integrations",    starter: "—",        growth: "—",        business: "Yes",       payg: "—"         },
+  { label: "Support",                starter: "Community",growth: "Email",    business: "Priority",  payg: "Community" },
+]
+
+const FAQS = [
+  { q: "Can I change plans at any time?", a: "Yes. Upgrade or downgrade at any time from billing settings. Upgrades take effect immediately; downgrades apply at the next billing period." },
+  { q: "What happens if I exceed my word quota?", a: "Translations pause once you hit your monthly limit. Upgrade to continue, or wait for your quota to reset at the start of your next billing period." },
+  { q: "Does unused quota roll over?", a: "No. Word quotas reset each billing cycle and do not carry over. If you consistently have leftover quota, consider a smaller plan." },
+  { q: "How does pay-as-you-go pricing work?", a: "You are charged per translated word based on actual usage, with no monthly commitment. Add a card and you will only be billed for what you use each month." },
+  { q: "Is there a free trial?", a: "Yes. Every new account starts with a one-time 10,000-word free trial — no card required." },
+  { q: "Do you offer annual billing?", a: "Annual billing with a 2-month discount is available — contact us and we will set it up for you." },
+  { q: "Is my data secure?", a: "All data is encrypted in transit (TLS) and at rest. We never use your content to train AI models." },
+]
+
+function PlanCheckIcon({ popular }: { popular?: boolean }) {
+  return (
+    <svg className={`h-4 w-4 shrink-0 mt-0.5 ${popular ? "text-indigo-200" : "text-indigo-600"}`} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+    </svg>
+  )
+}
+
+function TableCheck({ value }: { value: string }) {
+  if (value === "Yes") return (
+    <span className="flex justify-center">
+      <svg className="h-4 w-4 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+      </svg>
+    </span>
+  )
+  if (value === "—") return <span className="flex justify-center text-gray-300" aria-label="Not included">—</span>
+  return <span className="flex justify-center text-xs text-gray-700">{value}</span>
+}
 
 export default async function Home() {
   const session = await auth()
@@ -27,6 +73,9 @@ export default async function Home() {
             <Link href="/vision" className="text-sm text-gray-500 hover:text-gray-900 transition-colors hidden sm:block">
               {t("nav.vision")}
             </Link>
+            <a href="#pricing" className="text-sm text-gray-500 hover:text-gray-900 transition-colors hidden sm:block">
+              Pricing
+            </a>
             <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
               {t("nav.signIn")}
             </Link>
@@ -207,37 +256,165 @@ export default async function Home() {
       </section>
 
       {/* ── Pricing ──────────────────────────────────────────────────────────── */}
-      <section className="max-w-4xl mx-auto px-6 py-16">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-2">{t("pricing.heading")}</h2>
-        <p className="text-center text-gray-500 text-sm mb-10">{t("pricing.subheading")}</p>
+      <section id="pricing" className="py-20 bg-gray-50 border-y border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {[
-            { scenario: t("pricing.scenario1"), detail: t("pricing.scenario1Detail"), charge: t("pricing.scenario1Charge"), note: t("pricing.scenario1Note"), highlight: false },
-            { scenario: t("pricing.scenario2"), detail: t("pricing.scenario2Detail"), charge: t("pricing.scenario2Charge"), note: t("pricing.scenario2Note"), highlight: true },
-            { scenario: t("pricing.scenario3"), detail: t("pricing.scenario3Detail"), charge: t("pricing.scenario3Charge"), note: t("pricing.scenario3Note"), highlight: false },
-          ].map((ex) => (
-            <div key={ex.scenario} className={`relative rounded-xl border p-5 bg-white ${ex.highlight ? "border-indigo-300 shadow-sm" : "border-gray-200"}`}>
-              {ex.highlight && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="bg-indigo-600 text-white text-xs font-medium px-3 py-1 rounded-full">{t("pricing.mostCommon")}</span>
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">Simple, transparent pricing</h2>
+            <p className="text-gray-500 text-sm max-w-2xl mx-auto">
+              Start for free, then scale as you grow. Every plan includes all file formats, CMS integrations, and LQA Studio.
+            </p>
+            <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-indigo-50 px-4 py-1.5 text-sm font-medium text-indigo-700 ring-1 ring-inset ring-indigo-200">
+              Save 2 months with annual billing —{" "}
+              <a href="mailto:hello@summontranslator.com" className="underline underline-offset-2 hover:text-indigo-900">contact us</a>
+            </p>
+          </div>
+
+          {/* Plan cards */}
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {PAID_PLANS.map((plan) => (
+              <div
+                key={plan.id}
+                className={[
+                  "relative flex flex-col rounded-2xl border p-8",
+                  plan.popular
+                    ? "border-indigo-600 bg-indigo-600 shadow-2xl text-white"
+                    : "border-gray-200 bg-white shadow-sm text-gray-900",
+                ].join(" ")}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <span className="rounded-full bg-indigo-500 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-white ring-2 ring-white shadow">
+                      Most popular
+                    </span>
+                  </div>
+                )}
+                <div className="mb-6">
+                  <h3 className={["text-lg font-semibold", plan.popular ? "text-white" : "text-gray-900"].join(" ")}>
+                    {plan.name}
+                  </h3>
+                  {plan.price > 0 ? (
+                    <div className="mt-2 flex items-baseline gap-1">
+                      <span className={["text-4xl font-bold tracking-tight", plan.popular ? "text-white" : "text-gray-900"].join(" ")}>
+                        ${plan.price}
+                      </span>
+                      <span className={["text-sm", plan.popular ? "text-indigo-200" : "text-gray-500"].join(" ")}>/mo</span>
+                    </div>
+                  ) : plan.id === "payg" ? (
+                    <div className="mt-2">
+                      <span className={["text-4xl font-bold tracking-tight", plan.popular ? "text-white" : "text-gray-900"].join(" ")}>
+                        Usage
+                      </span>
+                      <p className={["mt-1 text-sm", plan.popular ? "text-indigo-200" : "text-gray-500"].join(" ")}>billed monthly</p>
+                    </div>
+                  ) : null}
+                  {plan.wordsPerMonth !== Infinity && (
+                    <p className={["mt-2 text-sm font-medium", plan.popular ? "text-indigo-100" : "text-indigo-600"].join(" ")}>
+                      {formatWords(plan.wordsPerMonth)} words / month
+                    </p>
+                  )}
                 </div>
-              )}
-              <p className="font-semibold text-gray-900 text-sm mb-1">{ex.scenario}</p>
-              <p className="text-xs text-gray-400 mb-4 leading-relaxed">{ex.detail}</p>
-              <div className="border-t border-gray-100 pt-3 text-right">
-                <p className="text-xs text-gray-400">{t("pricing.estimatedCost")}</p>
-                <p className="text-2xl font-bold text-indigo-600">{ex.charge}</p>
+                <ul className="mb-8 flex-1 space-y-3">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-3">
+                      <PlanCheckIcon popular={plan.popular} />
+                      <span className={["text-sm", plan.popular ? "text-indigo-100" : "text-gray-600"].join(" ")}>
+                        {feature}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href={`/login?plan=${plan.id}`}
+                  className={[
+                    "block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold transition-colors duration-150",
+                    plan.popular
+                      ? "bg-white text-indigo-600 hover:bg-indigo-50"
+                      : "bg-indigo-600 text-white hover:bg-indigo-700",
+                  ].join(" ")}
+                >
+                  {plan.cta}
+                </Link>
               </div>
-              <p className="text-xs text-gray-400 mt-2 italic">{ex.note}</p>
+            ))}
+          </div>
+
+          {/* Free trial note */}
+          <p className="mt-8 text-center text-sm text-gray-500">
+            Not ready to commit?{" "}
+            <Link href="/login?plan=free" className="font-medium text-indigo-600 hover:text-indigo-500 underline underline-offset-2">
+              Start with 10,000 free words
+            </Link>{" "}
+            — no card required.
+          </p>
+
+          {/* Comparison table */}
+          <div className="mt-20">
+            <h3 className="text-2xl font-bold tracking-tight text-gray-900 mb-8 text-center">Compare plans</h3>
+            <div className="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr className="bg-white">
+                    <th scope="col" className="py-4 pl-6 pr-3 text-left text-sm font-semibold text-gray-900 w-1/3">Feature</th>
+                    {[PLANS.starter, PLANS.growth, PLANS.business, PLANS.payg].map((plan) => (
+                      <th key={plan.id} scope="col" className={["px-4 py-4 text-center text-sm font-semibold", plan.popular ? "text-indigo-600" : "text-gray-900"].join(" ")}>
+                        {plan.name}
+                        {plan.popular && (
+                          <span className="ml-1 inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">Popular</span>
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {COMPARISON_ROWS.map((row, idx) => (
+                    <tr key={row.label} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"}>
+                      <td className="py-3.5 pl-6 pr-3 text-sm font-medium text-gray-700">{row.label}</td>
+                      <td className="px-4 py-3.5 text-sm text-gray-600"><TableCheck value={row.starter} /></td>
+                      <td className="px-4 py-3.5 text-sm text-indigo-600 font-medium"><TableCheck value={row.growth} /></td>
+                      <td className="px-4 py-3.5 text-sm text-gray-600"><TableCheck value={row.business} /></td>
+                      <td className="px-4 py-3.5 text-sm text-gray-600"><TableCheck value={row.payg} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-gray-50 border-t border-gray-200">
+                    <td className="py-4 pl-6 pr-3" />
+                    {[PLANS.starter, PLANS.growth, PLANS.business, PLANS.payg].map((plan) => (
+                      <td key={plan.id} className="px-4 py-4 text-center">
+                        <Link
+                          href={`/login?plan=${plan.id}`}
+                          className={[
+                            "inline-block rounded-lg px-4 py-2 text-sm font-semibold transition-colors duration-150",
+                            plan.popular
+                              ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                              : "bg-white text-indigo-600 ring-1 ring-inset ring-indigo-300 hover:bg-indigo-50",
+                          ].join(" ")}
+                        >
+                          {plan.cta}
+                        </Link>
+                      </td>
+                    ))}
+                  </tr>
+                </tfoot>
+              </table>
             </div>
-          ))}
-        </div>
+          </div>
 
-        <CostEstimator />
+          {/* FAQ */}
+          <div className="mt-20 max-w-3xl mx-auto">
+            <h3 className="text-2xl font-bold tracking-tight text-gray-900 mb-10 text-center">Frequently asked questions</h3>
+            <dl className="space-y-4">
+              {FAQS.map((faq) => (
+                <div key={faq.q} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                  <dt className="text-base font-semibold text-gray-900">{faq.q}</dt>
+                  <dd className="mt-2 text-sm text-gray-600 leading-relaxed">{faq.a}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
 
-        <div className="mt-6 flex items-center justify-center gap-2 bg-green-50 border border-green-200 text-green-800 text-sm font-medium px-4 py-3 rounded-xl">
-          🎁 <span>First 10,000 words free — sign up and enter code <span className="font-mono font-bold">1TIME</span></span>
         </div>
       </section>
 

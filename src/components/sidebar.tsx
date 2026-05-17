@@ -211,7 +211,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     {
       label: "Help",
       links: [
-        { href: "/pricing",            label: "Pricing",            match: "/pricing",            icon: <IconPricing /> },
+        { href: "/#pricing",           label: "Pricing",            match: "/pricing",            icon: <IconPricing /> },
         { href: "/support",            label: "Support & FAQ",      match: "/support",            icon: <IconSupport /> },
         { href: "/support#tutorials",  label: "Tutorials",          match: "/support",            icon: <IconTutorials /> },
       ],
