@@ -72,6 +72,17 @@ export async function POST(req: NextRequest) {
         const wordsQuota =
           quotaPlan && isFinite(quotaPlan.wordsPerMonth) ? quotaPlan.wordsPerMonth : 0
 
+        // Only reset usage counter when the plan actually changes, not on every
+        // metadata-only or status-only subscription.updated event.
+        let shouldResetUsage = event.type === "customer.subscription.created"
+        if (!shouldResetUsage) {
+          const existingUser = await db.user.findFirst({
+            where: { stripeCustomerId: customerId },
+            select: { plan: true },
+          })
+          shouldResetUsage = existingUser?.plan !== resolvedPlanId
+        }
+
         await db.user.updateMany({
           where: { stripeCustomerId: customerId },
           data: {
@@ -79,8 +90,7 @@ export async function POST(req: NextRequest) {
             plan: resolvedPlanId,
             subscriptionStatus: subscription.status,
             wordsQuota,
-            wordsUsed: 0,
-            billingPeriodStart: new Date(),
+            ...(shouldResetUsage ? { wordsUsed: 0, billingPeriodStart: new Date() } : {}),
           },
         })
         break
@@ -102,14 +112,20 @@ export async function POST(req: NextRequest) {
 
       case "invoice.paid": {
         const invoice = event.data.object as Stripe.Invoice
-        if (invoice.customer) {
-          // Reset usage window on subscription invoices (new billing period)
-          const hasSubscription = !!(invoice as unknown as Record<string, unknown>).subscription
+        const invoiceSubscriptionId = (invoice as unknown as Record<string, unknown>).subscription as string | null
+
+        if (invoice.customer && invoiceSubscriptionId) {
+          // Only update users with an active subscription — PAYG invoices must not
+          // flip subscriptionStatus to "active" or reset the usage window.
           await db.user.updateMany({
-            where: { stripeCustomerId: invoice.customer as string },
+            where: {
+              stripeCustomerId: invoice.customer as string,
+              stripeSubscriptionId: { not: null },
+            },
             data: {
               subscriptionStatus: "active",
-              ...(hasSubscription ? { wordsUsed: 0, billingPeriodStart: new Date() } : {}),
+              wordsUsed: 0,
+              billingPeriodStart: new Date(),
             },
           })
         }

@@ -271,8 +271,22 @@ export async function POST(req: NextRequest) {
   if (session.user.role !== "admin") {
     const dbUser = await db.user.findUnique({
       where: { id: session.user.id },
-      select: { plan: true, wordsQuota: true, wordsUsed: true }
+      select: { plan: true, wordsQuota: true, wordsUsed: true, billingPeriodStart: true }
     })
+    if (dbUser && ["starter","growth","business"].includes(dbUser.plan ?? "")) {
+      // Auto-reset quota if the billing period has rolled over (Stripe invoice.paid may not fire
+      // immediately). For subscription plans, reset if billingPeriodStart is > 31 days ago.
+      const daysSincePeriodStart = dbUser.billingPeriodStart
+        ? (Date.now() - new Date(dbUser.billingPeriodStart).getTime()) / 86_400_000
+        : 0
+      if (daysSincePeriodStart > 31) {
+        await db.user.update({
+          where: { id: session.user.id },
+          data: { wordsUsed: 0, billingPeriodStart: new Date() },
+        })
+        dbUser.wordsUsed = 0
+      }
+    }
     if (dbUser && ["free","starter","growth","business"].includes(dbUser.plan ?? "")) {
       const remaining = Math.max(0, dbUser.wordsQuota - dbUser.wordsUsed)
       if (remaining < totalSourceWords) {
@@ -355,12 +369,16 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Increment usage counter on the promo code
+    // Atomically increment promo code — single UPDATE with guard prevents concurrent over-use
     if (appliedPromoCode) {
-      await tx.promoCode.update({
-        where: { code: appliedPromoCode },
-        data: { usedCount: { increment: 1 } },
-      })
+      const rows = await tx.$executeRaw`
+        UPDATE "PromoCode"
+        SET "usedCount" = "usedCount" + 1
+        WHERE "code" = ${appliedPromoCode}
+          AND ("maxUses" IS NULL OR "usedCount" < "maxUses")
+      `
+      // 0 rows updated = another request claimed the last use between our check and this write
+      if (rows === 0) throw new Error("PROMO_EXHAUSTED")
     }
 
     const wordCount = (units as Array<{ source?: string }>).reduce(
