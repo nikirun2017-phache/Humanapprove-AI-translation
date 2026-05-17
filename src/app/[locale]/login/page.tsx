@@ -231,8 +231,25 @@ function LoginForm() {
             </div>
           )}
           {verifiedParam === "invalid" && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
-              Invalid verification link. Please request a new one.
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 space-y-2">
+              <p>Invalid or already-used verification link.</p>
+              <p>
+                Enter your email below and click{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (email) {
+                      handleResend(email)
+                    } else {
+                      document.getElementById("email")?.focus()
+                    }
+                  }}
+                  className="underline font-medium hover:text-red-900"
+                >
+                  {email ? "Resend verification email" : "enter your email then resend"}
+                </button>
+                .
+              </p>
             </div>
           )}
 
