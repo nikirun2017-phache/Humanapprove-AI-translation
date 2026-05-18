@@ -156,6 +156,15 @@ function JobRow({ job, isAdmin }: { job: Job; isAdmin: boolean }) {
         <td className="px-4 py-3 text-right">
           <div className="flex items-center justify-end gap-3">
             <ZipButton job={job} />
+            <a
+              href={`/api/translation-studio/jobs/${job.id}/download-source`}
+              download
+              className="text-xs text-gray-500 hover:text-indigo-600 font-medium"
+              onClick={e => e.stopPropagation()}
+              title="Download original uploaded file"
+            >
+              ↓ Original
+            </a>
             <Link href={`/translation-studio/${job.id}`}
               className="text-xs text-gray-500 hover:text-indigo-600 font-medium"
               onClick={e => e.stopPropagation()}>
@@ -276,6 +285,15 @@ function LqaRunRow({ run, isAdmin, onDelete }: { run: LqaRun; isAdmin: boolean; 
       </td>
       <td className="px-4 py-3 text-right">
         <div className="flex items-center justify-end gap-3">
+          <a
+            href={`/api/lqa/runs/${run.id}/download-source`}
+            download
+            className="text-xs text-gray-500 hover:text-indigo-600 font-medium"
+            onClick={e => e.stopPropagation()}
+            title="Download original uploaded file"
+          >
+            ↓ Original
+          </a>
           {run.status === "completed" && (
             <a href={`/lqa-studio`} className="text-xs text-indigo-600 hover:underline font-medium">View</a>
           )}
