@@ -510,7 +510,11 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
   }
 
   function removeEntry(key: string) {
-    setEntries((prev) => prev.filter((e: FileEntry) => e.key !== key))
+    setEntries((prev) => {
+      const next = prev.filter((e: FileEntry) => e.key !== key)
+      if (next.length === 0) setJobName("")
+      return next
+    })
   }
 
   const handleInputChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
