@@ -291,6 +291,7 @@ model TranslationTask {
   errorMessage   String?
   xliffFileUrl   String?
   xliffData      String?  // translated XLIFF content stored in DB for serverless access
+  actualCostUsd  Float?   // actual API cost derived from provider token-usage fields
   projectId      String?  @unique
 
   createdAt DateTime @default(now())

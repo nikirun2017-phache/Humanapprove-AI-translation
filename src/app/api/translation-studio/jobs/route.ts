@@ -8,17 +8,22 @@ const ALL_MODELS = PROVIDER_INFO.flatMap(p => p.models)
 const CHARS_PER_WORD = 5
 const COST_PER_WORD_FALLBACK = (3 / 1_000_000 / 4) * 5
 
-function estimateJobApiCost(tasks: { wordCount: number; totalUnits: number; status: string }[], model: string): number {
+function estimateTaskCost(t: { wordCount: number; totalUnits: number }, model: string, m: typeof ALL_MODELS[number] | undefined): number {
+  const words = t.wordCount > 0 ? t.wordCount : t.totalUnits * AVG_WORDS_PER_UNIT
+  const inputTokens = Math.ceil(words * CHARS_PER_WORD / 4)
+  const outputTokens = Math.ceil(inputTokens * 1.1)
+  return m
+    ? (inputTokens * m.inputPricePer1M + outputTokens * m.outputPricePer1M) / 1_000_000
+    : words * COST_PER_WORD_FALLBACK
+}
+
+function computeJobCost(tasks: { wordCount: number; totalUnits: number; status: string; actualCostUsd: number | null }[], model: string): number {
   const completedTasks = tasks.filter(t => t.status === "completed" || t.status === "imported")
   if (completedTasks.length === 0) return 0
   const m = ALL_MODELS.find(m => m.id === model)
   return completedTasks.reduce((sum, t) => {
-    const words = t.wordCount > 0 ? t.wordCount : t.totalUnits * AVG_WORDS_PER_UNIT
-    const inputTokens = Math.ceil(words * CHARS_PER_WORD / 4)
-    const outputTokens = Math.ceil(inputTokens * 1.1)
-    return sum + (m
-      ? (inputTokens * m.inputPricePer1M + outputTokens * m.outputPricePer1M) / 1_000_000
-      : words * COST_PER_WORD_FALLBACK)
+    // Use actual token-based cost when recorded; fall back to word-count estimate for older jobs
+    return sum + (t.actualCostUsd !== null ? t.actualCostUsd : estimateTaskCost(t, model, m))
   }, 0)
 }
 import { parseJsonSource, parseCsvSource, parseCsvSourceWithColumns, parseCsvFull, parseMarkdownSource, parseTxtSource, parsePdfSource, parseXliffSource, parseStringsSource, parseStringsDictSource, parseXcstringsSource, parsePoSource, parseAndroidXmlSource, parseArbSource, parsePropertiesSource, type SourceUnit, type PdfParseResult } from "@/lib/source-parser"
@@ -46,12 +51,12 @@ export async function GET() {
     jobs.map(async (job: (typeof jobs)[number]) => {
       const tasks = await db.translationTask.findMany({
         where: { jobId: job.id },
-        select: { id: true, targetLanguage: true, status: true, wordCount: true, totalUnits: true },
+        select: { id: true, targetLanguage: true, status: true, wordCount: true, totalUnits: true, actualCostUsd: true },
         orderBy: { targetLanguage: "asc" },
       })
       const completed = tasks.filter((t: (typeof tasks)[number]) => t.status === "completed" || t.status === "imported").length
       const failed = tasks.filter((t: (typeof tasks)[number]) => t.status === "failed").length
-      const estimatedApiCostUsd = estimateJobApiCost(tasks, job.model)
+      const estimatedApiCostUsd = computeJobCost(tasks, job.model)
       return { ...job, tasks, completedTasks: completed, failedTasks: failed, estimatedApiCostUsd }
     })
   )

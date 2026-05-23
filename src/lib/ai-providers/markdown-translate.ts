@@ -21,8 +21,15 @@ Rules:
 - Keep the same tone and formality as the source
 - Return ONLY the translated content in the same marker format — no explanations, no extra text`
 
+export interface MarkdownBatchResult {
+  text: string
+  inputTokens: number
+  outputTokens: number
+}
+
 /**
- * Translate a markdown batch document and return the translated markdown.
+ * Translate a markdown batch document and return the translated markdown
+ * together with the actual token counts reported by the provider.
  *
  * Input:  ## §unit-id§\nsource text\n\n## §unit-id-2§\nsource text 2
  * Output: ## §unit-id§\ntranslated text\n\n## §unit-id-2§\ntranslated text 2
@@ -39,7 +46,7 @@ export async function translateMarkdownBatch(
   apiKey: string,
   model: string,
   glossaryTerms?: GlossaryTerm[]
-): Promise<string> {
+): Promise<MarkdownBatchResult> {
   const glossarySection = glossaryTerms ? buildGlossaryPromptSection(glossaryTerms) : ""
   // Inject glossary BEFORE "Rules:" so it outranks the default abbreviation-handling rule
   const basePrompt = SYSTEM_PROMPT
@@ -72,7 +79,7 @@ async function callAnthropic(
   systemPrompt: string,
   model: string,
   apiKey: string
-): Promise<string> {
+): Promise<MarkdownBatchResult> {
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     signal: AbortSignal.timeout(AI_CALL_TIMEOUT_MS),
@@ -97,13 +104,18 @@ async function callAnthropic(
   const data = await response.json() as {
     content: { type: string; text: string }[]
     stop_reason?: string
+    usage?: { input_tokens: number; output_tokens: number }
   }
 
   if (data.stop_reason === "max_tokens") {
     throw new Error("Markdown batch too large (max_tokens reached). This batch will be split automatically on retry.")
   }
 
-  return data.content.find((c: { type: string; text: string }) => c.type === "text")?.text ?? ""
+  return {
+    text: data.content.find((c: { type: string; text: string }) => c.type === "text")?.text ?? "",
+    inputTokens: data.usage?.input_tokens ?? 0,
+    outputTokens: data.usage?.output_tokens ?? 0,
+  }
 }
 
 async function callOpenAICompat(
@@ -112,7 +124,7 @@ async function callOpenAICompat(
   model: string,
   apiKey: string,
   baseUrl: string
-): Promise<string> {
+): Promise<MarkdownBatchResult> {
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     signal: AbortSignal.timeout(AI_CALL_TIMEOUT_MS),
@@ -136,8 +148,13 @@ async function callOpenAICompat(
 
   const data = await response.json() as {
     choices: { message: { content: string } }[]
+    usage?: { prompt_tokens: number; completion_tokens: number }
   }
-  return data.choices[0]?.message?.content ?? ""
+  return {
+    text: data.choices[0]?.message?.content ?? "",
+    inputTokens: data.usage?.prompt_tokens ?? 0,
+    outputTokens: data.usage?.completion_tokens ?? 0,
+  }
 }
 
 async function callGemini(
@@ -145,7 +162,7 @@ async function callGemini(
   systemPrompt: string,
   model: string,
   apiKey: string
-): Promise<string> {
+): Promise<MarkdownBatchResult> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
   const response = await fetch(url, {
     method: "POST",
@@ -164,6 +181,11 @@ async function callGemini(
 
   const data = await response.json() as {
     candidates: { content: { parts: { text: string }[] } }[]
+    usageMetadata?: { promptTokenCount: number; candidatesTokenCount: number }
   }
-  return data.candidates?.[0]?.content?.parts?.[0]?.text ?? ""
+  return {
+    text: data.candidates?.[0]?.content?.parts?.[0]?.text ?? "",
+    inputTokens: data.usageMetadata?.promptTokenCount ?? 0,
+    outputTokens: data.usageMetadata?.candidatesTokenCount ?? 0,
+  }
 }

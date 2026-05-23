@@ -5,8 +5,10 @@ import { fireWebhook } from "@/lib/fire-webhook"
 import { readFile, writeFile, mkdir } from "fs/promises"
 import path from "path"
 import { resolveApiKey } from "@/lib/api-key-resolver"
-import { getProvider } from "@/lib/ai-providers/registry"
+import { getProvider, PROVIDER_INFO } from "@/lib/ai-providers/registry"
 import { translateMarkdownBatch } from "@/lib/ai-providers/markdown-translate"
+
+const ALL_MODELS_FOR_COST = PROVIDER_INFO.flatMap(p => p.models)
 import { buildMarkdownBatches, parseMarkdownTranslation } from "@/lib/xliff-markdown"
 import { chunkUnits } from "@/lib/translation-batcher"
 import { buildXliffFromTranslations, mergeTranslationsIntoXliff } from "@/lib/xliff-builder"
@@ -141,6 +143,29 @@ export async function POST(
       } catch { /* malformed glossaryData — ignore */ }
     }
 
+    // Accumulate actual token usage across all AI calls for this task.
+    // Used to compute an accurate actualCostUsd instead of the word-count estimate.
+    let totalInputTokens = 0
+    let totalOutputTokens = 0
+
+    // Wrapper: call translateMarkdownBatch, accumulate tokens, return just the text.
+    const mdBatch = (markdown: string) =>
+      withRetry(() =>
+        translateMarkdownBatch(
+          markdown,
+          job.sourceLanguage,
+          task.targetLanguage,
+          job.provider as ProviderName,
+          apiKey,
+          job.model,
+          glossaryTerms
+        )
+      ).then(result => {
+        totalInputTokens += result.inputTokens
+        totalOutputTokens += result.outputTokens
+        return result.text
+      })
+
     let xliff: string
 
     if (job.sourceFormat === "xliff") {
@@ -164,17 +189,7 @@ export async function POST(
       const translationMap = new Map<string, string>()
 
       for (const { markdown, indexToId } of markdownBatches) {
-        const translated = await withRetry(() =>
-          translateMarkdownBatch(
-            markdown,
-            job.sourceLanguage,
-            task.targetLanguage,
-            job.provider as ProviderName,
-            apiKey,
-            job.model,
-            glossaryTerms
-          )
-        )
+        const translated = await mdBatch(markdown)
         const indexedMap = parseMarkdownTranslation(translated)
         for (const [idx, text] of indexedMap) {
           const unitId = indexToId.get(idx)
@@ -201,17 +216,7 @@ export async function POST(
         const gapBatches = buildMarkdownBatches(missingUnits)
         for (const { markdown: gapMarkdown, indexToId: gapIndexToId } of gapBatches) {
           try {
-            const translated = await withRetry(() =>
-              translateMarkdownBatch(
-                gapMarkdown,
-                job.sourceLanguage,
-                task.targetLanguage,
-                job.provider as ProviderName,
-                apiKey,
-                job.model,
-                glossaryTerms
-              )
-            )
+            const translated = await mdBatch(gapMarkdown)
             const indexedMap = parseMarkdownTranslation(translated)
             for (const [idx, text] of indexedMap) {
               const unitId = gapIndexToId.get(idx)
@@ -251,9 +256,7 @@ export async function POST(
           const structBatches = buildMarkdownBatches(structuralMissing)
           for (const { markdown: sm, indexToId: sIdx } of structBatches) {
             try {
-              const translated = await withRetry(() =>
-                translateMarkdownBatch(sm, job.sourceLanguage, task.targetLanguage, job.provider as ProviderName, apiKey, job.model, glossaryTerms)
-              )
+              const translated = await mdBatch(sm)
               const indexedMap = parseMarkdownTranslation(translated)
               for (const [idx, text] of indexedMap) {
                 const unitId = sIdx.get(idx)
@@ -282,17 +285,7 @@ export async function POST(
       const pdfTranslationMap = new Map<string, string>()
 
       for (const { markdown, indexToId } of pdfMarkdownBatches) {
-        const translated = await withRetry(() =>
-          translateMarkdownBatch(
-            markdown,
-            job.sourceLanguage,
-            task.targetLanguage,
-            job.provider as ProviderName,
-            apiKey,
-            job.model,
-            glossaryTerms
-          )
-        )
+        const translated = await mdBatch(markdown)
         const indexedMap = parseMarkdownTranslation(translated)
         for (const [idx, text] of indexedMap) {
           const unitId = indexToId.get(idx)
@@ -310,9 +303,7 @@ export async function POST(
         const gapBatches = buildMarkdownBatches(pdfMissingUnits)
         for (const { markdown: gapMd, indexToId: gapIdx } of gapBatches) {
           try {
-            const translated = await withRetry(() =>
-              translateMarkdownBatch(gapMd, job.sourceLanguage, task.targetLanguage, job.provider as ProviderName, apiKey, job.model, glossaryTerms)
-            )
+            const translated = await mdBatch(gapMd)
             const indexedMap = parseMarkdownTranslation(translated)
             for (const [idx, text] of indexedMap) {
               const unitId = gapIdx.get(idx)
@@ -345,17 +336,7 @@ export async function POST(
       const mdTranslationMap = new Map<string, string>()
 
       for (const { markdown, indexToId } of mdBatches) {
-        const translated = await withRetry(() =>
-          translateMarkdownBatch(
-            markdown,
-            job.sourceLanguage,
-            task.targetLanguage,
-            job.provider as ProviderName,
-            apiKey,
-            job.model,
-            glossaryTerms
-          )
-        )
+        const translated = await mdBatch(markdown)
         const indexedMap = parseMarkdownTranslation(translated)
         for (const [idx, text] of indexedMap) {
           const unitId = indexToId.get(idx)
@@ -374,9 +355,7 @@ export async function POST(
         const gapBatches = buildMarkdownBatches(mdMissingUnits)
         for (const { markdown: gapMd, indexToId: gapIdx } of gapBatches) {
           try {
-            const translated = await withRetry(() =>
-              translateMarkdownBatch(gapMd, job.sourceLanguage, task.targetLanguage, job.provider as ProviderName, apiKey, job.model, glossaryTerms)
-            )
+            const translated = await mdBatch(gapMd)
             const indexedMap = parseMarkdownTranslation(translated)
             for (const [idx, text] of indexedMap) {
               const unitId = gapIdx.get(idx)
@@ -441,6 +420,17 @@ export async function POST(
       console.warn("[translate] Disk XLIFF backup write failed — data is safe in DB")
     }
 
+    // Compute actual cost from accumulated token counts (covers all markdown-based
+    // formats: CSV, HTML, MD, TXT, XLIFF, PDF). JSON-array formats (JSON, strings,
+    // etc.) don't accumulate tokens here and will fall back to the word-count estimate.
+    let actualCostUsd: number | undefined
+    if (totalInputTokens > 0 || totalOutputTokens > 0) {
+      const modelInfo = ALL_MODELS_FOR_COST.find(m => m.id === job.model)
+      if (modelInfo) {
+        actualCostUsd = (totalInputTokens * modelInfo.inputPricePer1M + totalOutputTokens * modelInfo.outputPricePer1M) / 1_000_000
+      }
+    }
+
     await db.translationTask.update({
       where: { id: taskId },
       data: {
@@ -448,6 +438,7 @@ export async function POST(
         completedUnits: units.length,
         xliffFileUrl: xliffPath || null,
         xliffData: xliff, // always stored in DB — primary source for downloads
+        ...(actualCostUsd !== undefined ? { actualCostUsd } : {}),
       },
     })
 
