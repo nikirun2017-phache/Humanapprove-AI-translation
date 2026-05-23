@@ -334,11 +334,13 @@ export async function POST(
       }))
       xliff = buildXliffFromTranslations(units, allTranslatedPdf, job.sourceLanguage, task.targetLanguage, job.name)
 
-    } else if (job.sourceFormat === "csv" || job.sourceFormat === "md" || job.sourceFormat === "txt") {
-      // ── CSV / Markdown / plain-text path: markdown-based translation ──────────
+    } else if (job.sourceFormat === "csv" || job.sourceFormat === "md" || job.sourceFormat === "txt" || job.sourceFormat === "html") {
+      // ── CSV / Markdown / plain-text / HTML path: markdown-based translation ───
       // These formats often contain quoted text, long prose, or special characters
       // (including CJK quotation marks in the AI response) that corrupt the JSON
-      // output in the JSON-array approach. Markdown batching avoids all JSON escaping issues.
+      // output in the JSON-array approach. HTML is especially prone to this because
+      // text nodes can contain raw quotes, ampersands, and attribute-like strings.
+      // Markdown batching avoids all JSON escaping issues.
       const mdBatches = buildMarkdownBatches(units)
       const mdTranslationMap = new Map<string, string>()
 
