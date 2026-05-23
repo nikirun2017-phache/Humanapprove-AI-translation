@@ -600,9 +600,22 @@ export function parseCsvSource(content: string): SourceUnit[] {
   const lines = content.split(/\r?\n/).filter((l: string) => l.trim())
   if (lines.length === 0) return []
 
-  // Detect if first line is a header (contains "id" or "key" as first field)
-  const firstCols = lines[0].split(",").map((c: string) => c.trim().toLowerCase().replace(/"/g, ""))
-  const hasHeader = firstCols[0] === "id" || firstCols[0] === "key" || firstCols[0] === "name"
+  // Detect if first line is a header.
+  // Use parseCsvLine for correct handling of quoted fields.
+  // Treat first row as a header if any cell matches a common header label OR if
+  // all cells look like short identifiers (no whitespace) — typical of header rows.
+  // This handles headers like "source,english", "key,text", "phrase,translation", etc.
+  // In practice, virtually all real-world CSVs include a header row.
+  const firstCols = parseCsvLine(lines[0]).map((c: string) => c.trim().toLowerCase().replace(/^"|"$/g, ""))
+  const KNOWN_HEADER_NAMES = new Set([
+    "id", "key", "name", "source", "target", "text", "string", "message",
+    "english", "phrase", "label", "identifier", "token", "original",
+    "segment", "content", "translation", "value", "term", "word",
+  ])
+  const hasHeader = lines.length > 1 && (
+    firstCols.some((c: string) => KNOWN_HEADER_NAMES.has(c)) ||
+    firstCols.every((c: string) => c.length > 0 && !/\s/.test(c))
+  )
   const dataLines = hasHeader ? lines.slice(1) : lines
 
   return dataLines

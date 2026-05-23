@@ -186,22 +186,31 @@ export async function GET(
       })
     }
 
-    // Legacy 2-column mode (id, value)
-    const unitsContent = job.unitsData ?? await readFile(job.unitsFileUrl, "utf-8")
-    const units = JSON.parse(unitsContent) as Array<{ id: string; sourceText: string }>
-    const lines = ["id,value"]
-    for (const unit of units) {
-      const text = translations.get(unit.id) ?? unit.sourceText
-      const escapedId = unit.id.includes(",") ? `"${unit.id.replace(/"/g, '""')}"` : unit.id
-      const escapedText = `"${text.replace(/"/g, '""')}"`
-      lines.push(`${escapedId},${escapedText}`)
+    // Legacy 2-column mode: re-parse source CSV to preserve ALL rows (including
+    // those that had empty values and were excluded from the translation units).
+    // This prevents apparent row-shifts where "row 2 shows row 3's content"
+    // because a filtered row made subsequent rows appear at the wrong position.
+    {
+      const { headers: srcHeaders, rows: srcRows } = parseCsvFull(sourceContent)
+      // Use original header names if present, otherwise fall back to "id,value"
+      const outHeader = srcHeaders.length >= 2
+        ? srcHeaders.map(h => escCsvCell(h)).join(",")
+        : "id,value"
+      const lines = [outHeader]
+      for (const row of srcRows) {
+        const id = row[0] ?? ""
+        const originalVal = row[1] ?? ""
+        const translated = id ? (translations.get(id) ?? "") : ""
+        const outVal = translated || originalVal
+        lines.push(`${escCsvCell(id)},${escCsvCell(outVal)}`)
+      }
+      return new NextResponse(lines.join("\n"), {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${safeName}.csv"`,
+        },
+      })
     }
-    return new NextResponse(lines.join("\n"), {
-      headers: {
-        "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="${safeName}.csv"`,
-      },
-    })
   }
 
   if (fmt === "txt") {
