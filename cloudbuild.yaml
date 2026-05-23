@@ -49,22 +49,31 @@ steps:
 
   # Create or update the Cloud Scheduler job that triggers daily job cleanup.
   # Runs at 03:00 UTC every day; deletes requester jobs older than 7 days.
+  # Uses create-or-update pattern: tries create first, falls back to update
+  # if the job already exists (avoids delete+create race and permission issues).
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: bash
     args:
       - -c
       - |
         CRON_SECRET=$$(gcloud secrets versions access latest --secret=CRON_SECRET --project=$PROJECT_ID)
-        gcloud scheduler jobs delete cleanup-old-jobs --location=us-central1 --project=$PROJECT_ID --quiet 2>/dev/null || true
-        gcloud scheduler jobs create http cleanup-old-jobs \
-          --schedule="0 3 * * *" \
-          --uri="https://summontranslator.com/api/cron/cleanup-jobs" \
-          --message-body="{}" \
-          --headers="Content-Type=application/json" \
-          --headers="Authorization=Bearer $${CRON_SECRET}" \
-          --time-zone="UTC" \
-          --location=us-central1 \
-          --project=$PROJECT_ID
+        SCHEDULER_ARGS=(
+          "--schedule=0 3 * * *"
+          "--uri=https://summontranslator.com/api/cron/cleanup-jobs"
+          "--message-body={}"
+          "--headers=Content-Type=application/json"
+          "--headers=Authorization=Bearer $${CRON_SECRET}"
+          "--time-zone=UTC"
+          "--location=us-central1"
+          "--project=$PROJECT_ID"
+        )
+        if gcloud scheduler jobs describe cleanup-old-jobs --location=us-central1 --project=$PROJECT_ID --quiet 2>/dev/null; then
+          echo "Scheduler job exists — updating"
+          gcloud scheduler jobs update http cleanup-old-jobs "$${SCHEDULER_ARGS[@]}"
+        else
+          echo "Scheduler job not found — creating"
+          gcloud scheduler jobs create http cleanup-old-jobs "$${SCHEDULER_ARGS[@]}"
+        fi
 
 availableSecrets:
   secretManager:
