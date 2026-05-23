@@ -57,22 +57,19 @@ steps:
       - -c
       - |
         CRON_SECRET=$$(gcloud secrets versions access latest --secret=CRON_SECRET --project=$PROJECT_ID)
-        SCHEDULER_ARGS=(
-          "--schedule=0 3 * * *"
-          "--uri=https://summontranslator.com/api/cron/cleanup-jobs"
-          "--message-body={}"
-          "--headers=Content-Type=application/json"
-          "--headers=Authorization=Bearer $${CRON_SECRET}"
-          "--time-zone=UTC"
-          "--location=us-central1"
-          "--project=$PROJECT_ID"
-        )
         if gcloud scheduler jobs describe cleanup-old-jobs --location=us-central1 --project=$PROJECT_ID --quiet 2>/dev/null; then
-          echo "Scheduler job exists — updating"
-          gcloud scheduler jobs update http cleanup-old-jobs "$${SCHEDULER_ARGS[@]}"
+          echo "Scheduler job already exists — skipping"
         else
           echo "Scheduler job not found — creating"
-          gcloud scheduler jobs create http cleanup-old-jobs "$${SCHEDULER_ARGS[@]}"
+          gcloud scheduler jobs create http cleanup-old-jobs \
+            --schedule="0 3 * * *" \
+            --uri="https://summontranslator.com/api/cron/cleanup-jobs" \
+            --message-body="{}" \
+            --headers="Content-Type=application/json" \
+            --headers="Authorization=Bearer $${CRON_SECRET}" \
+            --time-zone="UTC" \
+            --location=us-central1 \
+            --project=$PROJECT_ID
         fi
 
 availableSecrets:
