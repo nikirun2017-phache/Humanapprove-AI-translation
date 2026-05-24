@@ -26,8 +26,14 @@ ENV NODE_ENV=production
 # Disable Next.js telemetry
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Install Chromium (for Puppeteer PDF generation) and fonts for CJK/Unicode support
-RUN apk add --no-cache chromium fontconfig font-noto font-noto-cjk
+# Install Chromium (for Puppeteer PDF generation), fonts for CJK/Unicode support,
+# and PDF text-extraction tools (pdftotext + Python pdfplumber/pypdf).
+# These enable the 3-strategy text-extraction cascade for PDF source files,
+# so most PDFs never need the slower/larger Claude Vision path.
+RUN apk add --no-cache chromium fontconfig font-noto font-noto-cjk \
+    poppler-utils \
+    python3 py3-pip && \
+    pip3 install --no-cache-dir --break-system-packages pdfplumber pypdf
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Create non-root user

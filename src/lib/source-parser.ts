@@ -105,15 +105,42 @@ function isTextDense(text: string, numPages: number): boolean {
   return wordCount / pages >= MIN_WORDS_PER_PAGE || charCount / pages >= MIN_CHARS_PER_PAGE
 }
 
-/** Count PDF pages from raw bytes by scanning /Count entries in the page tree. */
+/**
+ * Count PDF pages from raw bytes.
+ *
+ * Two strategies in order of preference:
+ *  1. /Count N  — in the Pages tree node (visible for PDFs with uncompressed
+ *                 cross-reference tables, i.e. most PDF ≤ 1.4).
+ *  2. /Type /Page — count individual page objects (works for some PDF 1.5+
+ *                 files where /Count is inside a compressed XRef stream but
+ *                 individual page objects are still in uncompressed streams).
+ *
+ * Returns 0 when both strategies fail (e.g. fully compressed PDF 1.5+ with
+ * object streams). parsePdfWithClaude handles this by extracting without a
+ * page-range restriction rather than defaulting to "page 1 only".
+ */
 function countPagesFromRaw(buffer: Buffer): number {
   try {
     const raw = buffer.toString("latin1")
+
+    // Strategy 1: /Count N  (Pages tree root has the highest count)
     const counts: number[] = []
-    const re = /\/Count\s+(\d+)/g
+    const countRe = /\/Count\s+(\d+)/g
     let m: RegExpExecArray | null
-    while ((m = re.exec(raw)) !== null) counts.push(parseInt(m[1], 10))
-    return counts.length > 0 ? Math.max(...counts) : 0
+    while ((m = countRe.exec(raw)) !== null) {
+      const n = parseInt(m[1], 10)
+      if (n > 0) counts.push(n)
+    }
+    if (counts.length > 0) return Math.max(...counts)
+
+    // Strategy 2: count /Type /Page objects (not /Pages, which is the parent node)
+    // Uses a word-boundary check to skip /Type /Pages
+    let pageCount = 0
+    const pageRe = /\/Type\s*\/Page(?!s\b)/g
+    while (pageRe.exec(raw) !== null) pageCount++
+    if (pageCount > 0) return pageCount
+
+    return 0
   } catch {
     return 0
   }
@@ -179,10 +206,19 @@ export async function parsePdfSource(buffer: Buffer, anthropicApiKey?: string): 
   const tmpPy  = tmpPdf.replace(".pdf", ".py")
   const tmpOut = tmpPdf.replace(".pdf", ".json")
 
+  // Accumulate the best page count seen across all text strategies.
+  // Even when the extracted text is too sparse for a text-based translation,
+  // the page count from pdftotext/pdfplumber is reliable and must be forwarded
+  // to parsePdfWithClaude so it can chunk the Vision calls correctly.
+  // Without this, countPagesFromRaw fails for PDF 1.5+ compressed XRef streams
+  // and Vision is mistakenly told "extract ONLY pages 1 to 1".
+  let knownPageCount = 0
+
   try {
     // ── Strategy 1: pdftotext CLI ────────────────────────────────────────────
     const s1 = tryPdftotext(tmpPdf, tmpTxt, buffer)
     if (s1) {
+      if (s1.numPages > knownPageCount) knownPageCount = s1.numPages
       const units = segmentPdfText(s1.text)
       if (isTextDense(s1.text, s1.numPages) && units.length > 0) {
         return { units, sourceMarkdown: null }
@@ -192,6 +228,7 @@ export async function parsePdfSource(buffer: Buffer, anthropicApiKey?: string): 
     // ── Strategy 2: pdfplumber (Python) ──────────────────────────────────────
     const s2 = tryPdfplumber(tmpPdf, tmpPy, tmpOut)
     if (s2) {
+      if (s2.numPages > knownPageCount) knownPageCount = s2.numPages
       const units = segmentPdfText(s2.text)
       if (isTextDense(s2.text, s2.numPages) && units.length > 0) {
         return { units, sourceMarkdown: null }
@@ -201,6 +238,7 @@ export async function parsePdfSource(buffer: Buffer, anthropicApiKey?: string): 
     // ── Strategy 3: pypdf (Python) ───────────────────────────────────────────
     const s3 = tryPypdf(tmpPdf, tmpPy, tmpOut)
     if (s3) {
+      if (s3.numPages > knownPageCount) knownPageCount = s3.numPages
       const units = segmentPdfText(s3.text)
       if (isTextDense(s3.text, s3.numPages) && units.length > 0) {
         return { units, sourceMarkdown: null }
@@ -213,7 +251,7 @@ export async function parsePdfSource(buffer: Buffer, anthropicApiKey?: string): 
         "This PDF appears to be scanned (no embedded text). An Anthropic API key is required to extract text via Vision."
       )
     }
-    return parsePdfWithClaude(buffer, anthropicApiKey)
+    return parsePdfWithClaude(buffer, anthropicApiKey, knownPageCount)
 
   } finally {
     cleanupFiles(tmpPdf, tmpTxt, tmpPy, tmpOut)
@@ -464,24 +502,88 @@ function splitIntoSentences(text: string): string[] {
 // Pages processed per Claude API call. Keeps output well within max_tokens.
 const PDF_CHUNK_SIZE = 20
 
+// Retry delays for Vision API calls (mirrors the translate route's withRetry).
+// 429s from Claude typically clear within a minute, so three attempts with
+// increasing back-off are enough for transient spikes.
+const VISION_RETRY_DELAYS_MS = [15_000, 40_000, 65_000]
+
+/** Call extractPdfChunk with automatic retry on 429 / transient errors. */
+async function extractPdfChunkWithRetry(
+  base64: string,
+  anthropicApiKey: string,
+  startPage: number,
+  endPage: number,
+): Promise<string> {
+  let lastError: Error = new Error("Unknown error")
+  for (let attempt = 0; attempt <= VISION_RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      return await extractPdfChunk(base64, anthropicApiKey, startPage, endPage)
+    } catch (err) {
+      lastError = err as Error
+      const msg = lastError.message.toLowerCase()
+      const isRateLimit = msg.includes("429") || msg.includes("rate_limit") || msg.includes("overload")
+      const isTransient = isRateLimit || msg.includes("500") || msg.includes("503")
+      if (!isTransient || attempt === VISION_RETRY_DELAYS_MS.length) break
+      const delay = VISION_RETRY_DELAYS_MS[attempt]
+      console.warn(`[pdf-extract] retry ${attempt + 1} after ${delay}ms — ${lastError.message.slice(0, 120)}`)
+      await new Promise((r) => setTimeout(r, delay))
+    }
+  }
+  throw lastError
+}
+
 /**
  * Use Claude's native document API to extract text from scanned / image PDFs.
  * For large PDFs (> PDF_CHUNK_SIZE pages), the document is processed in chunks
  * of PDF_CHUNK_SIZE pages each to avoid hitting output token limits.
  * Returns structured Markdown with headings/lists preserved, plus parsed units.
+ *
+ * @param knownPageCount  Reliable page count from pdftotext/pdfplumber (0 = unknown).
+ *   When 0, countPagesFromRaw is tried as a fallback.  If that also returns 0
+ *   the PDF is extracted without a page-range restriction so Vision processes
+ *   the whole document rather than being told "extract ONLY pages 1 to 1".
  */
-async function parsePdfWithClaude(buffer: Buffer, anthropicApiKey: string): Promise<PdfParseResult> {
-  // Get total page count from raw bytes (works for scanned PDFs with no text layer).
-  const totalPages = Math.max(1, countPagesFromRaw(buffer))
+async function parsePdfWithClaude(
+  buffer: Buffer,
+  anthropicApiKey: string,
+  knownPageCount = 0,
+): Promise<PdfParseResult> {
+  // Anthropic's document API limit is 32 MB (decoded file size).
+  // Reject here with a user-friendly message rather than letting the API
+  // return a cryptic 400/413 error deep inside the extraction loop.
+  const MAX_PDF_BYTES = 32 * 1024 * 1024
+  if (buffer.length > MAX_PDF_BYTES) {
+    const mb = (buffer.length / 1024 / 1024).toFixed(1)
+    throw new Error(
+      `PDF is too large for Vision-based extraction (${mb} MB; limit is 32 MB). ` +
+      `Please reduce the file size — for example by compressing images — and re-upload.`
+    )
+  }
+
+  // Prefer the page count supplied by pdftotext/pdfplumber (most reliable).
+  // Fall back to raw-byte scan for PDFs without compressed XRef streams.
+  // If both return 0, set totalPages = 0 to signal "unknown".
+  const totalPages = knownPageCount > 1 ? knownPageCount : countPagesFromRaw(buffer)
 
   const base64 = buffer.toString("base64")
   const chunkMarkdowns: string[] = []
 
-  // Build page-range chunks: [[1,20], [21,40], [41,60], [61,62], …]
-  for (let startPage = 1; startPage <= totalPages; startPage += PDF_CHUNK_SIZE) {
-    const endPage = Math.min(startPage + PDF_CHUNK_SIZE - 1, totalPages)
-    const chunkMarkdown = await extractPdfChunk(base64, anthropicApiKey, startPage, endPage)
-    chunkMarkdowns.push(chunkMarkdown)
+  if (totalPages < 2) {
+    // Page count could not be determined (compressed PDF 1.5+ with object streams,
+    // or a genuine 1-page document). Extract without a page-range restriction so
+    // Vision processes the whole PDF instead of only page 1.
+    // NOTE: output may be truncated at ~max_tokens for very large PDFs,
+    // but this always produces far more content than "pages 1 to 1".
+    console.warn(`[pdf-extract] page count unknown (raw=${totalPages}) — extracting full PDF without range restriction`)
+    const md = await extractPdfChunkWithRetry(base64, anthropicApiKey, 0, 0)
+    chunkMarkdowns.push(md)
+  } else {
+    // Known page count — process in PDF_CHUNK_SIZE-page windows.
+    for (let startPage = 1; startPage <= totalPages; startPage += PDF_CHUNK_SIZE) {
+      const endPage = Math.min(startPage + PDF_CHUNK_SIZE - 1, totalPages)
+      const md = await extractPdfChunkWithRetry(base64, anthropicApiKey, startPage, endPage)
+      chunkMarkdowns.push(md)
+    }
   }
 
   const sourceMarkdown = chunkMarkdowns.join("\n\n")
@@ -493,7 +595,9 @@ async function parsePdfWithClaude(buffer: Buffer, anthropicApiKey: string): Prom
  * Call Claude Vision to extract text from a specific page range of a PDF.
  * The full PDF is sent but Claude is instructed to focus only on the given pages,
  * keeping each chunk's output within max_tokens.
- * Returns raw Markdown text for that page range.
+ *
+ * @param startPage  First page to extract (1-based). Pass 0 to extract all pages.
+ * @param endPage    Last page to extract (inclusive). Pass 0 to extract all pages.
  */
 async function extractPdfChunk(
   base64: string,
@@ -501,7 +605,11 @@ async function extractPdfChunk(
   startPage: number,
   endPage: number,
 ): Promise<string> {
-  const pageInstruction = `\nIMPORTANT: Extract text ONLY from pages ${startPage} to ${endPage}. Skip all other pages entirely.`
+  // startPage=0 / endPage=0 means "no restriction — extract all pages".
+  // This is used when the page count could not be determined from the PDF binary.
+  const pageInstruction = startPage > 0 && endPage > 0
+    ? `\nIMPORTANT: Extract text ONLY from pages ${startPage} to ${endPage}. Skip all other pages entirely.`
+    : ""
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
