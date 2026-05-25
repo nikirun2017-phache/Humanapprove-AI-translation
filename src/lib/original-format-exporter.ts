@@ -364,17 +364,12 @@ export async function exportAsDocx(
   units: ExportUnit[],
   sourceBase64: string
 ): Promise<Buffer> {
-  type JSZipFile = { async: (type: "string" | "nodebuffer") => Promise<string | Buffer> }
-  type JSZipType = {
-    loadAsync: (b: Buffer) => Promise<{
-      file: (name: string) => JSZipFile | null
-      file: (name: string, content: string) => void
-      generateAsync: (opts: object) => Promise<Buffer>
-    }>
-  }
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const JSZip = require("jszip") as JSZipType
-  const zip = await JSZip.loadAsync(Buffer.from(sourceBase64, "base64"))
+  const JSZip = require("jszip") as { loadAsync: (b: Buffer) => Promise<unknown> }
+  const zip = await JSZip.loadAsync(Buffer.from(sourceBase64, "base64")) as {
+    file: ((name: string) => ({ async: (t: "string") => Promise<string> } | null)) & ((name: string, content: string) => void)
+    generateAsync: (opts: object) => Promise<Buffer>
+  }
 
   const translationMap = new Map(units.map(u => [u.id, u.translatedText]))
 
@@ -389,14 +384,14 @@ export async function exportAsDocx(
   ]
 
   for (const { path, prefix } of parts) {
-    const f = (zip as unknown as { file: (n: string) => JSZipFile | null }).file(path)
+    const f = zip.file(path)
     if (!f) continue
-    const xml = await f.async("string") as string
+    const xml = await f.async("string")
     const modified = applyDocxTranslations(xml, prefix, translationMap)
-    ;(zip as unknown as { file: (n: string, c: string) => void }).file(path, modified)
+    zip.file(path, modified)
   }
 
-  return (zip as unknown as { generateAsync: (o: object) => Promise<Buffer> }).generateAsync({
+  return zip.generateAsync({
     type: "nodebuffer",
     compression: "DEFLATE",
     compressionOptions: { level: 6 },
