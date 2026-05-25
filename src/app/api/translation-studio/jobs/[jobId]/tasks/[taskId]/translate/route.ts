@@ -325,7 +325,7 @@ export async function POST(
       }))
       xliff = buildXliffFromTranslations(units, allTranslatedPdf, job.sourceLanguage, task.targetLanguage, job.name)
 
-    } else if (job.sourceFormat === "csv" || job.sourceFormat === "md" || job.sourceFormat === "txt" || job.sourceFormat === "html") {
+    } else if (job.sourceFormat === "csv" || job.sourceFormat === "md" || job.sourceFormat === "txt" || job.sourceFormat === "html" || job.sourceFormat === "docx") {
       // ── CSV / Markdown / plain-text / HTML path: markdown-based translation ───
       // These formats often contain quoted text, long prose, or special characters
       // (including CJK quotation marks in the AI response) that corrupt the JSON
