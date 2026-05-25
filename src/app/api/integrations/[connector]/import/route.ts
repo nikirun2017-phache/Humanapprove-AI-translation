@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { parseJsonSource } from "@/lib/source-parser"
+import { parseJsonSource, parseDocxSource } from "@/lib/source-parser"
 import { resolveApiKey } from "@/lib/api-key-resolver"
 import * as Pendo from "@/lib/connectors/pendo"
 import * as Webflow from "@/lib/connectors/webflow"
@@ -106,7 +106,7 @@ export async function POST(
         jsonContent = await Marketo.fetchContent(creds.munchkinId ?? "", creds.clientId ?? "", creds.clientSecret ?? "", body.contentId)
         break
       case "googledrive":
-        jsonContent = await GoogleDrive.fetchContent(creds.accessToken ?? "", body.contentId)
+        jsonContent = await GoogleDrive.fetchContent(creds.accessToken ?? "", body.contentId, (body as { fileType?: "gdoc" | "docx" }).fileType)
         break
       case "sharepoint":
         jsonContent = await SharePoint.fetchContent(creds.accessToken ?? "", body.contentId)
@@ -135,12 +135,25 @@ export async function POST(
   }
 
   // ── Parse into source units ──────────────────────────────────────────────
-  const jsonStr = JSON.stringify(
-    Object.entries(jsonContent).map(([id, text]) => ({ id, text }))
-  )
+  // DOCX from Google Drive: jsonContent contains a single __docx_base64__ key
+  const isDocxImport = "__docx_base64__" in jsonContent
   let units
+  let sourceFormat = "json"
+  let sourceData: string
   try {
-    units = parseJsonSource(jsonStr)
+    if (isDocxImport) {
+      const docxBase64 = jsonContent["__docx_base64__"]
+      const buffer = Buffer.from(docxBase64, "base64")
+      units = await parseDocxSource(buffer)
+      sourceFormat = "docx"
+      sourceData = docxBase64  // store original binary as base64 for DOCX download
+    } else {
+      const jsonStr = JSON.stringify(
+        Object.entries(jsonContent).map(([id, text]) => ({ id, text }))
+      )
+      units = parseJsonSource(jsonStr)
+      sourceData = jsonStr
+    }
   } catch (err) {
     return NextResponse.json({ error: `Parse error: ${(err as Error).message}` }, { status: 400 })
   }
@@ -165,8 +178,8 @@ export async function POST(
       sourceFileUrl: "",
       unitsFileUrl: "",
       unitsData: JSON.stringify(units),
-      sourceData: jsonStr,
-      sourceFormat: "json",
+      sourceData,
+      sourceFormat,
       sourceLanguage,
       provider: body.provider,
       model: body.model,

@@ -875,6 +875,99 @@ export function parseMarkdownSource(content: string): SourceUnit[] {
   return units
 }
 
+// ── .docx (Microsoft Word) ───────────────────────────────────────────────────
+
+/**
+ * Extract translatable paragraphs from a DOCX file, preserving structure.
+ *
+ * Strategy: DOCX is a ZIP containing XML files. We unzip it with jszip,
+ * parse word/document.xml (and optional headers/footers) to find <w:p>
+ * paragraph elements, concatenate their <w:t> text runs, and return one
+ * SourceUnit per non-empty paragraph.
+ *
+ * Images and drawings (<w:drawing>) are left in place untouched — the export
+ * step preserves all non-text content from the original ZIP.
+ *
+ * Unit IDs encode the source part and paragraph index so the exporter can
+ * apply translations back to the exact same positions:
+ *   doc_p_0, doc_p_1, …  → word/document.xml paragraphs
+ *   hdr1_p_0, …          → word/header1.xml (odd-page header)
+ *   ftr1_p_0, …          → word/footer1.xml (odd-page footer)
+ */
+export async function parseDocxSource(buffer: Buffer): Promise<SourceUnit[]> {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const JSZip = require("jszip") as { loadAsync: (b: Buffer) => Promise<{ file: (name: string) => { async: (type: "string") => Promise<string> } | null }> }
+  const zip = await JSZip.loadAsync(buffer)
+
+  const units: SourceUnit[] = []
+
+  const parts: Array<{ path: string; prefix: string }> = [
+    { path: "word/document.xml", prefix: "doc" },
+    { path: "word/header1.xml",  prefix: "hdr1" },
+    { path: "word/header2.xml",  prefix: "hdr2" },
+    { path: "word/header3.xml",  prefix: "hdr3" },
+    { path: "word/footer1.xml",  prefix: "ftr1" },
+    { path: "word/footer2.xml",  prefix: "ftr2" },
+    { path: "word/footer3.xml",  prefix: "ftr3" },
+  ]
+
+  for (const { path, prefix } of parts) {
+    const f = zip.file(path)
+    if (!f) continue
+    const xml = await f.async("string")
+    const partUnits = extractDocxParagraphUnits(xml, prefix)
+    units.push(...partUnits)
+  }
+
+  return units
+}
+
+/**
+ * Extract translation units from a single DOCX XML part (document, header, footer).
+ * Each non-empty paragraph becomes one unit. Paragraphs containing drawings/images
+ * are skipped (they are preserved verbatim in the output DOCX).
+ */
+function extractDocxParagraphUnits(xml: string, prefix: string): SourceUnit[] {
+  const units: SourceUnit[] = []
+  let idx = 0
+
+  // Match all <w:p ...>...</w:p> blocks (paragraphs are never nested in DOCX)
+  const paraRe = /<w:p[ >][\s\S]*?<\/w:p>/g
+  let m: RegExpExecArray | null
+
+  while ((m = paraRe.exec(xml)) !== null) {
+    const para = m[0]
+
+    // Skip paragraphs that contain drawings or pictures — preserve them as-is
+    if (/<w:drawing\b/.test(para) || /<pic:pic\b/.test(para)) continue
+
+    // Concatenate all <w:t> text runs in this paragraph
+    const textRe = /<w:t[^>]*>([\s\S]*?)<\/w:t>/g
+    let tm: RegExpExecArray | null
+    let text = ""
+    while ((tm = textRe.exec(para)) !== null) {
+      text += decodeXmlEntities(tm[1])
+    }
+    text = text.trim()
+
+    // Skip empty paragraphs and very short noise (single char, just punctuation, etc.)
+    if (text.length < 2) continue
+
+    units.push({ id: `${prefix}_p_${idx++}`, sourceText: text })
+  }
+
+  return units
+}
+
+function decodeXmlEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+}
+
 // Plain text parser — splits on blank lines into paragraphs
 export function parseTxtSource(content: string): SourceUnit[] {
   const units: SourceUnit[] = []

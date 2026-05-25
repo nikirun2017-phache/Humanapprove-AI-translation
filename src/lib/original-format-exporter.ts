@@ -342,6 +342,135 @@ export function exportAsProperties(units: ExportUnit[]): string {
   return units.map(u => `${u.id}=${escapePropertiesValue(u.translatedText)}`).join("\n")
 }
 
+// ── .docx (Microsoft Word) ───────────────────────────────────────────────────
+
+/**
+ * Rebuild a translated DOCX from the original binary (supplied as base64) and
+ * a list of translated units.
+ *
+ * Strategy:
+ *  1. Unzip the original DOCX with jszip.
+ *  2. For each XML part (document, headers, footers), find every <w:p> paragraph
+ *     that was extracted during parsing (same logic → same IDs).
+ *  3. Replace the text content of matching paragraphs:
+ *     - Keep the paragraph-level properties (<w:pPr>) for alignment/spacing.
+ *     - Keep the first run's character properties (<w:rPr>) for font/size/bold/etc.
+ *     - Collapse all runs into one run containing the full translated text.
+ *  4. Drawings/images inside paragraphs are untouched (the regex skip matches
+ *     the same paragraphs that were skipped during parsing).
+ *  5. Rezip and return as a Buffer.
+ */
+export async function exportAsDocx(
+  units: ExportUnit[],
+  sourceBase64: string
+): Promise<Buffer> {
+  type JSZipFile = { async: (type: "string" | "nodebuffer") => Promise<string | Buffer> }
+  type JSZipType = {
+    loadAsync: (b: Buffer) => Promise<{
+      file: (name: string) => JSZipFile | null
+      file: (name: string, content: string) => void
+      generateAsync: (opts: object) => Promise<Buffer>
+    }>
+  }
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const JSZip = require("jszip") as JSZipType
+  const zip = await JSZip.loadAsync(Buffer.from(sourceBase64, "base64"))
+
+  const translationMap = new Map(units.map(u => [u.id, u.translatedText]))
+
+  const parts: Array<{ path: string; prefix: string }> = [
+    { path: "word/document.xml", prefix: "doc" },
+    { path: "word/header1.xml",  prefix: "hdr1" },
+    { path: "word/header2.xml",  prefix: "hdr2" },
+    { path: "word/header3.xml",  prefix: "hdr3" },
+    { path: "word/footer1.xml",  prefix: "ftr1" },
+    { path: "word/footer2.xml",  prefix: "ftr2" },
+    { path: "word/footer3.xml",  prefix: "ftr3" },
+  ]
+
+  for (const { path, prefix } of parts) {
+    const f = (zip as unknown as { file: (n: string) => JSZipFile | null }).file(path)
+    if (!f) continue
+    const xml = await f.async("string") as string
+    const modified = applyDocxTranslations(xml, prefix, translationMap)
+    ;(zip as unknown as { file: (n: string, c: string) => void }).file(path, modified)
+  }
+
+  return (zip as unknown as { generateAsync: (o: object) => Promise<Buffer> }).generateAsync({
+    type: "nodebuffer",
+    compression: "DEFLATE",
+    compressionOptions: { level: 6 },
+  })
+}
+
+/**
+ * Apply translations to a single DOCX XML part.
+ * Uses the same paragraph-enumeration logic as extractDocxParagraphUnits so
+ * that unit IDs align perfectly between parse and export.
+ */
+function applyDocxTranslations(
+  xml: string,
+  prefix: string,
+  translationMap: Map<string, string>
+): string {
+  let idx = 0
+
+  return xml.replace(/<w:p[ >][\s\S]*?<\/w:p>/g, (para) => {
+    // Same skip condition as the parser — leave drawing paragraphs untouched
+    if (/<w:drawing\b/.test(para) || /<pic:pic\b/.test(para)) return para
+
+    // Compute original text to decide if this paragraph was a translation unit
+    const textRe = /<w:t[^>]*>([\s\S]*?)<\/w:t>/g
+    let tm: RegExpExecArray | null
+    let text = ""
+    while ((tm = textRe.exec(para)) !== null) {
+      text += decodeDocxXmlEntities(tm[1])
+    }
+    text = text.trim()
+
+    // Same threshold as the parser — skip paragraphs that were not emitted as units
+    if (text.length < 2) return para
+
+    const unitId = `${prefix}_p_${idx++}`
+    const translated = translationMap.get(unitId)
+    if (!translated) return para // no translation available — return original
+
+    // ── Reconstruct paragraph with translated text ─────────────────────────
+    // 1. Preserve paragraph-level properties (alignment, spacing, style, etc.)
+    const pPrMatch = para.match(/<w:pPr[\s\S]*?<\/w:pPr>/)
+    const pPr = pPrMatch ? pPrMatch[0] : ""
+
+    // 2. Preserve the first run's character properties (font, size, bold, colour…)
+    const firstRunMatch = para.match(/<w:r[ >][\s\S]*?<\/w:r>/)
+    let rPr = ""
+    if (firstRunMatch) {
+      const rPrMatch = firstRunMatch[0].match(/<w:rPr[\s\S]*?<\/w:rPr>/)
+      rPr = rPrMatch ? rPrMatch[0] : ""
+    }
+
+    // 3. Preserve the paragraph opening tag (may carry rsid / w14 attributes)
+    const pOpenMatch = para.match(/^(<w:p[^>]*>)/)
+    const pOpen = pOpenMatch ? pOpenMatch[1] : "<w:p>"
+
+    // 4. XML-encode the translated text
+    const escapedText = encodeDocxXmlEntities(translated)
+
+    return `${pOpen}${pPr}<w:r>${rPr}<w:t xml:space="preserve">${escapedText}</w:t></w:r></w:p>`
+  })
+}
+
+function decodeDocxXmlEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, "&").replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+}
+
+function encodeDocxXmlEntities(s: string): string {
+  return s
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+}
+
 // ── Label helpers ─────────────────────────────────────────────────────────────
 
 export function formatLabel(sourceFormat: string): string {

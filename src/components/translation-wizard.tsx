@@ -52,6 +52,7 @@ function fileKey(f: File) {
 
 function fileTypeLabel(name: string) {
   if (name.endsWith(".pdf")) return "PDF"
+  if (name.endsWith(".docx")) return "DOCX"
   if (name.endsWith(".json")) return "JSON"
   if (name.endsWith(".csv")) return "CSV"
   if (name.endsWith(".md")) return "MD"
@@ -440,6 +441,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
 
   const FILE_SIZE_LIMITS: Record<string, number> = {
     pdf:         50 * 1024 * 1024,  // 50 MB — scanned/image PDFs are large
+    docx:        20 * 1024 * 1024,  // 20 MB — binary format with embedded images
     json:         5 * 1024 * 1024,
     csv:          5 * 1024 * 1024,
     md:           5 * 1024 * 1024,
@@ -479,6 +481,10 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
         if (f.name.endsWith(".pdf")) {
           return Promise.resolve<FileEntry>({ key: fileKey(f), file: f, preview: [], parseError: "", probePending: true })
         }
+        // DOCX is binary — skip client-side preview, parse server-side on submit
+        if (f.name.endsWith(".docx")) {
+          return Promise.resolve<FileEntry>({ key: fileKey(f), file: f, preview: [], parseError: "" })
+        }
         return parseNonPdfFile(f)
       })
     )
@@ -486,7 +492,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
     setEntries((prev) => {
       const next = [...prev, ...parsed]
       if (!jobName && next.length > 0) {
-        setJobName(next[0].file.name.replace(/\.(json|csv|md|txt|pdf|xliff|xlf|strings|stringsdict|xcstrings|po|xml|arb|properties)$/i, ""))
+        setJobName(next[0].file.name.replace(/\.(json|csv|md|txt|pdf|docx|xliff|xlf|strings|stringsdict|xcstrings|po|xml|arb|properties)$/i, ""))
       }
       return next
     })
@@ -938,7 +944,7 @@ export function TranslationWizard({ providers, hasCard, restoringFromCardSetup }
             <input
               id="file-input"
               type="file"
-              accept=".json,.csv,.md,.txt,.pdf,.html,.htm,.xliff,.xlf,.strings,.stringsdict,.xcstrings,.po,.xml,.arb,.properties"
+              accept=".json,.csv,.md,.txt,.pdf,.docx,.html,.htm,.xliff,.xlf,.strings,.stringsdict,.xcstrings,.po,.xml,.arb,.properties"
               multiple
               className="hidden"
               onChange={handleInputChange}

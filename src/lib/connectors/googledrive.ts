@@ -1,8 +1,12 @@
 /**
- * Google Drive connector — Google Docs.
+ * Google Drive connector — Google Docs and native DOCX files.
  *
  * Auth: OAuth access token (user obtains from Google OAuth Playground or service account).
  * Docs: https://developers.google.com/drive/api/guides/about-sdk
+ *
+ * Supported file types:
+ *  - application/vnd.google-apps.document  (Google Docs — exported as plain text)
+ *  - application/vnd.openxmlformats-officedocument.wordprocessingml.document (.docx)
  */
 
 export interface ContentItem {
@@ -10,6 +14,8 @@ export interface ContentItem {
   name: string
   state: string
   itemCount: number
+  /** "gdoc" for native Google Docs, "docx" for uploaded Word files */
+  fileType?: "gdoc" | "docx"
 }
 
 const DRIVE_BASE = "https://www.googleapis.com/drive/v3"
@@ -33,26 +39,48 @@ export async function testConnection(accessToken: string): Promise<{ ok: boolean
   }
 }
 
+const GDOC_MIME  = "application/vnd.google-apps.document"
+const DOCX_MIME  = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
 export async function listContent(accessToken: string, folderId?: string): Promise<ContentItem[]> {
-  const q = folderId
-    ? `mimeType='application/vnd.google-apps.document' and '${folderId}' in parents and trashed=false`
-    : `mimeType='application/vnd.google-apps.document' and trashed=false`
-  const res = await fetch(`${DRIVE_BASE}/files?q=${encodeURIComponent(q)}&pageSize=50&orderBy=modifiedTime+desc&fields=files(id,name,modifiedTime)`, {
-    headers: headers(accessToken),
-    signal: AbortSignal.timeout(15_000),
-  })
+  const folderFilter = folderId ? ` and '${folderId}' in parents` : ""
+  // List both native Google Docs and uploaded DOCX files
+  const q = `(mimeType='${GDOC_MIME}' or mimeType='${DOCX_MIME}')${folderFilter} and trashed=false`
+  const res = await fetch(
+    `${DRIVE_BASE}/files?q=${encodeURIComponent(q)}&pageSize=50&orderBy=modifiedTime+desc&fields=files(id,name,mimeType,modifiedTime)`,
+    { headers: headers(accessToken), signal: AbortSignal.timeout(15_000) }
+  )
   if (!res.ok) throw new Error(`Google Drive API error ${res.status}`)
-  const data = await res.json() as { files: Array<{ id: string; name: string }> }
+  const data = await res.json() as { files: Array<{ id: string; name: string; mimeType: string }> }
   return (data.files ?? []).map((f) => ({
     id: f.id,
     name: f.name,
     state: "document",
     itemCount: 1,
+    fileType: f.mimeType === DOCX_MIME ? "docx" : "gdoc",
   }))
 }
 
-export async function fetchContent(accessToken: string, fileId: string): Promise<Record<string, string>> {
-  // Export Google Doc as plain text
+export async function fetchContent(
+  accessToken: string,
+  fileId: string,
+  fileType?: "gdoc" | "docx"
+): Promise<Record<string, string>> {
+  if (fileType === "docx") {
+    // Download the DOCX binary and return it as a single base64-encoded entry
+    // so the import route can forward it to parseDocxSource()
+    const res = await fetch(`${DRIVE_BASE}/files/${fileId}?alt=media`, {
+      headers: headers(accessToken),
+      signal: AbortSignal.timeout(30_000),
+    })
+    if (!res.ok) throw new Error(`Google Drive download failed ${res.status}`)
+    const arrayBuffer = await res.arrayBuffer()
+    const base64 = Buffer.from(arrayBuffer).toString("base64")
+    // Special sentinel key tells the import route this is a raw DOCX binary
+    return { __docx_base64__: base64 }
+  }
+
+  // Native Google Doc — export as plain text
   const res = await fetch(`${DRIVE_BASE}/files/${fileId}/export?mimeType=text/plain`, {
     headers: headers(accessToken),
     signal: AbortSignal.timeout(15_000),

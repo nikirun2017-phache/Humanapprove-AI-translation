@@ -26,7 +26,7 @@ function computeJobCost(tasks: { wordCount: number; totalUnits: number; status: 
     return sum + (t.actualCostUsd !== null ? t.actualCostUsd : estimateTaskCost(t, model, m))
   }, 0)
 }
-import { parseJsonSource, parseCsvSource, parseCsvSourceWithColumns, parseCsvFull, parseMarkdownSource, parseTxtSource, parsePdfSource, parseXliffSource, parseStringsSource, parseStringsDictSource, parseXcstringsSource, parsePoSource, parseAndroidXmlSource, parseArbSource, parsePropertiesSource, type SourceUnit, type PdfParseResult } from "@/lib/source-parser"
+import { parseJsonSource, parseCsvSource, parseCsvSourceWithColumns, parseCsvFull, parseMarkdownSource, parseTxtSource, parsePdfSource, parseXliffSource, parseStringsSource, parseStringsDictSource, parseXcstringsSource, parsePoSource, parseAndroidXmlSource, parseArbSource, parsePropertiesSource, parseDocxSource, type SourceUnit, type PdfParseResult } from "@/lib/source-parser"
 import { parseHtmlSource } from "@/lib/html-source-parser"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
@@ -95,11 +95,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
   }
 
-  // Enforce file size limit: 50 MB for PDF, 5 MB for all text-based types
+  // Enforce file size limit: 50 MB for PDF, 20 MB for DOCX, 5 MB for all text-based types
   const MAX_PDF_BYTES = 50 * 1024 * 1024
+  const MAX_DOCX_BYTES = 20 * 1024 * 1024
   const MAX_TEXT_BYTES = 5 * 1024 * 1024
   const rawExtCheck = file.name.split(".").pop()?.toLowerCase()
-  const maxBytes = rawExtCheck === "pdf" ? MAX_PDF_BYTES : MAX_TEXT_BYTES
+  const maxBytes = rawExtCheck === "pdf" ? MAX_PDF_BYTES : rawExtCheck === "docx" ? MAX_DOCX_BYTES : MAX_TEXT_BYTES
 
   if (file.size > maxBytes) {
     const limitMb = maxBytes / 1024 / 1024
@@ -113,9 +114,9 @@ export async function POST(req: NextRequest) {
   }
 
   const rawExt = file.name.split(".").pop()?.toLowerCase()
-  const ALLOWED_EXTS = new Set(["json","csv","md","txt","pdf","xliff","xlf","strings","stringsdict","xcstrings","po","xml","arb","properties","html"])
+  const ALLOWED_EXTS = new Set(["json","csv","md","txt","pdf","docx","xliff","xlf","strings","stringsdict","xcstrings","po","xml","arb","properties","html"])
   if (!rawExt || !ALLOWED_EXTS.has(rawExt)) {
-    return NextResponse.json({ error: "Unsupported file type. Accepted: .json, .csv, .md, .txt, .pdf, .html, .xliff, .xlf, .strings, .stringsdict, .xcstrings, .po, .xml, .arb, .properties" }, { status: 400 })
+    return NextResponse.json({ error: "Unsupported file type. Accepted: .json, .csv, .md, .txt, .pdf, .docx, .html, .xliff, .xlf, .strings, .stringsdict, .xcstrings, .po, .xml, .arb, .properties" }, { status: 400 })
   }
   // Normalise .xlf → xliff so sourceFormat is consistent throughout
   const ext = rawExt === "xlf" ? "xliff" : rawExt
@@ -207,6 +208,9 @@ export async function POST(req: NextRequest) {
       if (units.length === 0) {
         return NextResponse.json({ error: "XLIFF file has no untranslated units — all <target> elements are already filled" }, { status: 400 })
       }
+    } else if (ext === "docx") {
+      const buffer = Buffer.from(await file.arrayBuffer())
+      units = await parseDocxSource(buffer)
     } else {
       const content = await file.text()
       switch (ext) {
@@ -360,7 +364,8 @@ export async function POST(req: NextRequest) {
         unitsData: JSON.stringify(units),
         // Store text-based source content in DB for serverless access (XLIFF, markdown, etc.)
         // For scanned PDFs (Claude Vision path), store the extracted Markdown for formatted reconstruction.
-        sourceData: ext === "pdf" ? pdfSourceMarkdown : sourceFileContent.toString("utf-8"),
+        // For DOCX, store the original binary as base64 so the download route can reconstruct the file.
+        sourceData: ext === "pdf" ? pdfSourceMarkdown : ext === "docx" ? sourceFileContent.toString("base64") : sourceFileContent.toString("utf-8"),
         sourceFormat: ext,
         sourceLanguage,
         provider,

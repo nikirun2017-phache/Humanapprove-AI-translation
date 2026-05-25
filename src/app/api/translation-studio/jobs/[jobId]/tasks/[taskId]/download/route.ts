@@ -8,6 +8,7 @@ import { generateTranslatedPdf, generateTranslatedTxt, generatePdfFromMarkdown }
 import {
   exportAsStrings, exportAsStringsDict, exportAsXcstrings,
   exportAsPo, exportAsAndroidXml, exportAsArb, exportAsProperties,
+  exportAsDocx,
   formatMimeType,
 } from "@/lib/original-format-exporter"
 import { reconstructHtml } from "@/lib/html-source-parser"
@@ -104,6 +105,47 @@ export async function GET(
         console.error("[download] PDF generation failed:", err)
         return NextResponse.json({ error: "PDF generation failed. Please download the .txt version instead." }, { status: 500 })
       }
+    }
+  }
+
+  // ── DOCX source: reconstruct translated .docx preserving formatting & images ──
+  if (fmt === "docx") {
+    if (format === "xliff") {
+      const xliff = task.xliffData ?? await readFile(task.xliffFileUrl!, "utf-8")
+      return new NextResponse(xliff, {
+        headers: {
+          "Content-Type": "application/xliff+xml",
+          "Content-Disposition": `attachment; filename="${safeName}-bilingual.xliff"`,
+        },
+      })
+    }
+
+    // Retrieve original DOCX binary (stored as base64 in sourceData, or fall back to disk)
+    const sourceBase64 = job.sourceData
+      ? job.sourceData
+      : (await readFile(job.sourceFileUrl)).toString("base64")
+
+    const xliffContent = task.xliffData ?? await readFile(task.xliffFileUrl!, "utf-8")
+    const parsedXliff = parseXliff(xliffContent)
+    const units = parsedXliff.units
+      .filter((u: (typeof parsedXliff.units)[number]) => u.targetText?.trim())
+      .map((u: (typeof parsedXliff.units)[number]) => ({
+        id: u.id,
+        sourceText: u.sourceText ?? "",
+        translatedText: u.targetText,
+      }))
+
+    try {
+      const docxBuffer = await exportAsDocx(units, sourceBase64)
+      return new NextResponse(docxBuffer as unknown as BodyInit, {
+        headers: {
+          "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "Content-Disposition": `attachment; filename="${safeName}.docx"`,
+        },
+      })
+    } catch (err) {
+      console.error("[download] DOCX generation failed:", err)
+      return NextResponse.json({ error: "DOCX generation failed. Please download the XLIFF version instead." }, { status: 500 })
     }
   }
 
