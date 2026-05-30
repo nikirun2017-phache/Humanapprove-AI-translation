@@ -205,25 +205,35 @@ export async function fetchPageContent(apiToken: string, _siteId: string, pageId
 }
 
 /**
- * Push translated page content back to Webflow.
- * - localeId = null  → POST /pages/{pageId}/dom (updates static/primary content, no Localization add-on needed)
- * - localeId = "id"  → POST /pages/{pageId}/dom?localeId={id} (updates a secondary locale; requires Localization add-on)
+ * Push translated page content back to Webflow Pages DOM API.
+ *
+ * Webflow requires EXACTLY ONE of:
+ *   ?localeId={id}  — locale ID from GET /sites/{siteId}/locales (preferred)
+ *   ?locale={tag}   — locale tag, e.g. "zh-CN" (fallback when no ID available)
+ *
+ * Both primary and secondary locales require one of these parameters.
  *
  * Per Webflow API spec, each node in the request body must have:
  *   { nodeId: string, text: string }   ← text is a plain string, NOT { text: string }
  */
 export async function pushPageLocale(
   apiToken: string, _siteId: string, pageId: string,
-  localeId: string | null, translations: Record<string, string>
+  localeId: string | null, translations: Record<string, string>,
+  localeTag?: string   // fallback: used when localeId is unavailable
 ): Promise<void> {
   const nodes = Object.entries(translations).map(([key, text]) => ({
     nodeId: key.replace(/^node_/, ""),
     text,
   }))
 
-  const url = localeId
-    ? `${BASE}/pages/${pageId}/dom?localeId=${localeId}`
-    : `${BASE}/pages/${pageId}/dom`
+  let url: string
+  if (localeId) {
+    url = `${BASE}/pages/${pageId}/dom?localeId=${encodeURIComponent(localeId)}`
+  } else if (localeTag) {
+    url = `${BASE}/pages/${pageId}/dom?locale=${encodeURIComponent(localeTag)}`
+  } else {
+    url = `${BASE}/pages/${pageId}/dom`
+  }
 
   const res = await fetch(url, {
     method: "POST",
@@ -232,13 +242,29 @@ export async function pushPageLocale(
     signal: AbortSignal.timeout(15_000),
   })
   if (!res.ok) {
-    const err = await res.text()
-    let detail = err.slice(0, 300)
+    const errText = await res.text()
+    let detail = errText.slice(0, 400)
     try {
-      const parsed = JSON.parse(err) as { message?: string; code?: string; errors?: string[] }
+      const parsed = JSON.parse(errText) as {
+        message?: string
+        msg?: string
+        err?: string
+        code?: string | number
+        errors?: string[]
+        details?: Array<{ message?: string } | string>
+      }
       if (parsed.message) detail = parsed.message
+      else if (parsed.msg) detail = parsed.msg
+      else if (parsed.err) detail = parsed.err
       else if (parsed.errors?.length) detail = parsed.errors.join("; ")
+      else if (parsed.details?.length) {
+        detail = parsed.details
+          .map(d => (typeof d === "string" ? d : d.message ?? ""))
+          .filter(Boolean)
+          .join("; ")
+      }
     } catch { /* keep raw text */ }
+    console.error(`[Webflow] pushPageLocale failed — HTTP ${res.status} for page=${pageId} localeId=${localeId ?? "none"} localeTag=${localeTag ?? "none"}: ${detail}`)
     throw new Error(`Webflow push failed (HTTP ${res.status}): ${detail}`)
   }
 }
@@ -281,6 +307,7 @@ export async function patchItem(apiToken: string, collectionId: string, itemId: 
   })
   if (!res.ok) {
     const err = await res.text()
-    throw new Error(`Webflow patch failed ${res.status}: ${err.slice(0, 200)}`)
+    console.error(`[Webflow] patchItem failed — HTTP ${res.status} collection=${collectionId} item=${itemId}: ${err.slice(0, 300)}`)
+    throw new Error(`Webflow patch failed (HTTP ${res.status}): ${err.slice(0, 200)}`)
   }
 }

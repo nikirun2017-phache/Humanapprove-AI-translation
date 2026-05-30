@@ -599,14 +599,21 @@ export function JobProgress({ initialJob }: Props) {
                               {ps.message}
                             </span>
                           ) : ps?.status === "error" ? (
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-xs text-red-500" title={ps.message}>Push failed</span>
-                              <button
-                                onClick={() => pushTask(task)}
-                                className="text-xs text-red-600 underline hover:text-red-800"
-                              >
-                                Retry
-                              </button>
+                            <div className="flex flex-col items-end gap-0.5">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs text-red-500 font-medium">Push failed</span>
+                                <button
+                                  onClick={() => pushTask(task)}
+                                  className="text-xs text-red-600 underline hover:text-red-800"
+                                >
+                                  Retry
+                                </button>
+                              </div>
+                              {ps.message && (
+                                <span className="text-xs text-red-400 max-w-xs text-right leading-tight" title={ps.message}>
+                                  {ps.message.length > 120 ? ps.message.slice(0, 120) + "…" : ps.message}
+                                </span>
+                              )}
                             </div>
                           ) : (
                             <button
