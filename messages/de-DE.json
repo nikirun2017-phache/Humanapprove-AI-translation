@@ -8,27 +8,27 @@
     "getStarted": "Kostenlos starten →"
   },
   "hero": {
-    "badge": "Datei hochladen · KI übersetzt · Sofort herunterladen",
-    "h1Line1": "Dein Inhalt, übersetzt.",
-    "h1Line2": "Schnell, präzise, bezahlbar.",
-    "description": "Lade eine beliebige Datei hoch. Wähle deine Zielsprachen. Unsere KI übersetzt sie in Minuten und liefert das Ergebnis in deinem ursprünglichen Dateiformat — bereit zum Versand.",
-    "cta1": "Kostenlos ausprobieren",
-    "cta2": "Wie es funktioniert"
+    "badge": "10.000 Wörter kostenlos — Code 1TIME",
+    "h1Line1": "Ihr Inhalt.",
+    "h1Line2": "Jede Sprache.",
+    "description": "Laden Sie eine Datei hoch. Wählen Sie Ihre Sprachen. Erhalten Sie in wenigen Minuten eine präzise, veröffentlichungsfertige Übersetzung in Ihrem Originalformat.",
+    "cta1": "Jetzt starten",
+    "cta2": "So funktioniert es"
   },
   "mockPreview": {
     "caption": "Translation Studio — Echtzeit-Fortschritt pro Sprache, Download wenn fertig"
   },
   "howItWorks": {
-    "heading": "Drei Schritte. In wenigen Minuten erledigt.",
-    "step1Title": "1. Lade deine Datei hoch",
-    "step1Body": "Lade eine JSON-, CSV-, Markdown-, PDF- oder XLIFF-Datei hoch. Wir extrahieren automatisch jeden Satz — kein Kopieren und Einfügen, kein Setup erforderlich.",
-    "step2Title": "2. KI übersetzt es",
-    "step2Body": "Wähle dein KI-Modell — Claude, GPT-4o, Gemini oder DeepSeek. Sehe den genauen Preis, bevor etwas läuft. Die meisten Dateien werden in wenigen Minuten fertig.",
-    "step3Title": "3. Sofort herunterladen",
-    "step3Body": "Deine übersetzten Dateien werden im gleichen Format geliefert, in dem du sie hochgeladen hast — JSON, CSV, Markdown, XLIFF, PDF und mehr. Keine Umformatierung erforderlich."
+    "heading": "Einfach von Anfang an.",
+    "step1Title": "Datei hochladen",
+    "step1Body": "Laden Sie eine JSON-, CSV-, Markdown-, PDF- oder XLIFF-Datei hoch. Alle übersetzbaren Texte werden automatisch extrahiert — kein Kopieren, kein Einrichten.",
+    "step2Title": "KI übersetzt",
+    "step2Body": "Wählen Sie Ihr KI-Modell — Claude, GPT-4o, Gemini oder DeepSeek. Prüfen Sie den genauen Preis, bevor etwas ausgeführt wird. Die meisten Dateien sind in Minuten fertig.",
+    "step3Title": "Sofort herunterladen",
+    "step3Body": "Ihre übersetzten Dateien werden im selben Format wie beim Hochladen geliefert — JSON, XLIFF, PDF und mehr. Versandbereit, keine Neuformatierung erforderlich."
   },
   "features": {
-    "heading": "Alles, was du brauchst, um global zu gehen",
+    "heading": "Für jeden Workflow entwickelt.",
     "multiModel": "Top-KI-Modelle",
     "multiModelBody": "Claude, GPT-4o, Gemini, DeepSeek. Wähle das, das zu deinem Budget und Qualitätsanspruch passt.",
     "costTransparency": "Sehe den Preis, bevor du bezahlst",
@@ -43,8 +43,8 @@
     "accessControlBody": "Lade eine JSON-Datei hoch, lade eine übersetzte JSON-Datei herunter. Keine Umformatierung oder Kopieren und Einfügen erforderlich."
   },
   "pricing": {
-    "heading": "Zahle nur für das, was du nutzt",
-    "subheading": "Keine monatliche Gebühr. Keine Sitzungsbegrenzung. Deine Karte wird nach abgeschlossener Übersetzung belastet.",
+    "heading": "Zahlen Sie nur, was Sie nutzen.",
+    "subheading": "Keine Abonnements. Keine Nutzerbeschränkungen. Ihre Karte wird erst nach Abschluss der Übersetzung belastet.",
     "examplesLabel": "Was kostet es eigentlich?",
     "estimatedCost": "Geschätzte Gesamtkosten",
     "mostCommon": "Am beliebtesten",
@@ -85,9 +85,9 @@
     "startFree": "Kostenlos starten →"
   },
   "cta": {
-    "heading": "Bereit, Ihre erste Datei zu übersetzen?",
-    "body": "Melden Sie sich in 30 Sekunden an. Laden Sie eine Datei hoch, wählen Sie eine Sprache und sehen Sie Ihre Übersetzung in wenigen Minuten.",
-    "button": "Kostenlos testen →"
+    "heading": "Übersetzung, neu gedacht.",
+    "body": "Starten Sie mit 10.000 kostenlosen Wörtern, auf unsere Kosten. Keine Kreditkarte erforderlich.",
+    "button": "Jetzt starten"
   },
   "footer": {
     "rights": "© {year} Summon Translator. Alle Rechte vorbehalten."

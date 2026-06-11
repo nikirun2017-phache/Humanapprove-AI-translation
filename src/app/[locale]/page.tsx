@@ -20,19 +20,19 @@ export default async function Home() {
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Image src="/logo.png" alt="Summon Translator" width={28} height={28} className="rounded-full" />
-            <span className="font-bold text-indigo-600 text-lg tracking-tight hidden sm:block">{t("nav.brand")}</span>
+            <span className="font-semibold text-gray-900 text-base tracking-tight hidden sm:block">{t("nav.brand")}</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-5">
             <LocaleSwitcher />
-            <Link href="/vision" className="text-sm text-gray-500 hover:text-gray-900 transition-colors hidden sm:block">
+            <Link href="/vision" className="text-sm text-gray-400 hover:text-gray-700 transition-colors hidden sm:block">
               {t("nav.vision")}
             </Link>
-            <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+            <Link href="/login" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
               {t("nav.signIn")}
             </Link>
             <Link
               href="/login?mode=signup"
-              className="text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg transition-colors"
+              className="text-sm font-medium bg-gray-900 hover:bg-gray-700 text-white px-4 py-1.5 rounded-lg transition-colors"
             >
               {t("nav.signUp")}
             </Link>
@@ -41,38 +41,37 @@ export default async function Home() {
       </header>
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
-      <section className="max-w-5xl mx-auto px-6 pt-16 pb-12 text-center">
-        <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
-          🎁 First 10,000 words free — use code{" "}
-          <span className="font-mono bg-green-100 text-green-800 px-1.5 py-0.5 rounded">1TIME</span>
-        </div>
-        <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight text-gray-900 leading-tight mb-5">
+      <section className="max-w-4xl mx-auto px-6 pt-24 pb-16 text-center">
+        <p className="text-sm text-indigo-600 font-medium tracking-wide mb-8 uppercase">
+          {t("hero.badge")}
+        </p>
+        <h1 className="text-6xl sm:text-7xl font-bold tracking-tight text-gray-900 leading-[1.05] mb-6">
           {t("hero.h1Line1")}<br />
           <span className="text-indigo-600">{t("hero.h1Line2")}</span>
         </h1>
-        <p className="text-lg text-gray-500 max-w-2xl mx-auto mb-8 leading-relaxed">
+        <p className="text-xl text-gray-400 max-w-xl mx-auto mb-10 leading-relaxed font-light">
           {t("hero.description")}
         </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
           <Link
             href="/login?mode=signup"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-7 py-3 rounded-xl text-sm transition-colors shadow-sm"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 py-3.5 rounded-full text-sm transition-colors shadow-sm"
           >
-            Start free — 10,000 words on us
+            {t("hero.cta1")}
           </Link>
           <a
             href="#how-it-works"
-            className="border border-gray-200 hover:border-gray-300 text-gray-700 font-medium px-7 py-3 rounded-xl text-sm transition-colors"
+            className="text-gray-500 hover:text-gray-900 font-medium px-8 py-3.5 text-sm transition-colors"
           >
-            {t("hero.cta2")}
+            {t("hero.cta2")} →
           </a>
         </div>
-        <p className="text-xs text-gray-400 mt-3">No credit card required · Pay only for what you use</p>
+        <p className="text-xs text-gray-300 mt-5 tracking-wide">No card required · Pay only for what you use</p>
       </section>
 
       {/* ── Product screenshot ───────────────────────────────────────────────── */}
-      <section className="max-w-5xl mx-auto px-6 pb-20">
-        <div className="rounded-2xl border border-gray-200 shadow-xl overflow-hidden bg-gray-50">
+      <section className="max-w-5xl mx-auto px-6 pb-24">
+        <div className="rounded-2xl border border-gray-100 shadow-2xl overflow-hidden bg-gray-50">
           <div className="bg-gray-100 border-b border-gray-200 px-4 py-2.5 flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-red-300" />
             <span className="w-2.5 h-2.5 rounded-full bg-yellow-300" />
@@ -93,21 +92,19 @@ export default async function Home() {
       </section>
 
       {/* ── How it works ─────────────────────────────────────────────────────── */}
-      <section id="how-it-works" className="bg-gray-50 border-y border-gray-100 py-16">
+      <section id="how-it-works" className="py-24">
         <div className="max-w-4xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-10">{t("howItWorks.heading")}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <h2 className="text-4xl font-bold text-center text-gray-900 mb-16 tracking-tight">{t("howItWorks.heading")}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {[
-              { step: "1", title: t("howItWorks.step1Title"), body: t("howItWorks.step1Body") },
-              { step: "2", title: t("howItWorks.step2Title"), body: t("howItWorks.step2Body") },
-              { step: "3", title: t("howItWorks.step3Title"), body: t("howItWorks.step3Body") },
+              { step: "01", title: t("howItWorks.step1Title"), body: t("howItWorks.step1Body") },
+              { step: "02", title: t("howItWorks.step2Title"), body: t("howItWorks.step2Body") },
+              { step: "03", title: t("howItWorks.step3Title"), body: t("howItWorks.step3Body") },
             ].map((item) => (
               <div key={item.step} className="text-center">
-                <div className="w-9 h-9 rounded-full bg-indigo-600 text-white text-sm font-bold flex items-center justify-center mx-auto mb-3">
-                  {item.step}
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-1.5">{item.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{item.body}</p>
+                <p className="text-xs font-semibold text-indigo-500 tracking-widest mb-4 uppercase">{item.step}</p>
+                <h3 className="font-semibold text-gray-900 mb-3 text-base">{item.title}</h3>
+                <p className="text-sm text-gray-400 leading-relaxed">{item.body}</p>
               </div>
             ))}
           </div>
@@ -115,85 +112,83 @@ export default async function Home() {
       </section>
 
       {/* ── Key capabilities ─────────────────────────────────────────────────── */}
-      <section className="max-w-5xl mx-auto px-6 py-16">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-3">{t("features.heading")}</h2>
-        <p className="text-center text-gray-500 text-sm mb-10 max-w-xl mx-auto">
-          Everything you need to translate professional content at scale — from single files to multi-language campaigns.
-        </p>
+      <section className="bg-gray-50 py-24">
+        <div className="max-w-5xl mx-auto px-6">
+          <h2 className="text-4xl font-bold text-center text-gray-900 mb-4 tracking-tight">{t("features.heading")}</h2>
+          <p className="text-center text-gray-400 text-base mb-16 max-w-lg mx-auto font-light">
+            From single files to multi-language campaigns — everything in one place.
+          </p>
 
-        {/* 3 studio cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-          {[
-            {
-              badge: "Translation Studio",
-              badgeColor: "bg-indigo-50 text-indigo-700",
-              icon: "📄",
-              title: "Any file format",
-              body: "JSON, PDF, XLIFF, Markdown, .strings, Android XML, and more. Upload once, download in every language.",
-            },
-            {
-              badge: "LQA Studio",
-              badgeColor: "bg-emerald-50 text-emerald-700",
-              icon: "✅",
-              title: "Quality assurance",
-              body: "AI-powered LQA scores translations on Accuracy, Language, and Style — then auto-revises issues.",
-            },
-            {
-              badge: "Media Studio",
-              badgeColor: "bg-amber-50 text-amber-700",
-              icon: "🎬",
-              title: "Subtitle translation",
-              body: "Upload .srt or .vtt subtitle files and get back a translated version with all timestamps intact.",
-            },
-          ].map((c) => (
-            <div key={c.badge} className="bg-white border border-gray-200 rounded-xl p-5">
-              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${c.badgeColor}`}>{c.badge}</span>
-              <div className="text-2xl mt-3 mb-2">{c.icon}</div>
-              <h3 className="font-semibold text-gray-900 mb-1">{c.title}</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">{c.body}</p>
-            </div>
-          ))}
-        </div>
+          {/* 3 studio cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
+            {[
+              {
+                badge: "Translation Studio",
+                badgeColor: "bg-indigo-50 text-indigo-600",
+                title: "Any file format",
+                body: "JSON, PDF, XLIFF, Markdown, .strings, Android XML, and more. Upload once, download in every language.",
+              },
+              {
+                badge: "LQA Studio",
+                badgeColor: "bg-emerald-50 text-emerald-600",
+                title: "Quality assurance",
+                body: "AI-powered LQA scores translations on Accuracy, Language, and Style — then auto-revises issues in one click.",
+              },
+              {
+                badge: "Media Studio",
+                badgeColor: "bg-amber-50 text-amber-600",
+                title: "Subtitle translation",
+                body: "Upload .srt or .vtt subtitle files and receive a translated version with all timestamps intact.",
+              },
+            ].map((c) => (
+              <div key={c.badge} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${c.badgeColor}`}>{c.badge}</span>
+                <h3 className="font-semibold text-gray-900 mt-5 mb-2">{c.title}</h3>
+                <p className="text-sm text-gray-400 leading-relaxed">{c.body}</p>
+              </div>
+            ))}
+          </div>
 
-        {/* Feature pills */}
-        <div className="flex flex-wrap gap-2 justify-center">
-          {[
-            t("features.multiModel"),
-            t("features.costTransparency"),
-            t("features.languages"),
-            t("features.auditTrail"),
-            t("features.accessControl"),
-            "API access",
-            "Real-time progress",
-          ].map((f) => (
-            <span key={f} className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full border border-gray-200">
-              ✓ {f}
-            </span>
-          ))}
+          {/* Feature pills */}
+          <div className="flex flex-wrap gap-2 justify-center">
+            {[
+              t("features.multiModel"),
+              t("features.costTransparency"),
+              t("features.languages"),
+              t("features.auditTrail"),
+              t("features.accessControl"),
+              "API access",
+              "Real-time progress",
+            ].map((f) => (
+              <span key={f} className="text-xs text-gray-500 px-3.5 py-1.5 rounded-full border border-gray-200 bg-white">
+                {f}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* ── Portfolio preview ────────────────────────────────────────────────── */}
-      <section className="bg-gray-50 border-y border-gray-100 py-16">
+      <section className="py-24">
         <div className="max-w-5xl mx-auto px-6">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">See it in action</h2>
-            <p className="text-sm text-gray-500 max-w-xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-3 tracking-tight">See it in action</h2>
+            <p className="text-base text-gray-400 max-w-lg mx-auto font-light">
               A real eLearning safety course translated from English to Simplified Chinese — layout, fonts, and interactions fully localised.
             </p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {[
-              { label: "Original · English", lang: "EN", langColor: "bg-blue-100 text-blue-700", src: "/high-voltage-safety-course.html", title: "High Voltage Safety" },
-              { label: "Translated · Simplified Chinese", lang: "ZH-CN", langColor: "bg-red-100 text-red-700", src: "/high-voltage-safety-course-zh-CN.html", title: "高压电气安全" },
+              { label: "Original · English", lang: "EN", langColor: "bg-blue-50 text-blue-600", src: "/high-voltage-safety-course.html", title: "High Voltage Safety" },
+              { label: "Translated · Simplified Chinese", lang: "ZH-CN", langColor: "bg-red-50 text-red-600", src: "/high-voltage-safety-course-zh-CN.html", title: "高压电气安全" },
             ].map((item) => (
-              <div key={item.lang} className="rounded-xl border border-gray-200 shadow-sm overflow-hidden bg-white flex flex-col">
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 bg-gray-50">
+              <div key={item.lang} className="rounded-2xl border border-gray-100 shadow-sm overflow-hidden bg-white flex flex-col">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
                   <div className="flex items-center gap-2">
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${item.langColor}`}>{item.lang}</span>
-                    <span className="text-sm text-gray-600">{item.label}</span>
+                    <span className="text-sm text-gray-500">{item.label}</span>
                   </div>
-                  <a href={item.src} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-600 hover:underline">
+                  <a href={item.src} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-500 hover:text-indigo-700 transition-colors">
                     Open ↗
                   </a>
                 </div>
@@ -207,60 +202,64 @@ export default async function Home() {
       </section>
 
       {/* ── Pricing ──────────────────────────────────────────────────────────── */}
-      <section className="max-w-4xl mx-auto px-6 py-16">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-2">{t("pricing.heading")}</h2>
-        <p className="text-center text-gray-500 text-sm mb-10">{t("pricing.subheading")}</p>
+      <section className="bg-gray-50 py-24">
+        <div className="max-w-4xl mx-auto px-6">
+          <h2 className="text-4xl font-bold text-center text-gray-900 mb-3 tracking-tight">{t("pricing.heading")}</h2>
+          <p className="text-center text-gray-400 text-base mb-16 font-light">{t("pricing.subheading")}</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {[
-            { scenario: t("pricing.scenario1"), detail: t("pricing.scenario1Detail"), charge: t("pricing.scenario1Charge"), note: t("pricing.scenario1Note"), highlight: false },
-            { scenario: t("pricing.scenario2"), detail: t("pricing.scenario2Detail"), charge: t("pricing.scenario2Charge"), note: t("pricing.scenario2Note"), highlight: true },
-            { scenario: t("pricing.scenario3"), detail: t("pricing.scenario3Detail"), charge: t("pricing.scenario3Charge"), note: t("pricing.scenario3Note"), highlight: false },
-          ].map((ex) => (
-            <div key={ex.scenario} className={`relative rounded-xl border p-5 bg-white ${ex.highlight ? "border-indigo-300 shadow-sm" : "border-gray-200"}`}>
-              {ex.highlight && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="bg-indigo-600 text-white text-xs font-medium px-3 py-1 rounded-full">{t("pricing.mostCommon")}</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+            {[
+              { scenario: t("pricing.scenario1"), detail: t("pricing.scenario1Detail"), charge: t("pricing.scenario1Charge"), note: t("pricing.scenario1Note"), highlight: false },
+              { scenario: t("pricing.scenario2"), detail: t("pricing.scenario2Detail"), charge: t("pricing.scenario2Charge"), note: t("pricing.scenario2Note"), highlight: true },
+              { scenario: t("pricing.scenario3"), detail: t("pricing.scenario3Detail"), charge: t("pricing.scenario3Charge"), note: t("pricing.scenario3Note"), highlight: false },
+            ].map((ex) => (
+              <div key={ex.scenario} className={`relative rounded-2xl border p-6 bg-white ${ex.highlight ? "border-indigo-200 shadow-md" : "border-gray-100 shadow-sm"}`}>
+                {ex.highlight && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span className="bg-indigo-600 text-white text-xs font-medium px-3 py-1 rounded-full">{t("pricing.mostCommon")}</span>
+                  </div>
+                )}
+                <p className="font-semibold text-gray-900 text-sm mb-1">{ex.scenario}</p>
+                <p className="text-xs text-gray-400 mb-5 leading-relaxed">{ex.detail}</p>
+                <div className="border-t border-gray-100 pt-4 text-right">
+                  <p className="text-xs text-gray-300 uppercase tracking-wider mb-1">{t("pricing.estimatedCost")}</p>
+                  <p className="text-3xl font-bold text-gray-900">{ex.charge}</p>
                 </div>
-              )}
-              <p className="font-semibold text-gray-900 text-sm mb-1">{ex.scenario}</p>
-              <p className="text-xs text-gray-400 mb-4 leading-relaxed">{ex.detail}</p>
-              <div className="border-t border-gray-100 pt-3 text-right">
-                <p className="text-xs text-gray-400">{t("pricing.estimatedCost")}</p>
-                <p className="text-2xl font-bold text-indigo-600">{ex.charge}</p>
+                <p className="text-xs text-gray-300 mt-2">{ex.note}</p>
               </div>
-              <p className="text-xs text-gray-400 mt-2 italic">{ex.note}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <CostEstimator />
+          <CostEstimator />
 
-        <div className="mt-6 flex items-center justify-center gap-2 bg-green-50 border border-green-200 text-green-800 text-sm font-medium px-4 py-3 rounded-xl">
-          🎁 <span>First 10,000 words free — sign up and enter code <span className="font-mono font-bold">1TIME</span></span>
+          <p className="text-center text-sm text-gray-400 mt-8">
+            First 10,000 words free — sign up and enter code{" "}
+            <span className="font-mono font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">1TIME</span>{" "}
+            at checkout
+          </p>
         </div>
       </section>
 
       {/* ── Final CTA ────────────────────────────────────────────────────────── */}
-      <section className="bg-indigo-600 py-16">
+      <section className="bg-gray-950 py-24">
         <div className="max-w-2xl mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold text-white mb-3">{t("cta.heading")}</h2>
-          <p className="text-indigo-200 mb-8 text-sm leading-relaxed">{t("cta.body")}</p>
+          <h2 className="text-4xl font-bold text-white mb-4 tracking-tight">{t("cta.heading")}</h2>
+          <p className="text-gray-400 mb-10 text-base leading-relaxed font-light">{t("cta.body")}</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/login?mode=signup"
-              className="bg-white text-indigo-600 hover:bg-indigo-50 font-semibold px-8 py-3 rounded-xl text-sm transition-colors shadow-sm"
+              className="bg-white text-gray-900 hover:bg-gray-100 font-semibold px-8 py-3.5 rounded-full text-sm transition-colors"
             >
-              Start free — use code 1TIME
+              Get started — code 1TIME
             </Link>
             <Link
               href="/login"
-              className="border border-indigo-400 hover:border-indigo-300 text-white font-medium px-8 py-3 rounded-xl text-sm transition-colors"
+              className="text-gray-400 hover:text-white font-medium px-8 py-3.5 text-sm transition-colors"
             >
-              Sign in
+              Sign in →
             </Link>
           </div>
-          <p className="text-indigo-300 text-xs mt-4">No credit card required · Cancel anytime</p>
+          <p className="text-gray-600 text-xs mt-6 tracking-wide">No card required · Cancel anytime</p>
         </div>
       </section>
     </div>

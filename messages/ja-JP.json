@@ -8,27 +8,27 @@
     "getStarted": "無料で始める →"
   },
   "hero": {
-    "badge": "ファイルをアップロード · AIが翻訳 · 即座にダウンロード",
-    "h1Line1": "あなたのコンテンツを翻訳します。",
-    "h1Line2": "高速、正確、手頃な価格。",
-    "description": "任意のファイルをアップロードします。ターゲット言語を選択します。当社のAIは数分で翻訳し、結果を元のファイル形式で提供します。配信準備完了です。",
-    "cta1": "無料で試す",
+    "badge": "10,000語無料 — コード 1TIME",
+    "h1Line1": "あなたのコンテンツを。",
+    "h1Line2": "すべての言語で。",
+    "description": "ファイルをアップロードし、言語を選択するだけ。数分で精確な翻訳を元のフォーマットのまま受け取り、そのまま公開できます。",
+    "cta1": "今すぐ始める",
     "cta2": "仕組みを見る"
   },
   "mockPreview": {
     "caption": "翻訳スタジオ — 言語ごとのリアルタイム進捗、完了時にダウンロード"
   },
   "howItWorks": {
-    "heading": "3つのステップ。数分で完了。",
-    "step1Title": "1. ファイルをアップロード",
-    "step1Body": "JSON、CSV、Markdown、PDF、またはXLIFFファイルをドロップします。すべての文を自動的に抽出します。コピペなし、セットアップなし。",
-    "step2Title": "2. AIが翻訳",
-    "step2Body": "AIモデルを選択します。Claude、GPT-4o、Gemini、またはDeepSeek。何かが実行される前に正確な価格を確認できます。ほとんどのファイルは数分以内に完了します。",
-    "step3Title": "3. 即座にダウンロード",
-    "step3Body": "翻訳されたファイルは、アップロードした形式と同じ形式で提供されます。JSON、CSV、Markdown、XLIFF、PDF、その他多くの形式に対応しています。再フォーマットは不要です。"
+    "heading": "シンプルな設計で。",
+    "step1Title": "ファイルをアップロード",
+    "step1Body": "JSON、CSV、Markdown、PDF、または XLIFF ファイルをドロップ。翻訳可能なテキストはすべて自動で抽出されます — コピー&ペーストも設定も不要。",
+    "step2Title": "AI が翻訳",
+    "step2Body": "AI モデルを選択 — Claude、GPT-4o、Gemini、または DeepSeek。実行前に正確なコストを確認できます。ほとんどのファイルは数分で完了。",
+    "step3Title": "すぐにダウンロード",
+    "step3Body": "翻訳済みファイルはアップロード時と同じ形式で届きます — JSON、XLIFF、PDF など。再フォーマット不要で、すぐに使えます。"
   },
   "features": {
-    "heading": "グローバルに展開するために必要なすべて",
+    "heading": "あらゆるワークフローに対応。",
     "multiModel": "トップAIモデル",
     "multiModelBody": "Claude、GPT-4o、Gemini、DeepSeek。予算と品質基準に合ったものを選択してください。",
     "costTransparency": "支払う前に価格を確認",
@@ -43,8 +43,8 @@
     "accessControlBody": "JSONファイルをアップロードして、翻訳されたJSONファイルをダウンロードします。再フォーマットやコピペは不要です。"
   },
   "pricing": {
-    "heading": "使用した分だけお支払い",
-    "subheading": "月額料金なし。シート数制限なし。翻訳が完了した後、クレジットカードに請求されます。",
+    "heading": "使った分だけお支払い。",
+    "subheading": "サブスクリプションなし。ユーザー数の制限なし。翻訳完了後にのみカードに請求されます。",
     "examplesLabel": "実際のコストはいくらですか？",
     "estimatedCost": "予想総額",
     "mostCommon": "最も人気",
@@ -85,9 +85,9 @@
     "startFree": "無料で始める →"
   },
   "cta": {
-    "heading": "最初のファイルを翻訳する準備はできていますか？",
-    "body": "30秒でサインアップします。ファイルをアップロードして、言語を選択すれば、数分で翻訳が表示されます。",
-    "button": "無料で試す →"
+    "heading": "翻訳を、再定義する。",
+    "body": "10,000語を無料でお試しください。カード登録不要。",
+    "button": "今すぐ始める"
   },
   "footer": {
     "rights": "© {year} Summon Translator. All rights reserved."

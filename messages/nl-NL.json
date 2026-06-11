@@ -8,27 +8,27 @@
     "getStarted": "Gratis starten →"
   },
   "hero": {
-    "badge": "Upload een bestand · AI vertaalt · Direct downloaden",
-    "h1Line1": "Jouw content, vertaald.",
-    "h1Line2": "Snel, nauwkeurig, betaalbaar.",
-    "description": "Upload elk bestand. Kies je doeltalen. Onze AI vertaalt het in minuten en levert het resultaat in je originele bestandsindeling — klaar om te versturen.",
-    "cta1": "Gratis proberen",
-    "cta2": "Kijk hoe het werkt"
+    "badge": "10.000 woorden gratis — code 1TIME",
+    "h1Line1": "Uw inhoud.",
+    "h1Line2": "Elke taal.",
+    "description": "Upload een bestand. Kies uw talen. Ontvang een nauwkeurige, publicatieklare vertaling in uw oorspronkelijke indeling — binnen enkele minuten.",
+    "cta1": "Aan de slag",
+    "cta2": "Bekijk hoe het werkt"
   },
   "mockPreview": {
     "caption": "Translation Studio — real-time voortgang per taal, downloaden wanneer klaar"
   },
   "howItWorks": {
-    "heading": "Drie stappen. Klaar in minuten.",
-    "step1Title": "1. Upload je bestand",
-    "step1Body": "Sleep een JSON-, CSV-, Markdown-, PDF- of XLIFF-bestand. We halen automatisch elke zin eruit — geen copy-pasten, geen setup.",
-    "step2Title": "2. AI vertaalt het",
-    "step2Body": "Kies je AI-model — Claude, GPT-4o, Gemini of DeepSeek. Zie de exacte prijs voordat iets wordt uitgevoerd. De meeste bestanden zijn klaar in minder dan een paar minuten.",
-    "step3Title": "3. Direct downloaden",
-    "step3Body": "Je vertaalde bestanden worden in dezelfde indeling geleverd als je ze hebt geüpload — JSON, CSV, Markdown, XLIFF, PDF en meer. Geen herformattering nodig."
+    "heading": "Eenvoudig van ontwerp.",
+    "step1Title": "Upload uw bestand",
+    "step1Body": "Sleep een JSON-, CSV-, Markdown-, PDF- of XLIFF-bestand. Elke vertaalbare tekst wordt automatisch geëxtraheerd — geen kopiëren, geen instellen.",
+    "step2Title": "AI vertaalt het",
+    "step2Body": "Kies uw AI-model — Claude, GPT-4o, Gemini of DeepSeek. Bekijk de exacte kosten voordat er iets wordt uitgevoerd. De meeste bestanden zijn in minuten klaar.",
+    "step3Title": "Direct downloaden",
+    "step3Body": "Uw vertaalde bestanden komen aan in hetzelfde formaat als u heeft geüpload — JSON, XLIFF, PDF en meer. Klaar voor gebruik, geen herformattering nodig."
   },
   "features": {
-    "heading": "Alles wat je nodig hebt om wereldwijd uit te breiden",
+    "heading": "Gebouwd voor elke workflow.",
     "multiModel": "Topmodellen van AI",
     "multiModelBody": "Claude, GPT-4o, Gemini, DeepSeek. Kies degene die bij je budget en kwaliteitseisen past.",
     "costTransparency": "Zie de prijs voordat je betaalt",
@@ -43,8 +43,8 @@
     "accessControlBody": "Upload een JSON-bestand, download een vertaald JSON-bestand. Geen herformattering of copy-pasten nodig."
   },
   "pricing": {
-    "heading": "Betaal alleen voor wat je gebruikt",
-    "subheading": "Geen maandelijks abonnement. Geen plaatslimiet. Je kaart wordt belast nadat de vertaling is voltooid.",
+    "heading": "Betaal alleen voor wat u gebruikt.",
+    "subheading": "Geen abonnementen. Geen gebruikerslimieten. Uw kaart wordt pas afgeschreven na voltooiing van de vertaling.",
     "examplesLabel": "Wat kost het eigenlijk?",
     "estimatedCost": "Geschatte totaal",
     "mostCommon": "Meest populair",
@@ -85,9 +85,9 @@
     "startFree": "Gratis starten →"
   },
   "cta": {
-    "heading": "Klaar om uw eerste bestand te vertalen?",
-    "body": "Meld u aan in 30 seconden. Upload een bestand, kies een taal en zie uw vertaling in enkele minuten.",
-    "button": "Gratis proberen →"
+    "heading": "Vertalen, opnieuw bedacht.",
+    "body": "Begin met 10.000 gratis woorden, van ons. Geen kaart vereist.",
+    "button": "Aan de slag"
   },
   "footer": {
     "rights": "© {year} Summon Translator. Alle rechten voorbehouden."

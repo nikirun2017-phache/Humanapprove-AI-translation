@@ -8,27 +8,27 @@
     "getStarted": "Commencer gratuitement →"
   },
   "hero": {
-    "badge": "Téléchargez un fichier · L&apos;IA traduit · Téléchargez instantanément",
-    "h1Line1": "Votre contenu, traduit.",
-    "h1Line2": "Rapide, précis, abordable.",
-    "description": "Téléchargez n&apos;importe quel fichier. Choisissez vos langues cibles. Notre IA le traduit en quelques minutes et livre le résultat dans le format de fichier original — prêt à être lancé.",
-    "cta1": "Essayez gratuitement",
-    "cta2": "Découvrez comment ça marche"
+    "badge": "10 000 mots gratuits — code 1TIME",
+    "h1Line1": "Votre contenu.",
+    "h1Line2": "Toutes les langues.",
+    "description": "Importez n'importe quel fichier. Choisissez vos langues. Recevez une traduction précise et prête à publier dans votre format d'origine — en quelques minutes.",
+    "cta1": "Commencer",
+    "cta2": "Voir comment ça fonctionne"
   },
   "mockPreview": {
     "caption": "Translation Studio — progression en temps réel par langue, téléchargement une fois terminé"
   },
   "howItWorks": {
-    "heading": "Trois étapes. Terminé en quelques minutes.",
-    "step1Title": "1. Téléchargez votre fichier",
-    "step1Body": "Déposez un fichier JSON, CSV, Markdown, PDF ou XLIFF. Nous extrayons automatiquement chaque phrase — pas de copier-coller, pas de configuration.",
-    "step2Title": "2. L&apos;IA traduit",
-    "step2Body": "Choisissez votre modèle IA — Claude, GPT-4o, Gemini ou DeepSeek. Voyez le prix exact avant que tout s&apos;exécute. La plupart des fichiers se terminent en quelques minutes.",
-    "step3Title": "3. Téléchargez instantanément",
-    "step3Body": "Vos fichiers traduits sont livrés dans le même format que celui que vous avez téléchargé — JSON, CSV, Markdown, XLIFF, PDF, et bien d&apos;autres. Aucun reformatage nécessaire."
+    "heading": "Simple par conception.",
+    "step1Title": "Importez votre fichier",
+    "step1Body": "Déposez un fichier JSON, CSV, Markdown, PDF ou XLIFF. Chaque texte traduisible est extrait automatiquement — sans copier-coller, sans configuration.",
+    "step2Title": "L'IA le traduit",
+    "step2Body": "Choisissez votre modèle d'IA — Claude, GPT-4o, Gemini ou DeepSeek. Vérifiez le coût exact avant tout traitement. La plupart des fichiers sont prêts en quelques minutes.",
+    "step3Title": "Téléchargez instantanément",
+    "step3Body": "Vos fichiers traduits parviennent dans le même format que celui importé — JSON, XLIFF, PDF et plus. Prêts à l'emploi, sans reformatage."
   },
   "features": {
-    "heading": "Tout ce dont vous avez besoin pour devenir mondial",
+    "heading": "Conçu pour tous les flux de travail.",
     "multiModel": "Meilleurs modèles IA",
     "multiModelBody": "Claude, GPT-4o, Gemini, DeepSeek. Choisissez celui qui correspond à votre budget et à vos normes de qualité.",
     "costTransparency": "Voyez le prix avant de payer",
@@ -43,8 +43,8 @@
     "accessControlBody": "Téléchargez un fichier JSON, téléchargez un fichier JSON traduit. Aucun reformatage ou copier-coller requis."
   },
   "pricing": {
-    "heading": "Payez seulement ce que vous utilisez",
-    "subheading": "Pas de frais mensuels. Pas de limite de siège. Votre carte est facturée après la traduction.",
+    "heading": "Payez seulement ce que vous utilisez.",
+    "subheading": "Pas d'abonnement. Pas de limite d'utilisateurs. Votre carte n'est débitée qu'après la fin de la traduction.",
     "examplesLabel": "Quel est le coût réel?",
     "estimatedCost": "Total estimé",
     "mostCommon": "Le plus populaire",
@@ -85,9 +85,9 @@
     "startFree": "Commencer gratuitement →"
   },
   "cta": {
-    "heading": "Prêt à traduire votre premier fichier?",
-    "body": "Inscrivez-vous en 30 secondes. Téléchargez un fichier, choisissez une langue et voyez votre traduction en quelques minutes.",
-    "button": "Essayer gratuitement →"
+    "heading": "La traduction, réinventée.",
+    "body": "Commencez avec 10 000 mots offerts. Aucune carte requise.",
+    "button": "Commencer"
   },
   "footer": {
     "rights": "© {year} Summon Translator. Tous droits réservés."

@@ -8,27 +8,27 @@
     "getStarted": "Börja gratis →"
   },
   "hero": {
-    "badge": "Ladda upp en fil · AI översätter · Ladda ner direkt",
-    "h1Line1": "Ditt innehål, översatt.",
-    "h1Line2": "Snabbt, exakt, prisvärt.",
-    "description": "Ladda upp valfri fil. Välj målspråk. Vår AI översätter det på några minuter och levererar resultatet i ditt ursprungliga filformat — redo att skicka.",
-    "cta1": "Prova gratis",
+    "badge": "10 000 ord gratis — kod 1TIME",
+    "h1Line1": "Ditt innehåll.",
+    "h1Line2": "Alla språk.",
+    "description": "Ladda upp vilken fil som helst. Välj dina språk. Få en exakt, publiceringsklar översättning i ditt originalformat — på några minuter.",
+    "cta1": "Kom igång",
     "cta2": "Se hur det fungerar"
   },
   "mockPreview": {
     "caption": "Translation Studio — realtidsstatus per språk, ladda ner när det är klart"
   },
   "howItWorks": {
-    "heading": "Tre steg. Klart på några minuter.",
-    "step1Title": "1. Ladda upp din fil",
-    "step1Body": "Släpp en JSON-, CSV-, Markdown-, PDF- eller XLIFF-fil. Vi extraherar alla meningar automatiskt — ingen copy-paste, ingen konfiguration.",
-    "step2Title": "2. AI översätter den",
-    "step2Body": "Välj din AI-modell — Claude, GPT-4o, Gemini eller DeepSeek. Se det exakta priset innan något körs. De flesta filer är klara på under några minuter.",
-    "step3Title": "3. Ladda ner direkt",
-    "step3Body": "Dina översatta filer levereras i samma format som du laddade upp — JSON, CSV, Markdown, XLIFF, PDF och mer. Ingen omformatering behövs."
+    "heading": "Enkelt till sin design.",
+    "step1Title": "Ladda upp din fil",
+    "step1Body": "Dra en JSON-, CSV-, Markdown-, PDF- eller XLIFF-fil. Alla översättningsbara strängar extraheras automatiskt — ingen kopiering, ingen konfiguration.",
+    "step2Title": "AI översätter den",
+    "step2Body": "Välj din AI-modell — Claude, GPT-4o, Gemini eller DeepSeek. Granska den exakta kostnaden innan något körs. De flesta filer är klara på minuter.",
+    "step3Title": "Ladda ner direkt",
+    "step3Body": "Dina översatta filer levereras i samma format som du laddade upp — JSON, XLIFF, PDF med mera. Redo att använda, ingen omformatering krävs."
   },
   "features": {
-    "heading": "Allt du behöver för att bli global",
+    "heading": "Byggd för varje arbetsflöde.",
     "multiModel": "Toppsäkrade AI-modeller",
     "multiModelBody": "Claude, GPT-4o, Gemini, DeepSeek. Välj den som passar din budget och kvalitetskrav.",
     "costTransparency": "Se priset innan du betalar",
@@ -43,8 +43,8 @@
     "accessControlBody": "Ladda upp en JSON-fil, ladda ner en översatt JSON-fil. Ingen omformatering eller copy-paste krävs."
   },
   "pricing": {
-    "heading": "Betala endast för det du använder",
-    "subheading": "Ingen månadskostnad. Ingen begränsning av platser. Din kort debiteras efter översättningen är klar.",
+    "heading": "Betala bara för det du använder.",
+    "subheading": "Inga prenumerationer. Inga användarbegränsningar. Ditt kort debiteras först när översättningen är klar.",
     "examplesLabel": "Vad kostar det egentligen?",
     "estimatedCost": "Beräknad total",
     "mostCommon": "Mest populär",
@@ -85,9 +85,9 @@
     "startFree": "Börja kostnadsfritt →"
   },
   "cta": {
-    "heading": "Redo att översätta din första fil?",
-    "body": "Registrera dig på 30 sekunder. Ladda upp en fil, välj ett språk och se din översättning på några minuter.",
-    "button": "Prova gratis →"
+    "heading": "Översättning, omtänkt.",
+    "body": "Börja med 10 000 gratisord, bekostade av oss. Inget kort krävs.",
+    "button": "Kom igång"
   },
   "footer": {
     "rights": "© {year} Summon Translator. Alla rättigheter förbehållna."

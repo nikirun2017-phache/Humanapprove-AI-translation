@@ -8,27 +8,27 @@
     "getStarted": "무료로 시작하기 →"
   },
   "hero": {
-    "badge": "파일 업로드 · AI 번역 · 즉시 다운로드",
-    "h1Line1": "귀사의 콘텐츠, 번역됨.",
-    "h1Line2": "빠르고, 정확하고, 저렴합니다.",
-    "description": "파일을 업로드하세요. 목표 언어를 선택하세요. 저희 AI가 몇 분 내에 번역하고 결과를 원본 파일 형식으로 제공합니다 — 바로 배포할 준비가 됩니다.",
-    "cta1": "무료로 시도해보기",
-    "cta2": "작동 방식 확인"
+    "badge": "10,000 단어 무료 — 코드 1TIME",
+    "h1Line1": "당신의 콘텐츠를.",
+    "h1Line2": "모든 언어로.",
+    "description": "파일을 업로드하고 언어를 선택하세요. 원본 형식 그대로 몇 분 안에 정확하고 게시 가능한 번역을 받아보세요.",
+    "cta1": "시작하기",
+    "cta2": "작동 방식 보기"
   },
   "mockPreview": {
     "caption": "번역 스튜디오 — 언어별 실시간 진행 상황, 완료되면 다운로드"
   },
   "howItWorks": {
-    "heading": "3단계. 몇 분 안에 완료.",
-    "step1Title": "1. 파일 업로드",
-    "step1Body": "JSON, CSV, Markdown, PDF 또는 XLIFF 파일을 드롭하세요. 모든 문장을 자동으로 추출합니다 — 복사-붙여넣기 없음, 설정 없음.",
-    "step2Title": "2. AI가 번역합니다",
-    "step2Body": "AI 모델을 선택하세요 — Claude, GPT-4o, Gemini 또는 DeepSeek. 실행하기 전에 정확한 가격을 확인하세요. 대부분의 파일은 몇 분 안에 완료됩니다.",
-    "step3Title": "3. 즉시 다운로드",
-    "step3Body": "번역된 파일은 업로드한 것과 동일한 형식으로 제공됩니다 — JSON, CSV, Markdown, XLIFF, PDF 등. 재포맷팅이 필요하지 않습니다."
+    "heading": "간결하게 설계되었습니다.",
+    "step1Title": "파일 업로드",
+    "step1Body": "JSON, CSV, Markdown, PDF 또는 XLIFF 파일을 드롭하세요. 번역 가능한 모든 문자열이 자동으로 추출됩니다 — 복사·붙여넣기나 설정이 필요 없습니다.",
+    "step2Title": "AI 번역",
+    "step2Body": "AI 모델을 선택하세요 — Claude, GPT-4o, Gemini 또는 DeepSeek. 실행 전에 정확한 비용을 확인하세요. 대부분의 파일은 몇 분 안에 완료됩니다.",
+    "step3Title": "즉시 다운로드",
+    "step3Body": "번역된 파일은 업로드한 것과 같은 형식으로 제공됩니다 — JSON, XLIFF, PDF 등. 재포맷 없이 바로 사용 가능합니다."
   },
   "features": {
-    "heading": "글로벌로 성장하기 위한 모든 것",
+    "heading": "모든 워크플로우를 위해 설계되었습니다.",
     "multiModel": "상위 AI 모델",
     "multiModelBody": "Claude, GPT-4o, Gemini, DeepSeek. 예산과 품질 기준에 맞는 것을 선택하세요.",
     "costTransparency": "지불하기 전에 가격 확인",
@@ -43,8 +43,8 @@
     "accessControlBody": "JSON 파일을 업로드하고 번역된 JSON 파일을 다운로드하세요. 재포맷팅이나 복사-붙여넣기 필요 없음."
   },
   "pricing": {
-    "heading": "사용한 것에 대해서만 지불",
-    "subheading": "월간 수수료 없음. 사용자 수 제한 없음. 번역 완료 후 카드에 청구됩니다.",
+    "heading": "사용한 만큼만 지불하세요.",
+    "subheading": "구독 없음. 시트 제한 없음. 번역 완료 후에만 카드에 청구됩니다.",
     "examplesLabel": "실제 비용은 얼마입니까?",
     "estimatedCost": "예상 총액",
     "mostCommon": "가장 인기 있는",
@@ -85,9 +85,9 @@
     "startFree": "무료로 시작하기 →"
   },
   "cta": {
-    "heading": "첫 파일을 번역할 준비가 되셨나요?",
-    "body": "30초 만에 가입하세요. 파일을 업로드하고, 언어를 선택하고, 몇 분 안에 번역을 확인하세요.",
-    "button": "무료로 시도하기 →"
+    "heading": "번역, 새롭게 상상하다.",
+    "body": "10,000 단어를 무료로 시작하세요. 카드 등록 불필요.",
+    "button": "시작하기"
   },
   "footer": {
     "rights": "© {year} Summon Translator. 모든 권리 보유."

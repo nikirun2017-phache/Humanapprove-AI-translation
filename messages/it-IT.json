@@ -8,27 +8,27 @@
     "getStarted": "Inizia gratuitamente →"
   },
   "hero": {
-    "badge": "Carica un file · L&apos;IA traduce · Scarica istantaneamente",
-    "h1Line1": "I tuoi contenuti, tradotti.",
-    "h1Line2": "Veloce, accurato, conveniente.",
-    "description": "Carica qualsiasi file. Scegli le lingue di destinazione. La nostra IA lo traduce in pochi minuti e consegna il risultato nel formato di file originale — pronto per il lancio.",
-    "cta1": "Provalo gratuitamente",
+    "badge": "10.000 parole gratuite — codice 1TIME",
+    "h1Line1": "Il tuo contenuto.",
+    "h1Line2": "Ogni lingua.",
+    "description": "Carica qualsiasi file. Scegli le lingue. Ricevi una traduzione precisa e pronta alla pubblicazione nel tuo formato originale — in pochi minuti.",
+    "cta1": "Inizia",
     "cta2": "Scopri come funziona"
   },
   "mockPreview": {
     "caption": "Translation Studio — progresso in tempo reale per lingua, scarica al termine"
   },
   "howItWorks": {
-    "heading": "Tre passaggi. Fatto in pochi minuti.",
-    "step1Title": "1. Carica il tuo file",
-    "step1Body": "Trascina un file JSON, CSV, Markdown, PDF o XLIFF. Estraiamo automaticamente ogni frase — niente copia-incolla, niente configurazione.",
-    "step2Title": "2. L&apos;IA traduce",
-    "step2Body": "Scegli il tuo modello di IA — Claude, GPT-4o, Gemini o DeepSeek. Vedi il prezzo esatto prima di eseguire qualsiasi cosa. La maggior parte dei file finisce in pochi minuti.",
-    "step3Title": "3. Scarica istantaneamente",
-    "step3Body": "I tuoi file tradotti vengono consegnati nello stesso formato in cui li hai caricati — JSON, CSV, Markdown, XLIFF, PDF e altro. Nessuna riformattazione necessaria."
+    "heading": "Semplice per design.",
+    "step1Title": "Carica il file",
+    "step1Body": "Trascina un file JSON, CSV, Markdown, PDF o XLIFF. Ogni stringa traducibile viene estratta automaticamente — senza copia-incolla, senza configurazione.",
+    "step2Title": "L'IA traduce",
+    "step2Body": "Scegli il tuo modello di IA — Claude, GPT-4o, Gemini o DeepSeek. Verifica il costo esatto prima di avviare. La maggior parte dei file è pronta in pochi minuti.",
+    "step3Title": "Scarica immediatamente",
+    "step3Body": "I file tradotti arrivano nello stesso formato in cui li hai caricati — JSON, XLIFF, PDF e altro. Pronti alla distribuzione, senza riformattazione."
   },
   "features": {
-    "heading": "Tutto quello che ti serve per andare globale",
+    "heading": "Progettato per ogni flusso di lavoro.",
     "multiModel": "I migliori modelli di IA",
     "multiModelBody": "Claude, GPT-4o, Gemini, DeepSeek. Scegli quello che si adatta al tuo budget e al tuo standard di qualità.",
     "costTransparency": "Vedi il prezzo prima di pagare",
@@ -43,8 +43,8 @@
     "accessControlBody": "Carica un file JSON, scarica un file JSON tradotto. Nessuna riformattazione o copia-incolla richiesta."
   },
   "pricing": {
-    "heading": "Paga solo quello che usi",
-    "subheading": "Nessun canone mensile. Nessun limite di posti. La tua carta viene addebitata al termine della traduzione.",
+    "heading": "Paga solo quello che usi.",
+    "subheading": "Nessun abbonamento. Nessun limite di utenti. La tua carta viene addebitata solo al completamento della traduzione.",
     "examplesLabel": "Quanto costa effettivamente?",
     "estimatedCost": "Totale stimato",
     "mostCommon": "Più popolare",
@@ -85,9 +85,9 @@
     "startFree": "Inizia gratuitamente →"
   },
   "cta": {
-    "heading": "Pronto a tradurre il tuo primo file?",
-    "body": "Iscriviti in 30 secondi. Carica un file, scegli una lingua e visualizza la tua traduzione in pochi minuti.",
-    "button": "Prova gratuitamente →"
+    "heading": "La traduzione, reinventata.",
+    "body": "Inizia con 10.000 parole gratuite, da parte nostra. Nessuna carta richiesta.",
+    "button": "Inizia"
   },
   "footer": {
     "rights": "© {year} Summon Translator. Tutti i diritti riservati."

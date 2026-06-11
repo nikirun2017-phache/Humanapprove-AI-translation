@@ -8,27 +8,27 @@
     "getStarted": "免費開始 →"
   },
   "hero": {
-    "badge": "上傳檔案 · AI 翻譯 · 立即下載",
-    "h1Line1": "您的內容，已翻譯。",
-    "h1Line2": "快速、準確、經濟實惠。",
-    "description": "上傳任何檔案。選擇目標語言。我們的 AI 在幾分鐘內翻譯，並以您原始的檔案格式提供結果——準備就緒，可立即交付。",
-    "cta1": "免費試用",
-    "cta2": "看看它如何運作"
+    "badge": "10,000 字詞免費 — 代碼 1TIME",
+    "h1Line1": "您的內容。",
+    "h1Line2": "任何語言。",
+    "description": "上傳任意檔案。選擇目標語言。以您原有的檔案格式，在幾分鐘內收到精準、可直接發布的譯文。",
+    "cta1": "立即開始",
+    "cta2": "查看運作方式"
   },
   "mockPreview": {
     "caption": "翻譯工作室——每種語言的實時進度，完成後下載"
   },
   "howItWorks": {
-    "heading": "三個步驟。幾分鐘內完成。",
-    "step1Title": "1. 上傳您的檔案",
-    "step1Body": "放下 JSON、CSV、Markdown、PDF 或 XLIFF 檔案。我們自動提取每個句子——無需複製貼上，無需設定。",
-    "step2Title": "2. AI 翻譯",
-    "step2Body": "選擇您的 AI 模型——Claude、GPT-4o、Gemini 或 DeepSeek。在任何事情運行之前查看確切價格。大多數檔案在幾分鐘內完成。",
-    "step3Title": "3. 立即下載",
-    "step3Body": "您的翻譯檔案以您上傳的相同格式提供——JSON、CSV、Markdown、XLIFF、PDF 等。無需重新格式化。"
+    "heading": "設計簡潔，操作直覺。",
+    "step1Title": "上傳檔案",
+    "step1Body": "拖入 JSON、CSV、Markdown、PDF 或 XLIFF 檔案。所有可翻譯內容自動提取——無需複製貼上，無需任何設定。",
+    "step2Title": "AI 完成翻譯",
+    "step2Body": "選擇您的 AI 模型——Claude、GPT-4o、Gemini 或 DeepSeek。執行前預覽確切費用。大多數檔案在幾分鐘內完成。",
+    "step3Title": "即時下載",
+    "step3Body": "翻譯檔案以您上傳時的格式返回——JSON、XLIFF、PDF 等。開箱即用，無需重新格式化。"
   },
   "features": {
-    "heading": "向全球擴展所需的一切",
+    "heading": "適配每一種工作流程。",
     "multiModel": "頂級 AI 模型",
     "multiModelBody": "Claude、GPT-4o、Gemini、DeepSeek。選擇符合您預算和品質標準的。",
     "costTransparency": "支付前查看價格",
@@ -43,8 +43,8 @@
     "accessControlBody": "上傳 JSON 檔案，下載翻譯後的 JSON 檔案。無需重新格式化或複製貼上。"
   },
   "pricing": {
-    "heading": "只為您使用的付費",
-    "subheading": "無月費。無席位限制。翻譯完成後對您的卡片收費。",
+    "heading": "按量付費。",
+    "subheading": "無需訂閱。無座位限制。翻譯完成後才向您的卡收費。",
     "examplesLabel": "實際成本是多少？",
     "estimatedCost": "估計總計",
     "mostCommon": "最受歡迎",
@@ -85,9 +85,9 @@
     "startFree": "免費開始 →"
   },
   "cta": {
-    "heading": "準備好翻譯您的第一個檔案了嗎？",
-    "body": "30 秒內註冊。上傳檔案、選擇語言，幾分鐘內就能看到您的翻譯。",
-    "button": "免費試用 →"
+    "heading": "重新定義翻譯。",
+    "body": "10,000 字詞免費開始，由我們買單。無需綁卡。",
+    "button": "立即開始"
   },
   "footer": {
     "rights": "© {year} Summon Translator。版權所有。"
